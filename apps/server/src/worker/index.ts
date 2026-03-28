@@ -1,43 +1,44 @@
 import { createDatabaseConnection } from "@femi/db";
 
 import { getEnv } from "../lib/env.js";
+import { createStructuredLogger } from "../lib/structured-log.js";
 
 const env = getEnv();
 const { pool } = createDatabaseConnection(env.DATABASE_URL);
+const logger = createStructuredLogger("worker", env.LOG_LEVEL);
 
 const tick = async () => {
   const client = await pool.connect();
 
   try {
     await client.query("select 1");
-    console.log(
-      JSON.stringify({
-        level: "info",
-        msg: "worker heartbeat",
-        timestamp: new Date().toISOString()
-      })
-    );
+    logger.info("worker heartbeat", {
+      workerTickMs: env.WORKER_TICK_MS
+    });
   } finally {
     client.release();
   }
 };
 
-await tick();
+await tick().catch((error: unknown) => {
+  logger.error("initial worker tick failed", {
+    error
+  });
+});
 
 const timer = setInterval(() => {
-  void tick();
+  void tick().catch((error: unknown) => {
+    logger.error("worker tick failed", {
+      error
+    });
+  });
 }, env.WORKER_TICK_MS);
 
 const shutdown = async (signal: string) => {
   clearInterval(timer);
-  console.log(
-    JSON.stringify({
-      level: "info",
-      msg: "worker shutdown",
-      signal,
-      timestamp: new Date().toISOString()
-    })
-  );
+  logger.info("worker shutdown", {
+    signal
+  });
   await pool.end();
   process.exit(0);
 };

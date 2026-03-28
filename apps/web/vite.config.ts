@@ -1,10 +1,23 @@
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
 
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: "0.0.0.0",
-    port: 5173
-  }
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig, loadEnv } from "vite";
+
+export default defineConfig(({ mode }) => {
+  const workspaceRoot = fileURLToPath(new URL("../..", import.meta.url));
+  const env = loadEnv(mode, workspaceRoot, "");
+  const backendUrl = env.VITE_BACKEND_URL || "http://localhost:3001";
+
+  return {
+    plugins: [react(), tsconfigPaths()],
+    server: {
+      host: "0.0.0.0",
+      port: 5173,
+      proxy: {
+        "/api": backendUrl,
+        "/telegram": backendUrl
+      }
+    }
+  };
 });

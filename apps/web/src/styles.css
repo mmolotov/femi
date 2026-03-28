@@ -196,6 +196,50 @@ select {
   margin: 0;
 }
 
+.panel .details-list {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.language-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(96, 63, 46, 0.12);
+  border-radius: 1rem;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.language-button:hover {
+  border-color: rgba(156, 92, 66, 0.5);
+  transform: translateY(-1px);
+}
+
+.language-button.active {
+  border-color: #231815;
+  box-shadow: 0 10px 24px rgba(35, 24, 21, 0.12);
+}
+
+.language-code {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: #9c5c42;
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 0.75rem 0.75rem 3rem;

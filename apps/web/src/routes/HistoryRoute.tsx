@@ -1,14 +1,14 @@
 import { Panel } from "../components/Panel";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function HistoryRoute() {
+  const { messages } = useI18n();
+
   return (
-    <Panel
-      description="History becomes useful after cycle logs and check-ins exist."
-      title="History"
-    >
+    <Panel description={messages.history.description} title={messages.history.title}>
       <div className="empty-state">
-        <p>No entries yet.</p>
-        <p className="muted">This screen is ready for daily check-ins and symptom logs.</p>
+        <p>{messages.history.body}</p>
+        <p className="muted">{messages.history.muted}</p>
       </div>
     </Panel>
   );

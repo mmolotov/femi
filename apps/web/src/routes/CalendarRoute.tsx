@@ -1,14 +1,14 @@
 import { Panel } from "../components/Panel";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function CalendarRoute() {
+  const { messages } = useI18n();
+
   return (
-    <Panel
-      description="Milestone 1 will turn this into the main cycle calendar and period logging view."
-      title="Calendar"
-    >
+    <Panel description={messages.calendar.description} title={messages.calendar.title}>
       <div className="empty-state">
-        <p>Calendar UI will live here.</p>
-        <p className="muted">Foundation phase keeps routing and layout in place.</p>
+        <p>{messages.calendar.body}</p>
+        <p className="muted">{messages.calendar.muted}</p>
       </div>
     </Panel>
   );
