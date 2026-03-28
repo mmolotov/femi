@@ -1,0 +1,49 @@
+{
+  "name": "femi",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.55.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^16.0.0",
+    "jsdom": "^27.0.0",
+    "knip": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vite-tsconfig-paths": "^5.0.0",
+    "vitest": "^4.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --filter @femi/server build && pnpm --filter @femi/web build",
+    "dev:web": "pnpm --filter @femi/web dev",
+    "dev:server": "pnpm --filter @femi/server dev",
+    "dev:worker": "pnpm --filter @femi/server dev:worker",
+    "typecheck": "pnpm --filter @femi/shared typecheck && pnpm --filter @femi/db typecheck && pnpm --filter @femi/server typecheck && pnpm --filter @femi/web typecheck",
+    "lint": "eslint . --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
+    "lint:fix": "eslint . --fix --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "analyze": "knip --treat-config-hints-as-errors",
+    "validate": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm analyze && pnpm build",
+    "db:migrate": "pnpm --filter @femi/db migrate"
+  }
+}

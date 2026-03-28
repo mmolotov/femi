@@ -1,0 +1,19 @@
+{
+  email {$CADDY_EMAIL}
+}
+
+{$APP_DOMAIN} {
+  encode zstd gzip
+
+  handle /api/* {
+    reverse_proxy server:3001
+  }
+
+  handle /telegram/* {
+    reverse_proxy server:3001
+  }
+
+  handle {
+    reverse_proxy web:4173
+  }
+}

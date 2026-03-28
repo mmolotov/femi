@@ -1,0 +1,207 @@
+:root {
+  color-scheme: light;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(230, 154, 127, 0.32), transparent 22rem),
+    linear-gradient(180deg, #fffaf6 0%, #f6efe9 100%);
+  color: #231815;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  width: min(100%, 52rem);
+  margin: 0 auto;
+  padding: 1rem 1rem 4rem;
+}
+
+.hero-card,
+.panel {
+  background: rgba(255, 252, 248, 0.92);
+  border: 1px solid rgba(96, 63, 46, 0.12);
+  border-radius: 1.5rem;
+  box-shadow: 0 18px 40px rgba(94, 59, 40, 0.08);
+}
+
+.hero-card {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.hero-card h1 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2rem, 7vw, 3.25rem);
+  line-height: 0.95;
+}
+
+.hero-copy,
+.panel-header p,
+.muted,
+.notice {
+  color: #65544d;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.76rem;
+  color: #9c5c42;
+}
+
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab-link {
+  text-align: center;
+  padding: 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(96, 63, 46, 0.08);
+  color: #6c5b53;
+}
+
+.tab-link.active {
+  background: #231815;
+  color: #fffaf6;
+}
+
+.content {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel {
+  padding: 1.25rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.panel-header p {
+  margin: 0;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.metric-card {
+  padding: 1rem;
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid rgba(96, 63, 46, 0.08);
+}
+
+.metric-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9c5c42;
+}
+
+.token-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.token-list li {
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(96, 63, 46, 0.08);
+}
+
+.empty-state {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px dashed rgba(96, 63, 46, 0.2);
+}
+
+.details-list {
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.details-list div {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(96, 63, 46, 0.08);
+}
+
+.details-list dt {
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9c5c42;
+}
+
+.details-list dd {
+  margin: 0;
+}
+
+.notice {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 0.75rem 0.75rem 3rem;
+  }
+
+  .tab-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
