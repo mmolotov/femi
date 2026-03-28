@@ -1,9 +1,11 @@
 import { NavLink, Route, Routes } from "react-router-dom";
 
+import { I18nProvider, useI18n } from "./i18n/I18nProvider";
 import { CalendarRoute } from "./routes/CalendarRoute";
 import { HistoryRoute } from "./routes/HistoryRoute";
 import { SettingsRoute } from "./routes/SettingsRoute";
 import { TodayRoute } from "./routes/TodayRoute";
+import { SessionProvider } from "./session/SessionProvider";
 
 type Tab = {
   to: string;
@@ -11,23 +13,21 @@ type Tab = {
   end?: boolean;
 };
 
-const tabs: Tab[] = [
-  { to: "/", label: "Today", end: true },
-  { to: "/calendar", label: "Calendar" },
-  { to: "/history", label: "History" },
-  { to: "/settings", label: "Settings" }
-];
+function AppShell() {
+  const { messages } = useI18n();
+  const tabs: Tab[] = [
+    { to: "/", label: messages.app.tabs.today, end: true },
+    { to: "/calendar", label: messages.app.tabs.calendar },
+    { to: "/history", label: messages.app.tabs.history },
+    { to: "/settings", label: messages.app.tabs.settings }
+  ];
 
-export function App() {
   return (
     <div className="app-shell">
       <header className="hero-card">
-        <p className="eyebrow">femi foundation</p>
-        <h1>Simple cycle tracking, built for calm daily use.</h1>
-        <p className="hero-copy">
-          Milestone 0 ships the Mini App shell, authentication path, navigation, settings baseline,
-          and backend connectivity.
-        </p>
+        <p className="eyebrow">{messages.app.eyebrow}</p>
+        <h1>{messages.app.heroTitle}</h1>
+        <p className="hero-copy">{messages.app.heroCopy}</p>
       </header>
 
       <nav className="tab-bar" aria-label="Primary">
@@ -52,5 +52,15 @@ export function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <I18nProvider>
+      <SessionProvider>
+        <AppShell />
+      </SessionProvider>
+    </I18nProvider>
   );
 }

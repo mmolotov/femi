@@ -19,4 +19,15 @@ describe("App shell", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
   });
+
+  it("renders the language selector on the settings screen", () => {
+    render(
+      <MemoryRouter initialEntries={["/settings"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("heading", { name: "Language" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Русский/i })).toBeInTheDocument();
+  });
 });
