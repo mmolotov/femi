@@ -20,6 +20,8 @@ The current implementation targets `Milestone 0: Foundation`:
 - Docker Compose deployment
 - Caddy reverse proxy
 - backup container scaffold
+- Telegram runtime bootstrap and frontend auth bootstrap
+- restore script for PostgreSQL backups
 
 ## Quality Tooling
 
@@ -104,6 +106,14 @@ pnpm dev:web
 - frontend: `http://localhost:5173`
 - backend health: `http://localhost:3001/api/health`
 
+Local Vite development now proxies `/api` and `/telegram` to `http://localhost:3001` by default.
+
+If you need a different backend target in local development, set:
+
+```bash
+VITE_BACKEND_URL=http://localhost:3001
+```
+
 ## E2E Notes
 
 `pnpm test:e2e` expects the frontend to be running locally at `http://127.0.0.1:4173`.
@@ -166,3 +176,39 @@ docker compose -f infrastructure/docker-compose.yml down
 docker compose -f infrastructure/docker-compose.yml build --no-cache
 docker compose -f infrastructure/docker-compose.yml up
 ```
+
+## Backup Restore
+
+The repository includes a restore script at `infrastructure/backup/restore-backup.sh`.
+
+Restore is intentionally explicit and requires:
+
+- `DATABASE_URL`
+- `S3_BACKUP_BUCKET`
+- `S3_BACKUP_ENDPOINT`
+- `S3_BACKUP_REGION`
+- `S3_BACKUP_ACCESS_KEY`
+- `S3_BACKUP_SECRET_KEY`
+- `BACKUP_OBJECT_KEY`
+- `CONFIRM_RESTORE=restore-femi`
+
+Example:
+
+```bash
+export DATABASE_URL=postgres://femi:femi@localhost:5432/femi_restore
+export S3_BACKUP_ENDPOINT=https://your-s3-endpoint.example
+export S3_BACKUP_BUCKET=femi-backups
+export S3_BACKUP_REGION=us-east-1
+export S3_BACKUP_ACCESS_KEY=replace-me
+export S3_BACKUP_SECRET_KEY=replace-me
+export BACKUP_OBJECT_KEY=femi-20260328T040000Z.sql.gz
+export CONFIRM_RESTORE=restore-femi
+
+./infrastructure/backup/restore-backup.sh
+```
+
+Recommended restore flow:
+
+1. Restore into a separate database, not the live production database.
+2. Verify that core tables such as `users`, `user_settings`, and `cycles` exist.
+3. Only then promote or copy data as part of an explicit recovery procedure.

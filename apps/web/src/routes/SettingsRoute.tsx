@@ -1,8 +1,24 @@
 import { Panel } from "../components/Panel";
 import { useI18n } from "../i18n/I18nProvider";
+import { useSession } from "../session/SessionProvider";
 
 export function SettingsRoute() {
   const { language, languages, messages, setLanguage } = useI18n();
+  const session = useSession();
+
+  const sessionStatusLabel =
+    session.status === "authenticated"
+      ? messages.settings.sessionAuthenticated
+      : session.status === "preview"
+        ? messages.settings.sessionPreview
+        : session.status === "error"
+          ? messages.settings.sessionError
+          : messages.settings.sessionAuthenticating;
+
+  const telegramAccountLabel =
+    (session.user?.username ??
+      [session.user?.firstName, session.user?.lastName].filter(Boolean).join(" ")) ||
+    messages.settings.telegramAccountFallback;
 
   return (
     <>
@@ -20,6 +36,40 @@ export function SettingsRoute() {
             <dt>{messages.settings.dataPosture}</dt>
             <dd>{messages.settings.dataPostureValue}</dd>
           </div>
+        </dl>
+      </Panel>
+
+      <Panel
+        description={messages.settings.integrationDescription}
+        title={messages.settings.integrationTitle}
+      >
+        <dl className="details-list">
+          <div>
+            <dt>{messages.settings.environment}</dt>
+            <dd>
+              {session.environment === "telegram"
+                ? messages.settings.environmentTelegram
+                : messages.settings.environmentBrowser}
+            </dd>
+          </div>
+          <div>
+            <dt>{messages.settings.sessionStatus}</dt>
+            <dd>{sessionStatusLabel}</dd>
+          </div>
+          <div>
+            <dt>{messages.settings.telegramAccount}</dt>
+            <dd>{telegramAccountLabel}</dd>
+          </div>
+          <div>
+            <dt>{messages.settings.telegramLanguage}</dt>
+            <dd>{session.user?.languageCode ?? messages.settings.telegramLanguageFallback}</dd>
+          </div>
+          {session.error ? (
+            <div>
+              <dt>{messages.settings.authErrorLabel}</dt>
+              <dd>{session.error}</dd>
+            </div>
+          ) : null}
         </dl>
       </Panel>
 

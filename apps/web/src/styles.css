@@ -196,6 +196,10 @@ select {
   margin: 0;
 }
 
+.panel .details-list {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
 .language-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));

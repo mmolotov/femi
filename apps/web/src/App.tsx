@@ -5,6 +5,7 @@ import { CalendarRoute } from "./routes/CalendarRoute";
 import { HistoryRoute } from "./routes/HistoryRoute";
 import { SettingsRoute } from "./routes/SettingsRoute";
 import { TodayRoute } from "./routes/TodayRoute";
+import { SessionProvider } from "./session/SessionProvider";
 
 type Tab = {
   to: string;
@@ -57,7 +58,9 @@ function AppShell() {
 export function App() {
   return (
     <I18nProvider>
-      <AppShell />
+      <SessionProvider>
+        <AppShell />
+      </SessionProvider>
     </I18nProvider>
   );
 }
