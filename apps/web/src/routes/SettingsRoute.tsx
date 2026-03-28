@@ -1,36 +1,54 @@
 import { Panel } from "../components/Panel";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function SettingsRoute() {
+  const { language, languages, messages, setLanguage } = useI18n();
+
   return (
     <>
-      <Panel
-        description="This page anchors the non-medical and privacy posture from the start."
-        title="Settings"
-      >
+      <Panel description={messages.settings.description} title={messages.settings.title}>
         <dl className="details-list">
           <div>
-            <dt>Product type</dt>
-            <dd>Personal tracking app, not a medical application.</dd>
+            <dt>{messages.settings.productType}</dt>
+            <dd>{messages.settings.productTypeValue}</dd>
           </div>
           <div>
-            <dt>Core model</dt>
-            <dd>Ad-free and no subscription gate for baseline functionality.</dd>
+            <dt>{messages.settings.coreModel}</dt>
+            <dd>{messages.settings.coreModelValue}</dd>
           </div>
           <div>
-            <dt>Data posture</dt>
-            <dd>No ads, no sale of personal data, no unrelated third-party sharing.</dd>
+            <dt>{messages.settings.dataPosture}</dt>
+            <dd>{messages.settings.dataPostureValue}</dd>
           </div>
         </dl>
       </Panel>
 
       <Panel
-        description="This copy matches the project disclaimer and should remain visible in the product."
-        title="Important notice"
+        description={messages.settings.languageDescription}
+        title={messages.settings.languageTitle}
       >
-        <p className="notice">
-          femi is not a medical app and does not provide medical advice, diagnosis, or treatment
-          recommendations.
-        </p>
+        <div className="language-grid" role="list">
+          {languages.map((option) => (
+            <button
+              key={option.code}
+              className={option.code === language ? "language-button active" : "language-button"}
+              onClick={() => {
+                setLanguage(option.code);
+              }}
+              type="button"
+            >
+              <span>{option.label}</span>
+              <span className="language-code">{option.code.toUpperCase()}</span>
+            </button>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel
+        description={messages.settings.importantNoticeDescription}
+        title={messages.settings.importantNoticeTitle}
+      >
+        <p className="notice">{messages.settings.importantNotice}</p>
       </Panel>
     </>
   );
