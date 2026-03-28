@@ -1,0 +1,60 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/apps/server"
+      - "/apps/web"
+      - "/packages/db"
+      - "/packages/shared"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Belgrade"
+    labels:
+      - "dependencies"
+      - "javascript"
+    open-pull-requests-limit: 10
+    groups:
+      runtime-dependencies:
+        dependency-type: "production"
+      tooling-dependencies:
+        dependency-type: "development"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/apps/server"
+      - "/apps/web"
+      - "/infrastructure/backup"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:15"
+      timezone: "Europe/Belgrade"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "docker-compose"
+    directory: "/infrastructure"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Europe/Belgrade"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:45"
+      timezone: "Europe/Belgrade"
+    labels:
+      - "dependencies"
+      - "github-actions"

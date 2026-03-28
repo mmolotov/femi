@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "project": ["*.ts", "*.mjs"]
+    },
+    "apps/server": {
+      "project": ["src/**/*.ts"]
+    },
+    "apps/web": {
+      "ignoreDependencies": ["@telegram-apps/sdk-react", "autoprefixer", "postcss", "tailwindcss"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/db": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/shared": {
+      "project": ["src/**/*.ts"]
+    }
+  }
+}
