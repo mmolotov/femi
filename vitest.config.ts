@@ -1,8 +1,16 @@
+import { fileURLToPath } from "node:url";
+
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  resolve: {
+    alias: {
+      "@femi/shared": fileURLToPath(new URL("./packages/shared/src/index.ts", import.meta.url)),
+      "@femi/db": fileURLToPath(new URL("./packages/db/src/index.ts", import.meta.url))
+    }
+  },
   test: {
     globals: false,
     include: ["apps/**/*.test.ts", "apps/**/*.test.tsx", "packages/**/*.test.ts"],
@@ -11,7 +19,6 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       reportsDirectory: "coverage",
-      include: ["apps/**/*.ts", "apps/**/*.tsx", "packages/**/*.ts"],
       exclude: [
         "**/dist/**",
         "**/*.d.ts",

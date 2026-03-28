@@ -12,8 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Detect dependency graph availability
+        id: dependency-graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          response="$(curl -fsSL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}")"
+
+          status="$(printf '%s' "${response}" | jq -r '.security_and_analysis.dependency_graph_status // "unknown"')"
+
+          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+
       - name: Checkout
+        if: steps.dependency-graph.outputs.status == 'enabled'
         uses: actions/checkout@v6
 
       - name: Dependency review
+        if: steps.dependency-graph.outputs.status == 'enabled'
         uses: actions/dependency-review-action@v4
+
+      - name: Dependency review unavailable
+        if: steps.dependency-graph.outputs.status != 'enabled'
+        run: |
+          echo "::notice title=Dependency review skipped::Enable Dependency graph in Settings > Security > Code security and analysis to run dependency review on pull requests."
