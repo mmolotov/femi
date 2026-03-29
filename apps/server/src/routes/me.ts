@@ -10,7 +10,6 @@ import type { FastifyInstance } from "fastify";
 
 import { AuthContextError, resolveAuthenticatedUser } from "../lib/auth-context.js";
 import type { AppEnv } from "../lib/env.js";
-import { createAuthenticatedRouteRateLimit } from "../lib/rate-limit.js";
 
 type MeRouteDeps = {
   db: Database;
@@ -34,9 +33,7 @@ function toSettingsResponse(settings: {
 }
 
 export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps): Promise<void> {
-  const authenticatedRouteRateLimit = createAuthenticatedRouteRateLimit(app);
-
-  app.get("/api/me", authenticatedRouteRateLimit, async (request, reply) => {
+  app.get("/api/me", async (request, reply) => {
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
 
@@ -57,7 +54,7 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
     }
   });
 
-  app.patch("/api/me/settings", authenticatedRouteRateLimit, async (request, reply) => {
+  app.patch("/api/me/settings", async (request, reply) => {
     const parsedBody = updateUserSettingsRequestSchema.safeParse(request.body);
 
     if (!parsedBody.success) {
