@@ -34,7 +34,7 @@ import { z } from "zod";
 
 import { AuthContextError, resolveAuthenticatedUser } from "../lib/auth-context.js";
 import type { AppEnv } from "../lib/env.js";
-import { authenticatedRouteRateLimit } from "../lib/rate-limit.js";
+import { createAuthenticatedRouteRateLimit } from "../lib/rate-limit.js";
 
 type CycleRouteDeps = {
   db: Database;
@@ -343,6 +343,8 @@ export async function registerCycleRoutes(
   app: FastifyInstance,
   deps: CycleRouteDeps
 ): Promise<void> {
+  const authenticatedRouteRateLimit = createAuthenticatedRouteRateLimit(app);
+
   app.get("/api/cycle/summary", authenticatedRouteRateLimit, async (request, reply) => {
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
