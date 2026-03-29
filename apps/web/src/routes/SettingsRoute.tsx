@@ -1,10 +1,34 @@
+import { useEffect, useState } from "react";
+
 import { Panel } from "../components/Panel";
+import { useAppData } from "../data/AppDataProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import { useSession } from "../session/SessionProvider";
 
 export function SettingsRoute() {
   const { language, languages, messages, setLanguage } = useI18n();
+  const { me, updateSettings } = useAppData();
   const session = useSession();
+  const [cycleLengthDays, setCycleLengthDays] = useState(me?.settings.cycleLengthDays ?? 28);
+  const [periodLengthDays, setPeriodLengthDays] = useState(me?.settings.periodLengthDays ?? 5);
+  const [timezone, setTimezone] = useState(
+    me?.settings.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+  const [remindersEnabled, setRemindersEnabled] = useState(me?.settings.remindersEnabled ?? true);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!me) {
+      return;
+    }
+
+    setCycleLengthDays(me.settings.cycleLengthDays);
+    setPeriodLengthDays(me.settings.periodLengthDays);
+    setTimezone(me.settings.timezone);
+    setRemindersEnabled(me.settings.remindersEnabled);
+  }, [me]);
 
   const sessionStatusLabel =
     session.status === "authenticated"
@@ -22,6 +46,94 @@ export function SettingsRoute() {
 
   return (
     <>
+      <Panel
+        description={messages.settings.preferencesDescription}
+        title={messages.settings.preferencesTitle}
+      >
+        <form
+          className="stack-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setIsSaving(true);
+            setSaveError(null);
+            setSaveSuccess(false);
+
+            void updateSettings({
+              cycleLengthDays,
+              periodLengthDays,
+              remindersEnabled,
+              timezone
+            })
+              .then(() => {
+                setSaveSuccess(true);
+              })
+              .catch((error) => {
+                setSaveError(error instanceof Error ? error.message : messages.settings.saveError);
+              })
+              .finally(() => {
+                setIsSaving(false);
+              });
+          }}
+        >
+          <div className="field-grid">
+            <label className="field">
+              <span>{messages.settings.cycleLengthLabel}</span>
+              <input
+                max={45}
+                min={20}
+                onChange={(event) => {
+                  setCycleLengthDays(Number(event.target.value));
+                }}
+                type="number"
+                value={cycleLengthDays}
+              />
+            </label>
+
+            <label className="field">
+              <span>{messages.settings.periodLengthLabel}</span>
+              <input
+                max={10}
+                min={2}
+                onChange={(event) => {
+                  setPeriodLengthDays(Number(event.target.value));
+                }}
+                type="number"
+                value={periodLengthDays}
+              />
+            </label>
+          </div>
+
+          <label className="field">
+            <span>{messages.settings.timezoneLabel}</span>
+            <input
+              onChange={(event) => {
+                setTimezone(event.target.value);
+              }}
+              type="text"
+              value={timezone}
+            />
+          </label>
+
+          <label className="toggle-field">
+            <input
+              checked={remindersEnabled}
+              onChange={(event) => {
+                setRemindersEnabled(event.target.checked);
+              }}
+              type="checkbox"
+            />
+            <span>{messages.settings.remindersEnabledLabel}</span>
+          </label>
+
+          {saveError ? <p className="inline-error">{saveError}</p> : null}
+          {saveSuccess ? <p className="inline-success">{messages.settings.saveSuccess}</p> : null}
+
+          <button className="primary-button" disabled={isSaving} type="submit">
+            {isSaving ? messages.settings.savePending : messages.settings.saveIdle}
+          </button>
+        </form>
+      </Panel>
+
       <Panel description={messages.settings.description} title={messages.settings.title}>
         <dl className="details-list">
           <div>
