@@ -1,3 +1,4 @@
+import fastifyRateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -25,6 +26,17 @@ vi.mock("../lib/auth-context.js", () => ({
 
 import { registerMeRoutes } from "./me.js";
 
+async function createTestApp(): Promise<FastifyInstance> {
+  const app = Fastify();
+
+  await app.register(fastifyRateLimit, {
+    global: false,
+    hook: "preHandler"
+  });
+
+  return app;
+}
+
 describe("me routes", () => {
   let app: FastifyInstance;
 
@@ -39,7 +51,7 @@ describe("me routes", () => {
   });
 
   it("returns the authenticated user profile", async () => {
-    app = Fastify();
+    app = await createTestApp();
     resolveAuthenticatedUserMock.mockResolvedValue({
       settings: {
         cycleLengthDays: 29,
@@ -105,7 +117,7 @@ describe("me routes", () => {
       set: setMock
     }));
 
-    app = Fastify();
+    app = await createTestApp();
     resolveAuthenticatedUserMock.mockResolvedValue({
       settings: {
         cycleLengthDays: 28,
@@ -164,7 +176,7 @@ describe("me routes", () => {
   });
 
   it("rejects an invalid settings payload", async () => {
-    app = Fastify();
+    app = await createTestApp();
 
     await registerMeRoutes(app, {
       db: {} as never,
@@ -181,5 +193,53 @@ describe("me routes", () => {
 
     expect(response.statusCode).toBe(400);
     expect(resolveAuthenticatedUserMock).not.toHaveBeenCalled();
+  });
+
+  it("rate limits repeated access to authenticated endpoints", async () => {
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 29,
+        onboardingCompleted: false,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {} as never,
+      env: {} as never
+    });
+
+    for (let index = 0; index < 60; index += 1) {
+      const response = await app.inject({
+        headers: {
+          "x-telegram-init-data": "stub"
+        },
+        method: "GET",
+        url: "/api/me"
+      });
+
+      expect(response.statusCode).toBe(200);
+    }
+
+    const blockedResponse = await app.inject({
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "GET",
+      url: "/api/me"
+    });
+
+    expect(blockedResponse.statusCode).toBe(429);
   });
 });

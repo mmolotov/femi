@@ -34,6 +34,7 @@ import { z } from "zod";
 
 import { AuthContextError, resolveAuthenticatedUser } from "../lib/auth-context.js";
 import type { AppEnv } from "../lib/env.js";
+import { authenticatedRouteRateLimit } from "../lib/rate-limit.js";
 
 type CycleRouteDeps = {
   db: Database;
@@ -342,7 +343,7 @@ export async function registerCycleRoutes(
   app: FastifyInstance,
   deps: CycleRouteDeps
 ): Promise<void> {
-  app.get("/api/cycle/summary", async (request, reply) => {
+  app.get("/api/cycle/summary", authenticatedRouteRateLimit, async (request, reply) => {
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
       const { summary } = await loadSummaryData(
@@ -367,7 +368,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.get("/api/calendar", async (request, reply) => {
+  app.get("/api/calendar", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedQuery = calendarQuerySchema.safeParse(request.query);
 
     if (!parsedQuery.success) {
@@ -474,7 +475,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.get("/api/history", async (request, reply) => {
+  app.get("/api/history", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedQuery = historyQuerySchema.safeParse(request.query);
 
     if (!parsedQuery.success) {
@@ -621,7 +622,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.get("/api/checkins/:date", async (request, reply) => {
+  app.get("/api/checkins/:date", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedParams = dateParamsSchema.safeParse(request.params);
 
     if (!parsedParams.success) {
@@ -688,7 +689,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.put("/api/checkins/:date", async (request, reply) => {
+  app.put("/api/checkins/:date", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedParams = dateParamsSchema.safeParse(request.params);
     const parsedBody = dailyCheckinRequestSchema.safeParse(request.body);
 
@@ -794,7 +795,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.post("/api/period/log", async (request, reply) => {
+  app.post("/api/period/log", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedBody = periodLogRequestSchema.safeParse(request.body);
 
     if (!parsedBody.success) {
@@ -834,7 +835,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.post("/api/period/start", async (request, reply) => {
+  app.post("/api/period/start", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedBody = periodStartRequestSchema.safeParse(request.body);
 
     if (!parsedBody.success) {
@@ -904,7 +905,7 @@ export async function registerCycleRoutes(
     }
   });
 
-  app.post("/api/period/end", async (request, reply) => {
+  app.post("/api/period/end", authenticatedRouteRateLimit, async (request, reply) => {
     const parsedBody = periodEndRequestSchema.safeParse(request.body);
 
     if (!parsedBody.success) {

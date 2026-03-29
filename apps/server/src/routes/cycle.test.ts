@@ -1,3 +1,4 @@
+import fastifyRateLimit from "@fastify/rate-limit";
 import Fastify, { type FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -44,6 +45,17 @@ function createSelectBuilder<T>(rows: T[]) {
   };
 }
 
+async function createTestApp(): Promise<FastifyInstance> {
+  const app = Fastify();
+
+  await app.register(fastifyRateLimit, {
+    global: false,
+    hook: "preHandler"
+  });
+
+  return app;
+}
+
 describe("cycle routes", () => {
   let app: FastifyInstance;
 
@@ -58,7 +70,7 @@ describe("cycle routes", () => {
   });
 
   it("returns a cycle summary for the authenticated user", async () => {
-    app = Fastify();
+    app = await createTestApp();
     resolveAuthenticatedUserMock.mockResolvedValue({
       settings: {
         cycleLengthDays: 28,
@@ -118,7 +130,7 @@ describe("cycle routes", () => {
   });
 
   it("rejects an invalid calendar query before hitting the database", async () => {
-    app = Fastify();
+    app = await createTestApp();
 
     await registerCycleRoutes(app, {
       db: {
@@ -137,7 +149,7 @@ describe("cycle routes", () => {
   });
 
   it("rejects an invalid daily check-in payload before auth lookup", async () => {
-    app = Fastify();
+    app = await createTestApp();
 
     await registerCycleRoutes(app, {
       db: {
@@ -157,7 +169,7 @@ describe("cycle routes", () => {
   });
 
   it("rejects starting a new period while a previous cycle is still open", async () => {
-    app = Fastify();
+    app = await createTestApp();
     resolveAuthenticatedUserMock.mockResolvedValue({
       settings: {
         cycleLengthDays: 28,
@@ -213,7 +225,7 @@ describe("cycle routes", () => {
   });
 
   it("rejects ending a period when no open cycle exists", async () => {
-    app = Fastify();
+    app = await createTestApp();
     resolveAuthenticatedUserMock.mockResolvedValue({
       settings: {
         cycleLengthDays: 28,
