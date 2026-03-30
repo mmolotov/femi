@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import {
+  baseMessages,
   type Messages,
   type SupportedLanguage,
   languageOptions,
@@ -40,6 +41,38 @@ type TelegramWindow = Window & {
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
+
+function mergeMessages<T extends Record<string, unknown>>(base: T, override?: unknown): T {
+  if (!override || typeof override !== "object") {
+    return base;
+  }
+
+  const result = { ...base } as Record<string, unknown>;
+
+  for (const [key, value] of Object.entries(override)) {
+    const baseValue = result[key];
+
+    if (Array.isArray(value)) {
+      result[key] = value;
+      continue;
+    }
+
+    if (
+      value &&
+      typeof value === "object" &&
+      baseValue &&
+      typeof baseValue === "object" &&
+      !Array.isArray(baseValue)
+    ) {
+      result[key] = mergeMessages(baseValue as Record<string, unknown>, value);
+      continue;
+    }
+
+    result[key] = value;
+  }
+
+  return result as T;
+}
 
 function normalizeLanguage(value?: string | null): SupportedLanguage | null {
   if (!value) {
@@ -99,7 +132,7 @@ export function I18nProvider({ children }: PropsWithChildren) {
         direction,
         language,
         languages: languageOptions,
-        messages: translations[language],
+        messages: mergeMessages(baseMessages, translations[language]) as Messages,
         setLanguage
       }}
     >

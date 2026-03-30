@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar
 } from "drizzle-orm/pg-core";
@@ -35,56 +36,94 @@ export const userSettings = pgTable("user_settings", {
   periodLengthDays: integer("period_length_days").default(5).notNull(),
   timezone: varchar("timezone", { length: 64 }).default("UTC").notNull(),
   remindersEnabled: boolean("reminders_enabled").default(true).notNull(),
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
   ...timestamps
 });
 
-export const cycles = pgTable("cycles", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  startedOn: timestamp("started_on", { mode: "date" }).notNull(),
-  endedOn: timestamp("ended_on", { mode: "date" }),
-  predicted: boolean("predicted").default(false).notNull(),
-  ...timestamps
-});
+export const cycles = pgTable(
+  "cycles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    startedOn: timestamp("started_on", { mode: "date" }).notNull(),
+    endedOn: timestamp("ended_on", { mode: "date" }),
+    predicted: boolean("predicted").default(false).notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    userStartedOnUniqueIdx: uniqueIndex("cycles_user_started_on_idx").on(
+      table.userId,
+      table.startedOn
+    )
+  })
+);
 
-export const periodLogs = pgTable("period_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
-  flowLevel: integer("flow_level"),
-  notes: text("notes"),
-  ...timestamps
-});
+export const periodLogs = pgTable(
+  "period_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+    flowLevel: integer("flow_level"),
+    notes: text("notes"),
+    ...timestamps
+  },
+  (table) => ({
+    userHappenedOnUniqueIdx: uniqueIndex("period_logs_user_happened_on_idx").on(
+      table.userId,
+      table.happenedOn
+    )
+  })
+);
 
-export const dailyCheckins = pgTable("daily_checkins", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
-  mood: integer("mood"),
-  energy: integer("energy"),
-  painLevel: integer("pain_level"),
-  discharge: varchar("discharge", { length: 64 }),
-  sleepQuality: integer("sleep_quality"),
-  note: text("note"),
-  ...timestamps
-});
+export const dailyCheckins = pgTable(
+  "daily_checkins",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+    mood: integer("mood"),
+    energy: integer("energy"),
+    painLevel: integer("pain_level"),
+    discharge: varchar("discharge", { length: 64 }),
+    sleepQuality: integer("sleep_quality"),
+    note: text("note"),
+    ...timestamps
+  },
+  (table) => ({
+    userHappenedOnUniqueIdx: uniqueIndex("daily_checkins_user_happened_on_idx").on(
+      table.userId,
+      table.happenedOn
+    )
+  })
+);
 
-export const symptomLogs = pgTable("symptom_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
-  symptomKey: varchar("symptom_key", { length: 64 }).notNull(),
-  severity: integer("severity"),
-  ...timestamps
-});
+export const symptomLogs = pgTable(
+  "symptom_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+    symptomKey: varchar("symptom_key", { length: 64 }).notNull(),
+    severity: integer("severity"),
+    ...timestamps
+  },
+  (table) => ({
+    userHappenedOnSymptomUniqueIdx: uniqueIndex("symptom_logs_user_happened_on_symptom_idx").on(
+      table.userId,
+      table.happenedOn,
+      table.symptomKey
+    )
+  })
+);
 
 export const notes = pgTable("notes", {
   id: uuid("id").defaultRandom().primaryKey(),
