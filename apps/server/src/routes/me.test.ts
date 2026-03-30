@@ -30,10 +30,8 @@ async function createTestApp(): Promise<FastifyInstance> {
   const app = Fastify();
 
   await app.register(fastifyRateLimit, {
-    global: true,
-    hook: "preHandler",
-    max: 60,
-    timeWindow: "1 minute"
+    global: false,
+    hook: "preHandler"
   });
 
   return app;
@@ -222,12 +220,13 @@ describe("me routes", () => {
       env: {} as never
     });
 
-    for (let index = 0; index < 60; index += 1) {
+    for (let index = 0; index < 100; index += 1) {
       const response = await app.inject({
         headers: {
           "x-telegram-init-data": "stub"
         },
         method: "GET",
+        remoteAddress: "127.0.0.1",
         url: "/api/me"
       });
 
@@ -239,6 +238,7 @@ describe("me routes", () => {
         "x-telegram-init-data": "stub"
       },
       method: "GET",
+      remoteAddress: "127.0.0.1",
       url: "/api/me"
     });
 

@@ -342,330 +342,487 @@ export async function registerCycleRoutes(
   app: FastifyInstance,
   deps: CycleRouteDeps
 ): Promise<void> {
-  app.get("/api/cycle/summary", async (request, reply) => {
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const { summary } = await loadSummaryData(
-        deps.db,
-        authenticatedUser.user.id,
-        authenticatedUser.settings
-      );
-
-      return reply.send(
-        cycleSummaryResponseSchema.parse({
-          summary
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
-        });
-      }
-
-      throw error;
-    }
-  });
-
-  app.get("/api/calendar", async (request, reply) => {
-    const parsedQuery = calendarQuerySchema.safeParse(request.query);
-
-    if (!parsedQuery.success) {
-      return reply.code(400).send({
-        error: "Invalid calendar query."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const { averagePeriodLengthDays, summary } = await loadSummaryData(
-        deps.db,
-        authenticatedUser.user.id,
-        authenticatedUser.settings
-      );
-      const range = getMonthRange(parsedQuery.data.month);
-
-      const [periodRows, symptomRows] = await Promise.all([
-        deps.db
-          .select({
-            flowLevel: periodLogs.flowLevel,
-            happenedOn: periodLogs.happenedOn
-          })
-          .from(periodLogs)
-          .where(
-            and(
-              eq(periodLogs.userId, authenticatedUser.user.id),
-              gte(periodLogs.happenedOn, parseIsoDate(range.start)),
-              lte(periodLogs.happenedOn, parseIsoDate(range.end))
-            )
-          )
-          .orderBy(asc(periodLogs.happenedOn)),
-        deps.db
-          .select({
-            happenedOn: symptomLogs.happenedOn,
-            symptomKey: symptomLogs.symptomKey
-          })
-          .from(symptomLogs)
-          .where(
-            and(
-              eq(symptomLogs.userId, authenticatedUser.user.id),
-              gte(symptomLogs.happenedOn, parseIsoDate(range.start)),
-              lte(symptomLogs.happenedOn, parseIsoDate(range.end))
-            )
-          )
-          .orderBy(asc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey))
-      ]);
-
-      const markerMap = new Map<
-        string,
-        {
-          flowIntensity: FlowIntensity | null;
-          symptomKeys: SymptomKey[];
+  app.get(
+    "/api/cycle/summary",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
         }
-      >();
-
-      for (const row of periodRows) {
-        const date = formatIsoDate(row.happenedOn);
-
-        markerMap.set(date, {
-          flowIntensity: levelToFlowIntensity(row.flowLevel),
-          symptomKeys: markerMap.get(date)?.symptomKeys ?? []
-        });
       }
+    },
+    async (request, reply) => {
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+        const { summary } = await loadSummaryData(
+          deps.db,
+          authenticatedUser.user.id,
+          authenticatedUser.settings
+        );
 
-      for (const row of symptomRows) {
-        const date = formatIsoDate(row.happenedOn);
-        const existing = markerMap.get(date) ?? {
-          flowIntensity: null,
-          symptomKeys: []
-        };
-
-        markerMap.set(date, {
-          ...existing,
-          symptomKeys: [...existing.symptomKeys, row.symptomKey as SymptomKey]
-        });
-      }
-
-      return reply.send(
-        calendarResponseSchema.parse({
-          days: buildCalendarMonthDays({
-            currentCycleStart: summary.latestPeriodStart,
-            month: parsedQuery.data.month,
-            periodDays: Array.from(markerMap.entries()).map(([date, value]) => ({
-              date,
-              flowIntensity: value.flowIntensity,
-              symptomKeys: value.symptomKeys
-            })),
-            predictedNextPeriodStart: summary.predictedNextPeriodStart,
-            predictedPeriodLengthDays: averagePeriodLengthDays,
-            today: summary.today
-          }),
-          month: parsedQuery.data.month
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
-        });
-      }
-
-      throw error;
-    }
-  });
-
-  app.get("/api/history", async (request, reply) => {
-    const parsedQuery = historyQuerySchema.safeParse(request.query);
-
-    if (!parsedQuery.success) {
-      return reply.code(400).send({
-        error: "Invalid history query."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const limit = parsedQuery.data.limit ?? 30;
-      const [checkinRows, periodRows, symptomRows, cycleRows] = await Promise.all([
-        deps.db
-          .select({
-            discharge: dailyCheckins.discharge,
-            energy: dailyCheckins.energy,
-            happenedOn: dailyCheckins.happenedOn,
-            mood: dailyCheckins.mood,
-            note: dailyCheckins.note,
-            painLevel: dailyCheckins.painLevel,
-            sleepQuality: dailyCheckins.sleepQuality
-          })
-          .from(dailyCheckins)
-          .where(eq(dailyCheckins.userId, authenticatedUser.user.id))
-          .orderBy(desc(dailyCheckins.happenedOn))
-          .limit(limit),
-        deps.db
-          .select({
-            flowLevel: periodLogs.flowLevel,
-            happenedOn: periodLogs.happenedOn,
-            notes: periodLogs.notes
-          })
-          .from(periodLogs)
-          .where(eq(periodLogs.userId, authenticatedUser.user.id))
-          .orderBy(desc(periodLogs.happenedOn))
-          .limit(limit),
-        deps.db
-          .select({
-            happenedOn: symptomLogs.happenedOn,
-            symptomKey: symptomLogs.symptomKey
-          })
-          .from(symptomLogs)
-          .where(eq(symptomLogs.userId, authenticatedUser.user.id))
-          .orderBy(desc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey))
-          .limit(limit * 8),
-        loadCycleRows(deps.db, authenticatedUser.user.id)
-      ]);
-
-      const dayMap = new Map<
-        string,
-        {
-          checkin: DailyCheckinEntry | null;
-          period: PeriodLogEntry | null;
-          symptomKeys: SymptomKey[];
-        }
-      >();
-
-      for (const row of symptomRows) {
-        const date = formatIsoDate(row.happenedOn);
-        const existing = dayMap.get(date) ?? {
-          checkin: null,
-          period: null,
-          symptomKeys: []
-        };
-
-        dayMap.set(date, {
-          ...existing,
-          symptomKeys: [...existing.symptomKeys, row.symptomKey as SymptomKey]
-        });
-      }
-
-      for (const row of checkinRows) {
-        const date = formatIsoDate(row.happenedOn);
-        const existing = dayMap.get(date) ?? {
-          checkin: null,
-          period: null,
-          symptomKeys: []
-        };
-
-        dayMap.set(date, {
-          ...existing,
-          checkin: dailyCheckinEntrySchema.parse({
-            date,
-            discharge: row.discharge,
-            energy: row.energy,
-            mood: row.mood,
-            note: row.note,
-            painLevel: row.painLevel,
-            sleepQuality: row.sleepQuality,
-            symptomKeys: existing.symptomKeys
-          })
-        });
-      }
-
-      for (const row of periodRows) {
-        const date = formatIsoDate(row.happenedOn);
-        const existing = dayMap.get(date) ?? {
-          checkin: null,
-          period: null,
-          symptomKeys: []
-        };
-
-        dayMap.set(date, {
-          ...existing,
-          period: periodLogEntrySchema.parse({
-            cycleEnded: cycleRows.some((cycleRow) => toIsoDate(cycleRow.endedOn) === date),
-            cycleStarted: cycleRows.some((cycleRow) => formatIsoDate(cycleRow.startedOn) === date),
-            date,
-            flowIntensity: levelToFlowIntensity(row.flowLevel),
-            note: row.notes
-          })
-        });
-      }
-
-      const days = Array.from(dayMap.entries())
-        .sort(([left], [right]) => (left < right ? 1 : left > right ? -1 : 0))
-        .slice(0, limit)
-        .map(([date, value]) => ({
-          checkin:
-            value.checkin === null
-              ? null
-              : dailyCheckinEntrySchema.parse({
-                  ...value.checkin,
-                  symptomKeys: value.symptomKeys
-                }),
-          date,
-          period: value.period,
-          symptomKeys: value.symptomKeys
-        }));
-
-      return reply.send(
-        historyResponseSchema.parse({
-          days
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
-        });
-      }
-
-      throw error;
-    }
-  });
-
-  app.get("/api/checkins/:date", async (request, reply) => {
-    const parsedParams = dateParamsSchema.safeParse(request.params);
-
-    if (!parsedParams.success) {
-      return reply.code(400).send({
-        error: "Invalid check-in date."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const [checkinRow, symptomKeys] = await Promise.all([
-        deps.db
-          .select({
-            discharge: dailyCheckins.discharge,
-            energy: dailyCheckins.energy,
-            happenedOn: dailyCheckins.happenedOn,
-            mood: dailyCheckins.mood,
-            note: dailyCheckins.note,
-            painLevel: dailyCheckins.painLevel,
-            sleepQuality: dailyCheckins.sleepQuality
-          })
-          .from(dailyCheckins)
-          .where(
-            and(
-              eq(dailyCheckins.userId, authenticatedUser.user.id),
-              eq(dailyCheckins.happenedOn, parseIsoDate(parsedParams.data.date))
-            )
-          )
-          .limit(1)
-          .then((rows) => rows[0] ?? null),
-        loadSymptomKeys(deps.db, authenticatedUser.user.id, parsedParams.data.date)
-      ]);
-
-      if (!checkinRow) {
         return reply.send(
-          dailyCheckinResponseSchema.parse({
-            entry: null
+          cycleSummaryResponseSchema.parse({
+            summary
           })
         );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.get(
+    "/api/calendar",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedQuery = calendarQuerySchema.safeParse(request.query);
+
+      if (!parsedQuery.success) {
+        return reply.code(400).send({
+          error: "Invalid calendar query."
+        });
       }
 
-      return reply.send(
-        dailyCheckinResponseSchema.parse({
-          entry: {
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+        const { averagePeriodLengthDays, summary } = await loadSummaryData(
+          deps.db,
+          authenticatedUser.user.id,
+          authenticatedUser.settings
+        );
+        const range = getMonthRange(parsedQuery.data.month);
+
+        const [periodRows, symptomRows] = await Promise.all([
+          deps.db
+            .select({
+              flowLevel: periodLogs.flowLevel,
+              happenedOn: periodLogs.happenedOn
+            })
+            .from(periodLogs)
+            .where(
+              and(
+                eq(periodLogs.userId, authenticatedUser.user.id),
+                gte(periodLogs.happenedOn, parseIsoDate(range.start)),
+                lte(periodLogs.happenedOn, parseIsoDate(range.end))
+              )
+            )
+            .orderBy(asc(periodLogs.happenedOn)),
+          deps.db
+            .select({
+              happenedOn: symptomLogs.happenedOn,
+              symptomKey: symptomLogs.symptomKey
+            })
+            .from(symptomLogs)
+            .where(
+              and(
+                eq(symptomLogs.userId, authenticatedUser.user.id),
+                gte(symptomLogs.happenedOn, parseIsoDate(range.start)),
+                lte(symptomLogs.happenedOn, parseIsoDate(range.end))
+              )
+            )
+            .orderBy(asc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey))
+        ]);
+
+        const markerMap = new Map<
+          string,
+          {
+            flowIntensity: FlowIntensity | null;
+            symptomKeys: SymptomKey[];
+          }
+        >();
+
+        for (const row of periodRows) {
+          const date = formatIsoDate(row.happenedOn);
+
+          markerMap.set(date, {
+            flowIntensity: levelToFlowIntensity(row.flowLevel),
+            symptomKeys: markerMap.get(date)?.symptomKeys ?? []
+          });
+        }
+
+        for (const row of symptomRows) {
+          const date = formatIsoDate(row.happenedOn);
+          const existing = markerMap.get(date) ?? {
+            flowIntensity: null,
+            symptomKeys: []
+          };
+
+          markerMap.set(date, {
+            ...existing,
+            symptomKeys: [...existing.symptomKeys, row.symptomKey as SymptomKey]
+          });
+        }
+
+        return reply.send(
+          calendarResponseSchema.parse({
+            days: buildCalendarMonthDays({
+              currentCycleStart: summary.latestPeriodStart,
+              month: parsedQuery.data.month,
+              periodDays: Array.from(markerMap.entries()).map(([date, value]) => ({
+                date,
+                flowIntensity: value.flowIntensity,
+                symptomKeys: value.symptomKeys
+              })),
+              predictedNextPeriodStart: summary.predictedNextPeriodStart,
+              predictedPeriodLengthDays: averagePeriodLengthDays,
+              today: summary.today
+            }),
+            month: parsedQuery.data.month
+          })
+        );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.get(
+    "/api/history",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedQuery = historyQuerySchema.safeParse(request.query);
+
+      if (!parsedQuery.success) {
+        return reply.code(400).send({
+          error: "Invalid history query."
+        });
+      }
+
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+        const limit = parsedQuery.data.limit ?? 30;
+        const [checkinRows, periodRows, symptomRows, cycleRows] = await Promise.all([
+          deps.db
+            .select({
+              discharge: dailyCheckins.discharge,
+              energy: dailyCheckins.energy,
+              happenedOn: dailyCheckins.happenedOn,
+              mood: dailyCheckins.mood,
+              note: dailyCheckins.note,
+              painLevel: dailyCheckins.painLevel,
+              sleepQuality: dailyCheckins.sleepQuality
+            })
+            .from(dailyCheckins)
+            .where(eq(dailyCheckins.userId, authenticatedUser.user.id))
+            .orderBy(desc(dailyCheckins.happenedOn))
+            .limit(limit),
+          deps.db
+            .select({
+              flowLevel: periodLogs.flowLevel,
+              happenedOn: periodLogs.happenedOn,
+              notes: periodLogs.notes
+            })
+            .from(periodLogs)
+            .where(eq(periodLogs.userId, authenticatedUser.user.id))
+            .orderBy(desc(periodLogs.happenedOn))
+            .limit(limit),
+          deps.db
+            .select({
+              happenedOn: symptomLogs.happenedOn,
+              symptomKey: symptomLogs.symptomKey
+            })
+            .from(symptomLogs)
+            .where(eq(symptomLogs.userId, authenticatedUser.user.id))
+            .orderBy(desc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey))
+            .limit(limit * 8),
+          loadCycleRows(deps.db, authenticatedUser.user.id)
+        ]);
+
+        const dayMap = new Map<
+          string,
+          {
+            checkin: DailyCheckinEntry | null;
+            period: PeriodLogEntry | null;
+            symptomKeys: SymptomKey[];
+          }
+        >();
+
+        for (const row of symptomRows) {
+          const date = formatIsoDate(row.happenedOn);
+          const existing = dayMap.get(date) ?? {
+            checkin: null,
+            period: null,
+            symptomKeys: []
+          };
+
+          dayMap.set(date, {
+            ...existing,
+            symptomKeys: [...existing.symptomKeys, row.symptomKey as SymptomKey]
+          });
+        }
+
+        for (const row of checkinRows) {
+          const date = formatIsoDate(row.happenedOn);
+          const existing = dayMap.get(date) ?? {
+            checkin: null,
+            period: null,
+            symptomKeys: []
+          };
+
+          dayMap.set(date, {
+            ...existing,
+            checkin: dailyCheckinEntrySchema.parse({
+              date,
+              discharge: row.discharge,
+              energy: row.energy,
+              mood: row.mood,
+              note: row.note,
+              painLevel: row.painLevel,
+              sleepQuality: row.sleepQuality,
+              symptomKeys: existing.symptomKeys
+            })
+          });
+        }
+
+        for (const row of periodRows) {
+          const date = formatIsoDate(row.happenedOn);
+          const existing = dayMap.get(date) ?? {
+            checkin: null,
+            period: null,
+            symptomKeys: []
+          };
+
+          dayMap.set(date, {
+            ...existing,
+            period: periodLogEntrySchema.parse({
+              cycleEnded: cycleRows.some((cycleRow) => toIsoDate(cycleRow.endedOn) === date),
+              cycleStarted: cycleRows.some(
+                (cycleRow) => formatIsoDate(cycleRow.startedOn) === date
+              ),
+              date,
+              flowIntensity: levelToFlowIntensity(row.flowLevel),
+              note: row.notes
+            })
+          });
+        }
+
+        const days = Array.from(dayMap.entries())
+          .sort(([left], [right]) => (left < right ? 1 : left > right ? -1 : 0))
+          .slice(0, limit)
+          .map(([date, value]) => ({
+            checkin:
+              value.checkin === null
+                ? null
+                : dailyCheckinEntrySchema.parse({
+                    ...value.checkin,
+                    symptomKeys: value.symptomKeys
+                  }),
+            date,
+            period: value.period,
+            symptomKeys: value.symptomKeys
+          }));
+
+        return reply.send(
+          historyResponseSchema.parse({
+            days
+          })
+        );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.get(
+    "/api/checkins/:date",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedParams = dateParamsSchema.safeParse(request.params);
+
+      if (!parsedParams.success) {
+        return reply.code(400).send({
+          error: "Invalid check-in date."
+        });
+      }
+
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+        const [checkinRow, symptomKeys] = await Promise.all([
+          deps.db
+            .select({
+              discharge: dailyCheckins.discharge,
+              energy: dailyCheckins.energy,
+              happenedOn: dailyCheckins.happenedOn,
+              mood: dailyCheckins.mood,
+              note: dailyCheckins.note,
+              painLevel: dailyCheckins.painLevel,
+              sleepQuality: dailyCheckins.sleepQuality
+            })
+            .from(dailyCheckins)
+            .where(
+              and(
+                eq(dailyCheckins.userId, authenticatedUser.user.id),
+                eq(dailyCheckins.happenedOn, parseIsoDate(parsedParams.data.date))
+              )
+            )
+            .limit(1)
+            .then((rows) => rows[0] ?? null),
+          loadSymptomKeys(deps.db, authenticatedUser.user.id, parsedParams.data.date)
+        ]);
+
+        if (!checkinRow) {
+          return reply.send(
+            dailyCheckinResponseSchema.parse({
+              entry: null
+            })
+          );
+        }
+
+        return reply.send(
+          dailyCheckinResponseSchema.parse({
+            entry: {
+              date: parsedParams.data.date,
+              discharge: checkinRow.discharge,
+              energy: checkinRow.energy,
+              mood: checkinRow.mood,
+              note: checkinRow.note,
+              painLevel: checkinRow.painLevel,
+              sleepQuality: checkinRow.sleepQuality,
+              symptomKeys
+            }
+          })
+        );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.put(
+    "/api/checkins/:date",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedParams = dateParamsSchema.safeParse(request.params);
+      const parsedBody = dailyCheckinRequestSchema.safeParse(request.body);
+
+      if (!parsedParams.success || !parsedBody.success) {
+        return reply.code(400).send({
+          error: "Invalid check-in payload."
+        });
+      }
+
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+        const happenedOn = parseIsoDate(parsedParams.data.date);
+
+        const entry = await deps.db.transaction(async (transaction) => {
+          const existingRow = await transaction
+            .select({
+              discharge: dailyCheckins.discharge,
+              energy: dailyCheckins.energy,
+              mood: dailyCheckins.mood,
+              note: dailyCheckins.note,
+              painLevel: dailyCheckins.painLevel,
+              sleepQuality: dailyCheckins.sleepQuality
+            })
+            .from(dailyCheckins)
+            .where(
+              and(
+                eq(dailyCheckins.userId, authenticatedUser.user.id),
+                eq(dailyCheckins.happenedOn, happenedOn)
+              )
+            )
+            .limit(1)
+            .then((rows) => rows[0] ?? null);
+
+          const nextValues = {
+            discharge: parsedBody.data.discharge ?? existingRow?.discharge ?? null,
+            energy: parsedBody.data.energy ?? existingRow?.energy ?? null,
+            mood: parsedBody.data.mood ?? existingRow?.mood ?? null,
+            note:
+              parsedBody.data.note !== undefined
+                ? parsedBody.data.note.trim().length > 0
+                  ? parsedBody.data.note
+                  : null
+                : (existingRow?.note ?? null),
+            painLevel: parsedBody.data.painLevel ?? existingRow?.painLevel ?? null,
+            sleepQuality: parsedBody.data.sleepQuality ?? existingRow?.sleepQuality ?? null
+          };
+
+          const [checkinRow] = await transaction
+            .insert(dailyCheckins)
+            .values({
+              happenedOn,
+              ...nextValues,
+              userId: authenticatedUser.user.id
+            })
+            .onConflictDoUpdate({
+              set: {
+                ...nextValues,
+                updatedAt: new Date()
+              },
+              target: [dailyCheckins.userId, dailyCheckins.happenedOn]
+            })
+            .returning({
+              discharge: dailyCheckins.discharge,
+              energy: dailyCheckins.energy,
+              mood: dailyCheckins.mood,
+              note: dailyCheckins.note,
+              painLevel: dailyCheckins.painLevel,
+              sleepQuality: dailyCheckins.sleepQuality
+            });
+
+          await syncSymptomKeys(
+            transaction,
+            authenticatedUser.user.id,
+            parsedParams.data.date,
+            parsedBody.data.symptomKeys
+          );
+
+          return {
             date: parsedParams.data.date,
             discharge: checkinRow.discharge,
             energy: checkinRow.energy,
@@ -673,303 +830,236 @@ export async function registerCycleRoutes(
             note: checkinRow.note,
             painLevel: checkinRow.painLevel,
             sleepQuality: checkinRow.sleepQuality,
-            symptomKeys
-          }
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
+            symptomKeys: [...parsedBody.data.symptomKeys]
+          };
         });
-      }
 
-      throw error;
-    }
-  });
-
-  app.put("/api/checkins/:date", async (request, reply) => {
-    const parsedParams = dateParamsSchema.safeParse(request.params);
-    const parsedBody = dailyCheckinRequestSchema.safeParse(request.body);
-
-    if (!parsedParams.success || !parsedBody.success) {
-      return reply.code(400).send({
-        error: "Invalid check-in payload."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const happenedOn = parseIsoDate(parsedParams.data.date);
-
-      const entry = await deps.db.transaction(async (transaction) => {
-        const existingRow = await transaction
-          .select({
-            discharge: dailyCheckins.discharge,
-            energy: dailyCheckins.energy,
-            mood: dailyCheckins.mood,
-            note: dailyCheckins.note,
-            painLevel: dailyCheckins.painLevel,
-            sleepQuality: dailyCheckins.sleepQuality
+        return reply.send(
+          dailyCheckinResponseSchema.parse({
+            entry
           })
-          .from(dailyCheckins)
-          .where(
-            and(
-              eq(dailyCheckins.userId, authenticatedUser.user.id),
-              eq(dailyCheckins.happenedOn, happenedOn)
-            )
-          )
-          .limit(1)
-          .then((rows) => rows[0] ?? null);
-
-        const nextValues = {
-          discharge: parsedBody.data.discharge ?? existingRow?.discharge ?? null,
-          energy: parsedBody.data.energy ?? existingRow?.energy ?? null,
-          mood: parsedBody.data.mood ?? existingRow?.mood ?? null,
-          note:
-            parsedBody.data.note !== undefined
-              ? parsedBody.data.note.trim().length > 0
-                ? parsedBody.data.note
-                : null
-              : (existingRow?.note ?? null),
-          painLevel: parsedBody.data.painLevel ?? existingRow?.painLevel ?? null,
-          sleepQuality: parsedBody.data.sleepQuality ?? existingRow?.sleepQuality ?? null
-        };
-
-        const [checkinRow] = await transaction
-          .insert(dailyCheckins)
-          .values({
-            happenedOn,
-            ...nextValues,
-            userId: authenticatedUser.user.id
-          })
-          .onConflictDoUpdate({
-            set: {
-              ...nextValues,
-              updatedAt: new Date()
-            },
-            target: [dailyCheckins.userId, dailyCheckins.happenedOn]
-          })
-          .returning({
-            discharge: dailyCheckins.discharge,
-            energy: dailyCheckins.energy,
-            mood: dailyCheckins.mood,
-            note: dailyCheckins.note,
-            painLevel: dailyCheckins.painLevel,
-            sleepQuality: dailyCheckins.sleepQuality
-          });
-
-        await syncSymptomKeys(
-          transaction,
-          authenticatedUser.user.id,
-          parsedParams.data.date,
-          parsedBody.data.symptomKeys
         );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
 
-        return {
-          date: parsedParams.data.date,
-          discharge: checkinRow.discharge,
-          energy: checkinRow.energy,
-          mood: checkinRow.mood,
-          note: checkinRow.note,
-          painLevel: checkinRow.painLevel,
-          sleepQuality: checkinRow.sleepQuality,
-          symptomKeys: [...parsedBody.data.symptomKeys]
-        };
-      });
+        throw error;
+      }
+    }
+  );
 
-      return reply.send(
-        dailyCheckinResponseSchema.parse({
-          entry
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
+  app.post(
+    "/api/period/log",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedBody = periodLogRequestSchema.safeParse(request.body);
+
+      if (!parsedBody.success) {
+        return reply.code(400).send({
+          error: "Invalid period log payload."
         });
       }
 
-      throw error;
-    }
-  });
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
 
-  app.post("/api/period/log", async (request, reply) => {
-    const parsedBody = periodLogRequestSchema.safeParse(request.body);
-
-    if (!parsedBody.success) {
-      return reply.code(400).send({
-        error: "Invalid period log payload."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-
-      await upsertPeriodLog(deps.db, authenticatedUser.user.id, parsedBody.data.date, {
-        flowIntensity: parsedBody.data.flowIntensity,
-        note: parsedBody.data.note
-      });
-
-      const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
-
-      return reply.send(
-        periodLogResponseSchema.parse({
-          entry: await buildPeriodEntry(
-            deps.db,
-            authenticatedUser.user.id,
-            cycleRows,
-            parsedBody.data.date
-          )
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
-        });
-      }
-
-      throw error;
-    }
-  });
-
-  app.post("/api/period/start", async (request, reply) => {
-    const parsedBody = periodStartRequestSchema.safeParse(request.body);
-
-    if (!parsedBody.success) {
-      return reply.code(400).send({
-        error: "Invalid period start payload."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-
-      await deps.db.transaction(async (transaction) => {
-        const [latestCycle] = await transaction
-          .select({
-            endedOn: cycles.endedOn,
-            id: cycles.id,
-            startedOn: cycles.startedOn
-          })
-          .from(cycles)
-          .where(and(eq(cycles.userId, authenticatedUser.user.id), eq(cycles.predicted, false)))
-          .orderBy(desc(cycles.startedOn))
-          .limit(1);
-
-        assertCanStartCycle(latestCycle ?? null, parsedBody.data.date);
-
-        await upsertPeriodLog(transaction, authenticatedUser.user.id, parsedBody.data.date, {
+        await upsertPeriodLog(deps.db, authenticatedUser.user.id, parsedBody.data.date, {
           flowIntensity: parsedBody.data.flowIntensity,
           note: parsedBody.data.note
         });
 
-        await transaction
-          .insert(cycles)
-          .values({
-            predicted: false,
-            startedOn: parseIsoDate(parsedBody.data.date),
-            userId: authenticatedUser.user.id
-          })
-          .onConflictDoUpdate({
-            set: {
-              predicted: false,
-              updatedAt: new Date()
-            },
-            target: [cycles.userId, cycles.startedOn]
-          });
-      });
+        const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
 
-      const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
-
-      return reply.send(
-        periodLogResponseSchema.parse({
-          entry: await buildPeriodEntry(
-            deps.db,
-            authenticatedUser.user.id,
-            cycleRows,
-            parsedBody.data.date
-          )
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
-        });
-      }
-
-      throw error;
-    }
-  });
-
-  app.post("/api/period/end", async (request, reply) => {
-    const parsedBody = periodEndRequestSchema.safeParse(request.body);
-
-    if (!parsedBody.success) {
-      return reply.code(400).send({
-        error: "Invalid period end payload."
-      });
-    }
-
-    try {
-      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-
-      await deps.db.transaction(async (transaction) => {
-        const [latestCycle] = await transaction
-          .select({
-            endedOn: cycles.endedOn,
-            id: cycles.id,
-            startedOn: cycles.startedOn
-          })
-          .from(cycles)
-          .where(
-            and(
-              eq(cycles.userId, authenticatedUser.user.id),
-              eq(cycles.predicted, false),
-              isNull(cycles.endedOn),
-              lte(cycles.startedOn, parseIsoDate(parsedBody.data.date))
+        return reply.send(
+          periodLogResponseSchema.parse({
+            entry: await buildPeriodEntry(
+              deps.db,
+              authenticatedUser.user.id,
+              cycleRows,
+              parsedBody.data.date
             )
-          )
-          .orderBy(desc(cycles.startedOn))
-          .limit(1);
-
-        if (!latestCycle) {
-          throw new AuthContextError("No started period was found to end.", 400);
+          })
+        );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
         }
 
-        await transaction
-          .update(cycles)
-          .set({
-            endedOn: parseIsoDate(parsedBody.data.date),
-            updatedAt: new Date()
-          })
-          .where(eq(cycles.id, latestCycle.id));
+        throw error;
+      }
+    }
+  );
 
-        await upsertPeriodLog(transaction, authenticatedUser.user.id, parsedBody.data.date, {});
-      });
+  app.post(
+    "/api/period/start",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedBody = periodStartRequestSchema.safeParse(request.body);
 
-      const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
-
-      return reply.send(
-        periodLogResponseSchema.parse({
-          entry: await buildPeriodEntry(
-            deps.db,
-            authenticatedUser.user.id,
-            cycleRows,
-            parsedBody.data.date
-          )
-        })
-      );
-    } catch (error) {
-      if (error instanceof AuthContextError) {
-        return reply.code(error.statusCode).send({
-          error: error.message
+      if (!parsedBody.success) {
+        return reply.code(400).send({
+          error: "Invalid period start payload."
         });
       }
 
-      throw error;
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+
+        await deps.db.transaction(async (transaction) => {
+          const [latestCycle] = await transaction
+            .select({
+              endedOn: cycles.endedOn,
+              id: cycles.id,
+              startedOn: cycles.startedOn
+            })
+            .from(cycles)
+            .where(and(eq(cycles.userId, authenticatedUser.user.id), eq(cycles.predicted, false)))
+            .orderBy(desc(cycles.startedOn))
+            .limit(1);
+
+          assertCanStartCycle(latestCycle ?? null, parsedBody.data.date);
+
+          await upsertPeriodLog(transaction, authenticatedUser.user.id, parsedBody.data.date, {
+            flowIntensity: parsedBody.data.flowIntensity,
+            note: parsedBody.data.note
+          });
+
+          await transaction
+            .insert(cycles)
+            .values({
+              predicted: false,
+              startedOn: parseIsoDate(parsedBody.data.date),
+              userId: authenticatedUser.user.id
+            })
+            .onConflictDoUpdate({
+              set: {
+                predicted: false,
+                updatedAt: new Date()
+              },
+              target: [cycles.userId, cycles.startedOn]
+            });
+        });
+
+        const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
+
+        return reply.send(
+          periodLogResponseSchema.parse({
+            entry: await buildPeriodEntry(
+              deps.db,
+              authenticatedUser.user.id,
+              cycleRows,
+              parsedBody.data.date
+            )
+          })
+        );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
     }
-  });
+  );
+
+  app.post(
+    "/api/period/end",
+    {
+      config: {
+        rateLimit: {
+          max: 100,
+          timeWindow: 15 * 60 * 1000
+        }
+      }
+    },
+    async (request, reply) => {
+      const parsedBody = periodEndRequestSchema.safeParse(request.body);
+
+      if (!parsedBody.success) {
+        return reply.code(400).send({
+          error: "Invalid period end payload."
+        });
+      }
+
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+
+        await deps.db.transaction(async (transaction) => {
+          const [latestCycle] = await transaction
+            .select({
+              endedOn: cycles.endedOn,
+              id: cycles.id,
+              startedOn: cycles.startedOn
+            })
+            .from(cycles)
+            .where(
+              and(
+                eq(cycles.userId, authenticatedUser.user.id),
+                eq(cycles.predicted, false),
+                isNull(cycles.endedOn),
+                lte(cycles.startedOn, parseIsoDate(parsedBody.data.date))
+              )
+            )
+            .orderBy(desc(cycles.startedOn))
+            .limit(1);
+
+          if (!latestCycle) {
+            throw new AuthContextError("No started period was found to end.", 400);
+          }
+
+          await transaction
+            .update(cycles)
+            .set({
+              endedOn: parseIsoDate(parsedBody.data.date),
+              updatedAt: new Date()
+            })
+            .where(eq(cycles.id, latestCycle.id));
+
+          await upsertPeriodLog(transaction, authenticatedUser.user.id, parsedBody.data.date, {});
+        });
+
+        const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
+
+        return reply.send(
+          periodLogResponseSchema.parse({
+            entry: await buildPeriodEntry(
+              deps.db,
+              authenticatedUser.user.id,
+              cycleRows,
+              parsedBody.data.date
+            )
+          })
+        );
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
 }

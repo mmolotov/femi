@@ -49,10 +49,8 @@ async function createTestApp(): Promise<FastifyInstance> {
   const app = Fastify();
 
   await app.register(fastifyRateLimit, {
-    global: true,
-    hook: "preHandler",
-    max: 60,
-    timeWindow: "1 minute"
+    global: false,
+    hook: "preHandler"
   });
 
   return app;
