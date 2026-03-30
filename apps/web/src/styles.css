@@ -101,6 +101,25 @@ select {
   gap: 1rem;
 }
 
+.status-banner {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  background: rgba(35, 24, 21, 0.08);
+  color: #231815;
+}
+
+.muted-banner {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.error-banner {
+  background: rgba(179, 59, 43, 0.12);
+  color: #7b2318;
+}
+
 .panel {
   padding: 1.25rem;
 }
@@ -200,6 +219,128 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
+.stack-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.field span {
+  font-weight: 600;
+}
+
+.field small {
+  color: #65544d;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(96, 63, 46, 0.12);
+  background: #fff;
+  color: inherit;
+}
+
+.toggle-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.toggle-field input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.primary-button,
+.secondary-button,
+.pill-button {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+.primary-button,
+.secondary-button {
+  padding: 0.85rem 1rem;
+}
+
+.primary-button {
+  background: #231815;
+  color: #fffaf6;
+}
+
+.secondary-button {
+  background: #fff;
+  color: #231815;
+  border-color: rgba(96, 63, 46, 0.14);
+}
+
+.pill-button {
+  padding: 0.55rem 0.8rem;
+  background: #fff;
+  border-color: rgba(96, 63, 46, 0.12);
+}
+
+.pill-button.active {
+  background: rgba(156, 92, 66, 0.12);
+  border-color: rgba(156, 92, 66, 0.4);
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.pill-button:hover,
+.language-button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.inline-error,
+.inline-success {
+  margin: 0;
+}
+
+.inline-error {
+  color: #8e281b;
+}
+
+.inline-success {
+  color: #35633c;
+}
+
+.onboarding-panel {
+  max-width: 34rem;
+}
+
 .language-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
@@ -240,6 +381,134 @@ select {
   color: #9c5c42;
 }
 
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #65544d;
+}
+
+.legend-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  display: inline-block;
+  background: rgba(96, 63, 46, 0.12);
+}
+
+.legend-dot.logged {
+  background: #d26f49;
+}
+
+.legend-dot.predicted {
+  background: #e8c7a4;
+}
+
+.legend-dot.today {
+  background: #231815;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.calendar-day {
+  width: 100%;
+  min-height: 5.75rem;
+  padding: 0.65rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgba(96, 63, 46, 0.08);
+  display: grid;
+  align-content: start;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.calendar-day.today {
+  border-color: #231815;
+}
+
+.calendar-day.selected {
+  border-color: #9c5c42;
+  box-shadow: 0 10px 24px rgba(156, 92, 66, 0.15);
+}
+
+.calendar-day.logged {
+  background: rgba(210, 111, 73, 0.12);
+}
+
+.calendar-day.predicted {
+  background: rgba(232, 199, 164, 0.4);
+}
+
+.calendar-day-number {
+  font-weight: 700;
+}
+
+.calendar-day-flow,
+.calendar-day-symptoms {
+  font-size: 0.8rem;
+  color: #65544d;
+}
+
+.calendar-actions {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgba(96, 63, 46, 0.08);
+}
+
+.history-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.history-card {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  border: 1px solid rgba(96, 63, 46, 0.08);
+}
+
+.history-card-header {
+  margin-bottom: 0.75rem;
+}
+
+.history-section + .history-section {
+  margin-top: 0.75rem;
+}
+
+.history-line {
+  margin: 0.25rem 0 0;
+}
+
+.history-tag {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(35, 24, 21, 0.06);
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 0.75rem 0.75rem 3rem;
@@ -247,5 +516,9 @@ select {
 
   .tab-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendar-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

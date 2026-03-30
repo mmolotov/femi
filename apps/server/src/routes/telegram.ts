@@ -17,5 +17,5 @@ export async function registerTelegramRoutes(
     secretToken: deps.env.TELEGRAM_BOT_SECRET_TOKEN
   });
 
-  app.post("/telegram/webhook", webhook);
+  app.post("/telegram/webhook", { config: { rateLimit: false } }, webhook);
 }

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
+    "@fastify/rate-limit": "^10.3.0",
     "@femi/db": "workspace:*",
     "@femi/shared": "workspace:*",
     "@telegram-apps/init-data-node": "^2.0.0",

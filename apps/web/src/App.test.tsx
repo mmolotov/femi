@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
 describe("App shell", () => {
-  it("renders the foundation hero copy", () => {
+  it("renders the foundation hero copy", async () => {
     render(
       <MemoryRouter>
         <App />
@@ -15,19 +15,22 @@ describe("App shell", () => {
     );
 
     expect(
-      screen.getByText(/Simple cycle tracking, built for calm daily use/i)
+      await screen.findByText(/Simple cycle tracking, built for calm daily use/i)
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Milestone 1 adds onboarding, period logging, daily check-ins/i)
+    ).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Settings" })).toBeInTheDocument();
   });
 
-  it("renders the language selector on the settings screen", () => {
+  it("renders the language selector on the settings screen", async () => {
     render(
       <MemoryRouter initialEntries={["/settings"]}>
         <App />
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("heading", { name: "Language" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Русский/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Language" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Русский/i })).toBeInTheDocument();
   });
 });

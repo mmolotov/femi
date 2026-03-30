@@ -8,20 +8,19 @@ Telegram Mini App for simple cycle and symptom tracking.
 - [Product Roadmap](./product-roadmap.md)
 - [Architecture](./architecture.md)
 
-## Foundation Scope
+## Current Scope
 
-The current implementation targets `Milestone 0: Foundation`:
+The current implementation targets `Milestone 1: Core Cycle Tracking MVP`:
 
-- monorepo workspace
-- web app shell
-- backend API foundation
-- Telegram bot webhook integration
-- PostgreSQL schema and migrations
-- Docker Compose deployment
-- Caddy reverse proxy
-- backup container scaffold
-- Telegram runtime bootstrap and frontend auth bootstrap
-- restore script for PostgreSQL backups
+- onboarding flow for first-time users
+- current cycle summary and next-period prediction
+- period start and end logging
+- flow intensity logging
+- daily check-ins with symptom tags
+- calendar and history screens
+- Telegram auth bootstrap and browser preview mode
+- backend API, PostgreSQL schema, migrations, and worker foundation
+- Docker Compose deployment, backups, CI, and CodeQL
 
 ## Quality Tooling
 
@@ -116,7 +115,19 @@ VITE_BACKEND_URL=http://localhost:3001
 
 ## E2E Notes
 
-`pnpm test:e2e` expects the frontend to be running locally at `http://127.0.0.1:4173`.
+`pnpm test:e2e` builds the frontend and starts a local preview server at `http://127.0.0.1:4173`.
+
+Install the browser runtime once on a fresh machine:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+The Playwright happy-path scenario uses browser demo mode:
+
+- `/?app_demo=1`
+
+This keeps the end-to-end flow testable without a live Telegram session.
 
 ## Container Setup
 

@@ -91,6 +91,12 @@ Main interaction pattern:
 
 We will ship the product in small, coherent slices. Each milestone should result in something testable and usable.
 
+## Current Delivery Status
+
+- `Milestone 0`: done
+- `Milestone 1`: implemented and now treated as the current product baseline
+- `Milestone 2`: next
+
 ## Milestone 0: Foundation
 
 ### Goal

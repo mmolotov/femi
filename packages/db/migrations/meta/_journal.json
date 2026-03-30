@@ -8,6 +8,20 @@
       "when": 1774702800000,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774726200000,
+      "tag": "0001_user_settings_onboarding",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774729800000,
+      "tag": "0002_m1_uniques",
+      "breakpoints": true
     }
   ]
 }
