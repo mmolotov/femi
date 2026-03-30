@@ -24,14 +24,17 @@ vi.mock("../lib/auth-context.js", () => ({
   resolveAuthenticatedUser: resolveAuthenticatedUserMock
 }));
 
+import { API_RATE_LIMIT_MAX, API_RATE_LIMIT_WINDOW_MS } from "../lib/rate-limit.js";
 import { registerMeRoutes } from "./me.js";
 
 async function createTestApp(): Promise<FastifyInstance> {
   const app = Fastify();
 
   await app.register(fastifyRateLimit, {
-    global: false,
-    hook: "preHandler"
+    global: true,
+    hook: "preHandler",
+    max: API_RATE_LIMIT_MAX,
+    timeWindow: API_RATE_LIMIT_WINDOW_MS
   });
 
   return app;
@@ -220,7 +223,7 @@ describe("me routes", () => {
       env: {} as never
     });
 
-    for (let index = 0; index < 100; index += 1) {
+    for (let index = 0; index < API_RATE_LIMIT_MAX; index += 1) {
       const response = await app.inject({
         headers: {
           "x-telegram-init-data": "stub"

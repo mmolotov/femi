@@ -33,106 +33,84 @@ function toSettingsResponse(settings: {
 }
 
 export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps): Promise<void> {
-  app.get(
-    "/api/me",
-    {
-      config: {
-        rateLimit: {
-          max: 100,
-          timeWindow: 15 * 60 * 1000
-        }
-      }
-    },
-    async (request, reply) => {
-      try {
-        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+  app.get("/api/me", async (request, reply) => {
+    try {
+      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
 
-        return reply.send(
-          meResponseSchema.parse({
-            settings: toSettingsResponse(authenticatedUser.settings),
-            user: authenticatedUser.user
-          })
-        );
-      } catch (error) {
-        if (error instanceof AuthContextError) {
-          return reply.code(error.statusCode).send({
-            error: error.message
-          });
-        }
-
-        throw error;
-      }
-    }
-  );
-
-  app.patch(
-    "/api/me/settings",
-    {
-      config: {
-        rateLimit: {
-          max: 100,
-          timeWindow: 15 * 60 * 1000
-        }
-      }
-    },
-    async (request, reply) => {
-      const parsedBody = updateUserSettingsRequestSchema.safeParse(request.body);
-
-      if (!parsedBody.success) {
-        return reply.code(400).send({
-          error: "Invalid request body."
+      return reply.send(
+        meResponseSchema.parse({
+          settings: toSettingsResponse(authenticatedUser.settings),
+          user: authenticatedUser.user
+        })
+      );
+    } catch (error) {
+      if (error instanceof AuthContextError) {
+        return reply.code(error.statusCode).send({
+          error: error.message
         });
       }
 
-      try {
-        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-        const nextSettings = {
-          cycleLengthDays:
-            parsedBody.data.cycleLengthDays ?? authenticatedUser.settings.cycleLengthDays,
-          onboardingCompleted:
-            authenticatedUser.settings.onboardingCompleted ||
-            parsedBody.data.cycleLengthDays !== undefined ||
-            parsedBody.data.periodLengthDays !== undefined,
-          periodLengthDays:
-            parsedBody.data.periodLengthDays ?? authenticatedUser.settings.periodLengthDays,
-          remindersEnabled:
-            parsedBody.data.remindersEnabled ?? authenticatedUser.settings.remindersEnabled,
-          timezone: parsedBody.data.timezone ?? authenticatedUser.settings.timezone,
-          updatedAt: new Date()
-        };
-
-        const [updatedSettings] = await deps.db
-          .update(userSettings)
-          .set(nextSettings)
-          .where(eq(userSettings.userId, authenticatedUser.user.id))
-          .returning({
-            cycleLengthDays: userSettings.cycleLengthDays,
-            onboardingCompleted: userSettings.onboardingCompleted,
-            periodLengthDays: userSettings.periodLengthDays,
-            remindersEnabled: userSettings.remindersEnabled,
-            timezone: userSettings.timezone
-          });
-
-        if (!updatedSettings) {
-          return reply.code(404).send({
-            error: "User settings were not found."
-          });
-        }
-
-        return reply.send(
-          updateUserSettingsResponseSchema.parse({
-            settings: toSettingsResponse(updatedSettings)
-          })
-        );
-      } catch (error) {
-        if (error instanceof AuthContextError) {
-          return reply.code(error.statusCode).send({
-            error: error.message
-          });
-        }
-
-        throw error;
-      }
+      throw error;
     }
-  );
+  });
+
+  app.patch("/api/me/settings", async (request, reply) => {
+    const parsedBody = updateUserSettingsRequestSchema.safeParse(request.body);
+
+    if (!parsedBody.success) {
+      return reply.code(400).send({
+        error: "Invalid request body."
+      });
+    }
+
+    try {
+      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const nextSettings = {
+        cycleLengthDays:
+          parsedBody.data.cycleLengthDays ?? authenticatedUser.settings.cycleLengthDays,
+        onboardingCompleted:
+          authenticatedUser.settings.onboardingCompleted ||
+          parsedBody.data.cycleLengthDays !== undefined ||
+          parsedBody.data.periodLengthDays !== undefined,
+        periodLengthDays:
+          parsedBody.data.periodLengthDays ?? authenticatedUser.settings.periodLengthDays,
+        remindersEnabled:
+          parsedBody.data.remindersEnabled ?? authenticatedUser.settings.remindersEnabled,
+        timezone: parsedBody.data.timezone ?? authenticatedUser.settings.timezone,
+        updatedAt: new Date()
+      };
+
+      const [updatedSettings] = await deps.db
+        .update(userSettings)
+        .set(nextSettings)
+        .where(eq(userSettings.userId, authenticatedUser.user.id))
+        .returning({
+          cycleLengthDays: userSettings.cycleLengthDays,
+          onboardingCompleted: userSettings.onboardingCompleted,
+          periodLengthDays: userSettings.periodLengthDays,
+          remindersEnabled: userSettings.remindersEnabled,
+          timezone: userSettings.timezone
+        });
+
+      if (!updatedSettings) {
+        return reply.code(404).send({
+          error: "User settings were not found."
+        });
+      }
+
+      return reply.send(
+        updateUserSettingsResponseSchema.parse({
+          settings: toSettingsResponse(updatedSettings)
+        })
+      );
+    } catch (error) {
+      if (error instanceof AuthContextError) {
+        return reply.code(error.statusCode).send({
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
+  });
 }

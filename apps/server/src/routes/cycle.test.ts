@@ -24,6 +24,7 @@ vi.mock("../lib/auth-context.js", () => ({
   resolveAuthenticatedUser: resolveAuthenticatedUserMock
 }));
 
+import { API_RATE_LIMIT_MAX, API_RATE_LIMIT_WINDOW_MS } from "../lib/rate-limit.js";
 import { registerCycleRoutes } from "./cycle.js";
 
 function createSelectBuilder<T>(rows: T[]) {
@@ -49,8 +50,10 @@ async function createTestApp(): Promise<FastifyInstance> {
   const app = Fastify();
 
   await app.register(fastifyRateLimit, {
-    global: false,
-    hook: "preHandler"
+    global: true,
+    hook: "preHandler",
+    max: API_RATE_LIMIT_MAX,
+    timeWindow: API_RATE_LIMIT_WINDOW_MS
   });
 
   return app;

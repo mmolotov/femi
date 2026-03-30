@@ -1,7 +1,5 @@
 import { createDatabaseConnection, type DatabaseConnection } from "@femi/db";
 import cors from "@fastify/cors";
-import middie from "@fastify/middie";
-import rateLimit from "express-rate-limit";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Bot } from "grammy";
 
@@ -35,16 +33,7 @@ export async function createAppContext(): Promise<AppContext> {
   await app.register(cors, {
     origin: true
   });
-  await app.register(middie);
   await registerRateLimit(app);
-  app.use(
-    "/api",
-    rateLimit({
-      limit: 100,
-      standardHeaders: "draft-8",
-      windowMs: 15 * 60 * 1000
-    })
-  );
 
   await registerHealthRoutes(app);
   await registerAuthRoutes(app, {
