@@ -1,10 +1,6 @@
 import type { Database } from "@femi/db";
-import { userSettings } from "@femi/db";
-import {
-  meResponseSchema,
-  updateUserSettingsRequestSchema,
-  updateUserSettingsResponseSchema
-} from "@femi/shared";
+import { cycles, periodLogs, userSettings } from "@femi/db";
+import { meResponseSchema, updateUserSettingsRequestSchema, updateUserSettingsResponseSchema } from "@femi/shared";
 import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
@@ -15,6 +11,43 @@ type MeRouteDeps = {
   db: Database;
   env: AppEnv;
 };
+
+function parseIsoDate(date: string): Date {
+  const [year, month, day] = date.split("-").map(Number);
+
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function formatIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date: string, days: number): string {
+  const nextDate = parseIsoDate(date);
+
+  nextDate.setUTCDate(nextDate.getUTCDate() + days);
+
+  return formatIsoDate(nextDate);
+}
+
+function buildLoggedPeriodDates(latestPeriodStart: string, periodLengthDays: number, today: string) {
+  const periodEnd = addDays(latestPeriodStart, periodLengthDays - 1);
+  const loggedEnd = periodEnd < today ? periodEnd : today;
+
+  if (latestPeriodStart > loggedEnd) {
+    return [latestPeriodStart];
+  }
+
+  const dates: string[] = [];
+  let cursor = latestPeriodStart;
+
+  while (cursor <= loggedEnd) {
+    dates.push(cursor);
+    cursor = addDays(cursor, 1);
+  }
+
+  return dates;
+}
 
 function toSettingsResponse(settings: {
   cycleLengthDays: number;
@@ -71,7 +104,8 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
         onboardingCompleted:
           authenticatedUser.settings.onboardingCompleted ||
           parsedBody.data.cycleLengthDays !== undefined ||
-          parsedBody.data.periodLengthDays !== undefined,
+          parsedBody.data.periodLengthDays !== undefined ||
+          parsedBody.data.latestPeriodStart !== undefined,
         periodLengthDays:
           parsedBody.data.periodLengthDays ?? authenticatedUser.settings.periodLengthDays,
         remindersEnabled:
@@ -80,17 +114,64 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
         updatedAt: new Date()
       };
 
-      const [updatedSettings] = await deps.db
-        .update(userSettings)
-        .set(nextSettings)
-        .where(eq(userSettings.userId, authenticatedUser.user.id))
-        .returning({
-          cycleLengthDays: userSettings.cycleLengthDays,
-          onboardingCompleted: userSettings.onboardingCompleted,
-          periodLengthDays: userSettings.periodLengthDays,
-          remindersEnabled: userSettings.remindersEnabled,
-          timezone: userSettings.timezone
-        });
+      const updatedSettings = await deps.db.transaction(async (transaction) => {
+        const [settings] = await transaction
+          .update(userSettings)
+          .set(nextSettings)
+          .where(eq(userSettings.userId, authenticatedUser.user.id))
+          .returning({
+            cycleLengthDays: userSettings.cycleLengthDays,
+            onboardingCompleted: userSettings.onboardingCompleted,
+            periodLengthDays: userSettings.periodLengthDays,
+            remindersEnabled: userSettings.remindersEnabled,
+            timezone: userSettings.timezone
+          });
+
+        if (!settings) {
+          return null;
+        }
+
+        if (parsedBody.data.latestPeriodStart) {
+          const latestPeriodStart = parseIsoDate(parsedBody.data.latestPeriodStart);
+          const loggedPeriodDates = buildLoggedPeriodDates(
+            parsedBody.data.latestPeriodStart,
+            settings.periodLengthDays,
+            formatIsoDate(new Date())
+          );
+
+          await transaction
+            .insert(cycles)
+            .values({
+              predicted: false,
+              startedOn: latestPeriodStart,
+              userId: authenticatedUser.user.id
+            })
+            .onConflictDoUpdate({
+              set: {
+                predicted: false,
+                updatedAt: new Date()
+              },
+              target: [cycles.userId, cycles.startedOn]
+            });
+
+          await transaction
+            .insert(periodLogs)
+            .values(
+              loggedPeriodDates.map((date) => ({
+                happenedOn: parseIsoDate(date),
+                userId: authenticatedUser.user.id
+              }))
+            )
+            .onConflictDoUpdate({
+              set: {
+                updatedAt: new Date()
+              },
+              target: [periodLogs.userId, periodLogs.happenedOn]
+            });
+        }
+
+        return settings;
+      });
 
       if (!updatedSettings) {
         return reply.code(404).send({

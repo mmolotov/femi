@@ -38,7 +38,7 @@ describe("OnboardingGate", () => {
       }
     });
 
-    render(
+    const { container } = render(
       <I18nProvider>
         <OnboardingGate />
       </I18nProvider>
@@ -50,12 +50,24 @@ describe("OnboardingGate", () => {
     fireEvent.change(screen.getByLabelText(/usual period length/i), {
       target: { value: "6" }
     });
+    fireEvent.change(screen.getByLabelText(/latest period start date/i), {
+      target: { value: "2026-03-01" }
+    });
+
+    expect(
+      container.querySelectorAll(".onboarding-calendar-grid .calendar-day.logged").length
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      container.querySelectorAll(".onboarding-calendar-grid .calendar-day.predicted").length
+    ).toBeGreaterThan(0);
+
     fireEvent.click(screen.getByRole("button", { name: /save setup/i }));
 
     await waitFor(() => {
       expect(completeOnboarding).toHaveBeenCalledWith(
         expect.objectContaining({
           cycleLengthDays: 30,
+          latestPeriodStart: "2026-03-01",
           periodLengthDays: 6
         })
       );

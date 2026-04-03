@@ -22,6 +22,7 @@ const isoDateSchema = z.string().regex(isoDatePattern, "Expected a date in YYYY-
 const yearMonthSchema = z.string().regex(yearMonthPattern, "Expected a month in YYYY-MM format.");
 const timezoneSchema = z.string().trim().min(1).max(64);
 const optionalNoteSchema = z.string().trim().max(1000).optional();
+export const cyclePhaseValues = ["menstrual", "follicular", "ovulatory", "luteal"] as const;
 
 export const cycleLengthDaysSchema = z
   .number()
@@ -63,6 +64,7 @@ export const symptomKeys = [
 export const flowIntensitySchema = z.enum(flowIntensityValues);
 export const dischargeSchema = z.enum(dischargeValues);
 export const symptomKeySchema = z.enum(symptomKeys);
+export const cyclePhaseSchema = z.enum(cyclePhaseValues);
 
 const symptomKeysArraySchema = z
   .array(symptomKeySchema)
@@ -109,12 +111,14 @@ export const meResponseSchema = z.object({
 
 export const onboardingSetupRequestSchema = z.object({
   cycleLengthDays: cycleLengthDaysSchema,
+  latestPeriodStart: isoDateSchema,
   periodLengthDays: periodLengthDaysSchema,
   timezone: timezoneSchema.optional()
 });
 
 export const updateUserSettingsRequestSchema = z.object({
   cycleLengthDays: cycleLengthDaysSchema.optional(),
+  latestPeriodStart: isoDateSchema.optional(),
   periodLengthDays: periodLengthDaysSchema.optional(),
   timezone: timezoneSchema.optional(),
   remindersEnabled: z.boolean().optional()
@@ -127,11 +131,18 @@ export const updateUserSettingsResponseSchema = z.object({
 export const cycleSummarySchema = z.object({
   today: isoDateSchema,
   currentCycleDay: z.number().int().positive().nullable(),
+  currentPhase: cyclePhaseSchema.nullable(),
   activePeriod: z.boolean(),
   predictedNextPeriodStart: isoDateSchema.nullable(),
   latestPeriodStart: isoDateSchema.nullable(),
   averageCycleLengthDays: cycleLengthDaysSchema,
   averagePeriodLengthDays: periodLengthDaysSchema,
+  forecast: z.array(
+    z.object({
+      periodEnd: isoDateSchema,
+      periodStart: isoDateSchema
+    })
+  ),
   onboardingCompleted: z.boolean()
 });
 
@@ -170,7 +181,7 @@ export const periodEndRequestSchema = z.object({
 
 export const periodLogRequestSchema = z.object({
   date: isoDateSchema,
-  flowIntensity: flowIntensitySchema,
+  flowIntensity: flowIntensitySchema.optional(),
   note: optionalNoteSchema
 });
 
@@ -227,17 +238,40 @@ export const dailyCheckinResponseSchema = z.object({
 
 export const historyDaySchema = z.object({
   date: isoDateSchema,
+  phase: cyclePhaseSchema.nullable(),
   checkin: dailyCheckinEntrySchema.nullable(),
   period: periodLogEntrySchema.nullable(),
   symptomKeys: symptomKeysArraySchema
 });
 
 export const historyQuerySchema = z.object({
-  limit: z.number().int().min(1).max(90).optional()
+  limit: z.number().int().min(1).max(12).optional()
+});
+
+export const historyPhaseSchema = z.object({
+  phase: cyclePhaseSchema,
+  startDate: isoDateSchema,
+  endDate: isoDateSchema,
+  totalDays: z.number().int().positive(),
+  averageFlowIntensityLevel: z.number().min(1).max(4).nullable(),
+  averagePainLevel: painLevelSchema.nullable(),
+  averageMood: wellbeingScoreSchema.nullable(),
+  averageEnergy: wellbeingScoreSchema.nullable(),
+  commonSymptoms: symptomKeysArraySchema,
+  days: z.array(historyDaySchema)
+});
+
+export const historyCycleSchema = z.object({
+  cycleId: z.string(),
+  startedOn: isoDateSchema,
+  endedOn: isoDateSchema.nullable(),
+  cycleLengthDays: z.number().int().positive().nullable(),
+  periodLengthDays: z.number().int().positive().nullable(),
+  phases: z.array(historyPhaseSchema)
 });
 
 export const historyResponseSchema = z.object({
-  days: z.array(historyDaySchema)
+  cycles: z.array(historyCycleSchema)
 });
 
 function parseIsoDateValue(value: string): Date {
@@ -327,6 +361,118 @@ export function predictNextPeriodStart(
   );
 }
 
+export function resolveCyclePhase(
+  cycleDay: number | null,
+  cycleLengthDays: number,
+  periodLengthDays: number
+): CyclePhase | null {
+  if (cycleDay === null || cycleDay < 1) {
+    return null;
+  }
+
+  if (cycleDay <= periodLengthDays) {
+    return "menstrual";
+  }
+
+  const ovulationStartDay = Math.min(
+    cycleLengthDays,
+    Math.max(periodLengthDays + 1, cycleLengthDays - 16)
+  );
+  const ovulationEndDay = Math.min(cycleLengthDays, Math.max(ovulationStartDay, cycleLengthDays - 12));
+
+  if (cycleDay < ovulationStartDay) {
+    return "follicular";
+  }
+
+  if (cycleDay <= ovulationEndDay) {
+    return "ovulatory";
+  }
+
+  return "luteal";
+}
+
+export function buildPeriodForecast({
+  averageCycleLengthDays,
+  averagePeriodLengthDays,
+  fromDate,
+  latestCycleStart,
+  months = 6
+}: {
+  averageCycleLengthDays: number;
+  averagePeriodLengthDays: number;
+  fromDate: string;
+  latestCycleStart: string | null;
+  months?: number;
+}): Array<{
+  periodEnd: string;
+  periodStart: string;
+}> {
+  if (!latestCycleStart) {
+    return [];
+  }
+
+  const horizon = addDaysToIsoDate(fromDate, months * 31);
+  const forecast: Array<{ periodEnd: string; periodStart: string }> = [];
+  let cursor = addDaysToIsoDate(latestCycleStart, averageCycleLengthDays);
+
+  while (differenceInDays(cursor, horizon) >= 0) {
+    forecast.push({
+      periodEnd: addDaysToIsoDate(cursor, averagePeriodLengthDays - 1),
+      periodStart: cursor
+    });
+    cursor = addDaysToIsoDate(cursor, averageCycleLengthDays);
+  }
+
+  return forecast;
+}
+
+export function buildCyclePeriodWindows(
+  periodDatesInput: readonly string[],
+  fallbackPeriodLengthDays: number
+): Array<{
+  endedOn: string;
+  startedOn: string;
+}> {
+  const periodDates = [...new Set(periodDatesInput)].sort((left, right) =>
+    left < right ? -1 : left > right ? 1 : 0
+  );
+
+  if (periodDates.length === 0) {
+    return [];
+  }
+
+  const windows: Array<{ endedOn: string; startedOn: string }> = [];
+  let currentStart = periodDates[0];
+  let currentEnd = addDaysToIsoDate(currentStart, fallbackPeriodLengthDays - 1);
+
+  for (const date of periodDates.slice(1)) {
+    const nextAllowedDate = addDaysToIsoDate(currentEnd, 1);
+
+    if (date <= nextAllowedDate) {
+      if (date > currentEnd) {
+        currentEnd = date;
+      }
+
+      continue;
+    }
+
+    windows.push({
+      endedOn: currentEnd,
+      startedOn: currentStart
+    });
+
+    currentStart = date;
+    currentEnd = addDaysToIsoDate(currentStart, fallbackPeriodLengthDays - 1);
+  }
+
+  windows.push({
+    endedOn: currentEnd,
+    startedOn: currentStart
+  });
+
+  return windows;
+}
+
 export function resolvePeriodEnd(
   latestCycleStart: string | null,
   latestCycleEnd: string | null,
@@ -375,8 +521,13 @@ export type BuildCalendarMonthDaysInput = {
   month: string;
   today: string;
   currentCycleStart: string | null;
+  currentPeriodEnd: string | null;
   predictedNextPeriodStart: string | null;
   predictedPeriodLengthDays: number;
+  predictedPeriods?: ReadonlyArray<{
+    periodEnd: string;
+    periodStart: string;
+  }>;
   periodDays?: readonly CalendarMonthDayMarkerInput[];
 };
 
@@ -384,8 +535,10 @@ export function buildCalendarMonthDays({
   month,
   today,
   currentCycleStart,
+  currentPeriodEnd,
   predictedNextPeriodStart,
   predictedPeriodLengthDays,
+  predictedPeriods,
   periodDays = []
 }: BuildCalendarMonthDaysInput): CalendarDay[] {
   const [year, monthNumber] = month.split("-").map(Number);
@@ -395,10 +548,29 @@ export function buildCalendarMonthDays({
   return Array.from({ length: monthEnd.getUTCDate() }, (_, index) => {
     const date = formatIsoDate(new Date(Date.UTC(year, monthNumber - 1, index + 1)));
     const loggedDay = loggedDaysByDate.get(date);
-    const isPredictedPeriodDay =
-      predictedNextPeriodStart !== null &&
-      differenceInDays(predictedNextPeriodStart, date) >= 0 &&
-      differenceInDays(predictedNextPeriodStart, date) < predictedPeriodLengthDays;
+    const fallbackPredictedPeriods =
+      predictedNextPeriodStart === null
+        ? []
+        : [
+            {
+              periodEnd: addDaysToIsoDate(predictedNextPeriodStart, predictedPeriodLengthDays - 1),
+              periodStart: predictedNextPeriodStart
+            }
+          ];
+    const currentPredictedPeriod =
+      currentCycleStart && currentPeriodEnd
+        ? [
+            {
+              periodEnd: currentPeriodEnd,
+              periodStart: currentCycleStart
+            }
+          ]
+        : [];
+    const resolvedPredictedPeriods = [...currentPredictedPeriod, ...(predictedPeriods ?? fallbackPredictedPeriods)];
+    const isPredictedPeriodDay = resolvedPredictedPeriods.some(
+      (period) =>
+        differenceInDays(period.periodStart, date) >= 0 && differenceInDays(date, period.periodEnd) >= 0
+    ) && loggedDay === undefined;
 
     const isInCurrentCycle =
       currentCycleStart !== null &&
@@ -419,6 +591,7 @@ export function buildCalendarMonthDays({
 
 export type CalendarDay = z.infer<typeof calendarDaySchema>;
 export type CalendarResponse = z.infer<typeof calendarResponseSchema>;
+export type CyclePhase = z.infer<typeof cyclePhaseSchema>;
 export type CycleSummary = z.infer<typeof cycleSummarySchema>;
 export type CycleSummaryResponse = z.infer<typeof cycleSummaryResponseSchema>;
 export type DailyCheckinEntry = z.infer<typeof dailyCheckinEntrySchema>;
@@ -427,7 +600,9 @@ export type DailyCheckinResponse = z.infer<typeof dailyCheckinResponseSchema>;
 export type Discharge = z.infer<typeof dischargeSchema>;
 export type FlowIntensity = z.infer<typeof flowIntensitySchema>;
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+export type HistoryCycle = z.infer<typeof historyCycleSchema>;
 export type HistoryDay = z.infer<typeof historyDaySchema>;
+export type HistoryPhase = z.infer<typeof historyPhaseSchema>;
 export type HistoryResponse = z.infer<typeof historyResponseSchema>;
 export type MeResponse = z.infer<typeof meResponseSchema>;
 export type OnboardingSetupRequest = z.infer<typeof onboardingSetupRequestSchema>;

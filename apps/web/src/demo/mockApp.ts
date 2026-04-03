@@ -1,21 +1,27 @@
 import {
   addDaysToIsoDate,
   buildCalendarMonthDays,
+  buildCyclePeriodWindows,
+  buildPeriodForecast,
   calculateAverageCycleLength,
   calculateAveragePeriodLength,
   calculateCurrentCycleDay,
   differenceInDays,
   formatIsoDate,
+  resolveCyclePhase,
   type CalendarResponse,
+  type CyclePhase,
   type CycleSummaryResponse,
   type DailyCheckinEntry,
   type DailyCheckinRequest,
   type DailyCheckinResponse,
   type FlowIntensity,
+  type HistoryDay,
   type HistoryResponse,
   type MeResponse,
   type OnboardingSetupRequest,
   type PeriodLogResponse,
+  type SymptomKey,
   type UpdateUserSettingsRequest,
   type UpdateUserSettingsResponse
 } from "@femi/shared";
@@ -41,8 +47,34 @@ type DemoState = {
 
 type DemoMode = "preview" | "reset";
 
+const flowIntensityLevel: Record<FlowIntensity, number> = {
+  heavy: 4,
+  light: 2,
+  medium: 3,
+  spotting: 1
+};
+
 function getToday(): string {
   return formatIsoDate(new Date());
+}
+
+function buildLoggedPeriodDates(latestPeriodStart: string, periodLengthDays: number, today: string) {
+  const periodEnd = addDaysToIsoDate(latestPeriodStart, periodLengthDays - 1);
+  const loggedEnd = periodEnd < today ? periodEnd : today;
+
+  if (latestPeriodStart > loggedEnd) {
+    return [latestPeriodStart];
+  }
+
+  const dates: string[] = [];
+  let cursor = latestPeriodStart;
+
+  while (cursor <= loggedEnd) {
+    dates.push(cursor);
+    cursor = addDaysToIsoDate(cursor, 1);
+  }
+
+  return dates;
 }
 
 function hasDemoFlag(): boolean {
@@ -88,7 +120,7 @@ function createPreviewState(): DemoState {
     checkins: {
       [today]: {
         date: today,
-        discharge: "creamy",
+        discharge: null,
         energy: 3,
         mood: 4,
         note: "Demo preview entry",
@@ -177,15 +209,43 @@ function getPeriodLengths(cycles: readonly DemoCycle[]): number[] {
     .map((cycle) => differenceInDays(cycle.startedOn, cycle.endedOn) + 1);
 }
 
+function getPeriodDateSet(): Set<string> {
+  return new Set(Object.keys(demoState.periodLogs));
+}
+
+function inferCyclePeriodEnd(cycle: DemoCycle, nextCycleStart: string | null): string {
+  const fallbackEnd = addDaysToIsoDate(cycle.startedOn, demoState.me.settings.periodLengthDays - 1);
+  let resolvedEnd = cycle.endedOn ?? fallbackEnd;
+  const periodDates = getPeriodDateSet();
+
+  if (periodDates.has(cycle.startedOn)) {
+    let cursor = cycle.startedOn;
+
+    while (periodDates.has(addDaysToIsoDate(cursor, 1))) {
+      const nextDate = addDaysToIsoDate(cursor, 1);
+
+      if (nextCycleStart && nextDate >= nextCycleStart) {
+        break;
+      }
+
+      cursor = nextDate;
+    }
+
+    if (cursor > resolvedEnd) {
+      resolvedEnd = cursor;
+    }
+  }
+
+  if (nextCycleStart && resolvedEnd >= nextCycleStart) {
+    return addDaysToIsoDate(nextCycleStart, -1);
+  }
+
+  return resolvedEnd;
+}
+
 function getSummary(): CycleSummaryResponse {
   const today = getToday();
   const [latestCycle] = demoState.cycles;
-  const latestPeriodStart = latestCycle?.startedOn ?? null;
-  const latestPeriodEnd =
-    latestCycle?.endedOn ??
-    (latestPeriodStart
-      ? addDaysToIsoDate(latestPeriodStart, demoState.me.settings.periodLengthDays - 1)
-      : null);
   const cycleLengths = getCycleLengths(demoState.cycles);
   const periodLengths = getPeriodLengths(demoState.cycles);
   const averageCycleLengthDays = calculateAverageCycleLength(
@@ -196,6 +256,15 @@ function getSummary(): CycleSummaryResponse {
     periodLengths,
     demoState.me.settings.periodLengthDays
   );
+  const latestPeriodStart = latestCycle?.startedOn ?? null;
+  const latestPeriodEnd = latestCycle ? inferCyclePeriodEnd(latestCycle, null) : null;
+  const currentCycleDay = calculateCurrentCycleDay(latestPeriodStart, today);
+  const forecast = buildPeriodForecast({
+    averageCycleLengthDays,
+    averagePeriodLengthDays,
+    fromDate: today,
+    latestCycleStart: latestPeriodStart
+  });
 
   return {
     summary: {
@@ -206,46 +275,18 @@ function getSummary(): CycleSummaryResponse {
         differenceInDays(today, latestPeriodEnd) >= 0,
       averageCycleLengthDays,
       averagePeriodLengthDays,
-      currentCycleDay: calculateCurrentCycleDay(latestPeriodStart, today),
+      currentCycleDay,
+      currentPhase: resolveCyclePhase(
+        currentCycleDay,
+        averageCycleLengthDays,
+        averagePeriodLengthDays
+      ),
+      forecast,
       latestPeriodStart,
       onboardingCompleted: demoState.me.settings.onboardingCompleted,
-      predictedNextPeriodStart:
-        latestPeriodStart === null
-          ? null
-          : addDaysToIsoDate(latestPeriodStart, averageCycleLengthDays),
+      predictedNextPeriodStart: forecast[0]?.periodStart ?? null,
       today
     }
-  };
-}
-
-function getHistory(limit = 30): HistoryResponse {
-  const dates = Array.from(
-    new Set([
-      ...Object.keys(demoState.checkins),
-      ...Object.keys(demoState.periodLogs),
-      ...demoState.cycles.flatMap(
-        (cycle) => [cycle.startedOn, cycle.endedOn].filter(Boolean) as string[]
-      )
-    ])
-  )
-    .sort((left, right) => (left < right ? 1 : left > right ? -1 : 0))
-    .slice(0, limit);
-
-  return {
-    days: dates.map((date) => ({
-      checkin: demoState.checkins[date] ?? null,
-      date,
-      period: demoState.periodLogs[date]
-        ? {
-            cycleEnded: demoState.cycles.some((cycle) => cycle.endedOn === date),
-            cycleStarted: demoState.cycles.some((cycle) => cycle.startedOn === date),
-            date,
-            flowIntensity: demoState.periodLogs[date].flowIntensity,
-            note: demoState.periodLogs[date].note
-          }
-        : null,
-      symptomKeys: demoState.checkins[date]?.symptomKeys ?? []
-    }))
   };
 }
 
@@ -255,6 +296,7 @@ function getCalendar(month: string): CalendarResponse {
   return {
     days: buildCalendarMonthDays({
       currentCycleStart: summary.latestPeriodStart,
+      currentPeriodEnd: demoState.cycles[0] ? inferCyclePeriodEnd(demoState.cycles[0], null) : null,
       month,
       periodDays: Object.entries(demoState.periodLogs).map(([date, value]) => ({
         date,
@@ -263,14 +305,163 @@ function getCalendar(month: string): CalendarResponse {
       })),
       predictedNextPeriodStart: summary.predictedNextPeriodStart,
       predictedPeriodLengthDays: summary.averagePeriodLengthDays,
+      predictedPeriods: summary.forecast,
       today: summary.today
     }),
     month
   };
 }
 
-function sortCyclesDescending(): void {
-  demoState.cycles.sort((left, right) => (left.startedOn < right.startedOn ? 1 : -1));
+function averageNullable(values: readonly number[]): number | null {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function getCommonSymptoms(days: readonly HistoryDay[]): SymptomKey[] {
+  const counts = new Map<SymptomKey, number>();
+
+  for (const day of days) {
+    for (const symptomKey of day.symptomKeys) {
+      counts.set(symptomKey, (counts.get(symptomKey) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((left, right) => {
+      if (right[1] !== left[1]) {
+        return right[1] - left[1];
+      }
+
+      return left[0].localeCompare(right[0]);
+    })
+    .slice(0, 3)
+    .map(([symptomKey]) => symptomKey);
+}
+
+function getDateRange(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  let cursor = startDate;
+
+  while (cursor <= endDate) {
+    dates.push(cursor);
+    cursor = addDaysToIsoDate(cursor, 1);
+  }
+
+  return dates;
+}
+
+function buildPhaseRanges(
+  cycleStart: string,
+  cycleLengthDays: number,
+  periodLengthDays: number
+): Array<{ endDate: string; phase: CyclePhase; startDate: string }> {
+  const ovulationStartDay = Math.min(
+    cycleLengthDays,
+    Math.max(periodLengthDays + 1, cycleLengthDays - 16)
+  );
+  const ovulationEndDay = Math.min(cycleLengthDays, Math.max(ovulationStartDay, cycleLengthDays - 12));
+  const windows: Array<{ endDay: number; phase: CyclePhase; startDay: number }> = [
+    { endDay: periodLengthDays, phase: "menstrual", startDay: 1 },
+    { endDay: Math.max(periodLengthDays, ovulationStartDay - 1), phase: "follicular", startDay: periodLengthDays + 1 },
+    { endDay: ovulationEndDay, phase: "ovulatory", startDay: ovulationStartDay },
+    { endDay: cycleLengthDays, phase: "luteal", startDay: ovulationEndDay + 1 }
+  ];
+
+  return windows
+    .filter((window) => window.startDay <= window.endDay)
+    .map((window) => ({
+      endDate: addDaysToIsoDate(cycleStart, window.endDay - 1),
+      phase: window.phase,
+      startDate: addDaysToIsoDate(cycleStart, window.startDay - 1)
+    }));
+}
+
+function createHistoryDay(date: string, phase: CyclePhase): HistoryDay {
+  const cycleStarted = demoState.cycles.some((cycle) => cycle.startedOn === date);
+  const cycleEnded = demoState.cycles.some((cycle) => cycle.endedOn === date);
+
+  return {
+    checkin: demoState.checkins[date] ?? null,
+    date,
+    period: demoState.periodLogs[date]
+      ? {
+          cycleEnded,
+          cycleStarted,
+          date,
+          flowIntensity: demoState.periodLogs[date].flowIntensity,
+          note: demoState.periodLogs[date].note
+        }
+      : null,
+    phase,
+    symptomKeys: demoState.checkins[date]?.symptomKeys ?? []
+  };
+}
+
+function getHistory(limit = 6): HistoryResponse {
+  const today = getToday();
+  const cyclesAscending = [...demoState.cycles].sort((left, right) =>
+    left.startedOn < right.startedOn ? -1 : left.startedOn > right.startedOn ? 1 : 0
+  );
+  const recentCycles = cyclesAscending.slice(-limit);
+
+  return {
+    cycles: recentCycles
+      .map((cycle, index) => {
+        const nextCycle = recentCycles[index + 1] ?? null;
+        const nextCycleStart = nextCycle?.startedOn ?? null;
+        const cycleLengthDays = nextCycleStart
+          ? differenceInDays(cycle.startedOn, nextCycleStart)
+          : differenceInDays(cycle.startedOn, today) + 1;
+        const periodEnd = inferCyclePeriodEnd(cycle, nextCycleStart);
+        const periodLengthDays = differenceInDays(cycle.startedOn, periodEnd) + 1;
+        const phases = buildPhaseRanges(cycle.startedOn, cycleLengthDays, periodLengthDays).map(
+          (phaseRange) => {
+            const days = getDateRange(phaseRange.startDate, phaseRange.endDate).map((date) =>
+              createHistoryDay(date, phaseRange.phase)
+            );
+            const flowLevels = days
+              .map((day) => day.period?.flowIntensity)
+              .filter((value): value is FlowIntensity => value !== null && value !== undefined)
+              .map((value) => flowIntensityLevel[value]);
+            const painLevels = days
+              .map((day) => day.checkin?.painLevel)
+              .filter((value): value is number => value !== null && value !== undefined);
+            const moodValues = days
+              .map((day) => day.checkin?.mood)
+              .filter((value): value is number => value !== null && value !== undefined);
+            const energyValues = days
+              .map((day) => day.checkin?.energy)
+              .filter((value): value is number => value !== null && value !== undefined);
+
+            return {
+              averageEnergy: averageNullable(energyValues),
+              averageFlowIntensityLevel: averageNullable(flowLevels),
+              averageMood: averageNullable(moodValues),
+              averagePainLevel: averageNullable(painLevels),
+              commonSymptoms: getCommonSymptoms(days),
+              days,
+              endDate: phaseRange.endDate,
+              phase: phaseRange.phase,
+              startDate: phaseRange.startDate,
+              totalDays: days.length
+            };
+          }
+        );
+
+        return {
+          cycleId: `${cycle.startedOn}-${index}`,
+          cycleLengthDays: nextCycleStart ? differenceInDays(cycle.startedOn, nextCycleStart) : null,
+          endedOn: nextCycleStart ? addDaysToIsoDate(nextCycleStart, -1) : null,
+          periodLengthDays,
+          phases,
+          startedOn: cycle.startedOn
+        };
+      })
+      .reverse()
+  };
 }
 
 function upsertPeriodLog(
@@ -294,6 +485,20 @@ function upsertPeriodLog(
   };
 }
 
+function syncCyclesFromPeriodLogs(): void {
+  const cycleWindows = buildCyclePeriodWindows(
+    Object.keys(demoState.periodLogs),
+    demoState.me.settings.periodLengthDays
+  );
+
+  demoState.cycles = cycleWindows
+    .map((cycleWindow, index) => ({
+      endedOn: index === cycleWindows.length - 1 ? null : cycleWindow.endedOn,
+      startedOn: cycleWindow.startedOn
+    }))
+    .sort((left, right) => (left.startedOn < right.startedOn ? 1 : -1));
+}
+
 export function isDemoAppMode(): boolean {
   return hasDemoFlag();
 }
@@ -310,10 +515,26 @@ export function createDemoApiClient(): ApiClient {
         periodLengthDays: input.periodLengthDays,
         timezone: input.timezone ?? demoState.me.settings.timezone
       };
+      demoState.periodLogs = Object.fromEntries(
+        buildLoggedPeriodDates(input.latestPeriodStart, input.periodLengthDays, getToday()).map(
+          (date) => [
+            date,
+            {
+              flowIntensity: null,
+              note: null
+            }
+          ]
+        )
+      ) as typeof demoState.periodLogs;
+      syncCyclesFromPeriodLogs();
 
       return {
         settings: demoState.me.settings
       };
+    },
+    async deletePeriodDay(date: string): Promise<void> {
+      delete demoState.periodLogs[date];
+      syncCyclesFromPeriodLogs();
     },
     async endPeriod(date: string): Promise<PeriodLogResponse> {
       const latestOpenCycle = demoState.cycles.find(
@@ -324,7 +545,10 @@ export function createDemoApiClient(): ApiClient {
         latestOpenCycle.endedOn = date;
       }
 
-      return upsertPeriodLog(date);
+      const response = upsertPeriodLog(date);
+      syncCyclesFromPeriodLogs();
+
+      return response;
     },
     async getCalendar(month: string): Promise<CalendarResponse> {
       return getCalendar(month);
@@ -344,7 +568,10 @@ export function createDemoApiClient(): ApiClient {
       return cloneState(demoState.me);
     },
     async logPeriod(input): Promise<PeriodLogResponse> {
-      return upsertPeriodLog(input.date, input.flowIntensity, input.note);
+      const response = upsertPeriodLog(input.date, input.flowIntensity, input.note);
+      syncCyclesFromPeriodLogs();
+
+      return response;
     },
     async saveCheckin(date: string, input: DailyCheckinRequest): Promise<DailyCheckinResponse> {
       demoState.checkins[date] = {
@@ -363,15 +590,10 @@ export function createDemoApiClient(): ApiClient {
       };
     },
     async startPeriod(input): Promise<PeriodLogResponse> {
-      if (!demoState.cycles.some((cycle) => cycle.startedOn === input.date)) {
-        demoState.cycles.push({
-          endedOn: null,
-          startedOn: input.date
-        });
-        sortCyclesDescending();
-      }
+      const response = upsertPeriodLog(input.date, input.flowIntensity, input.note);
+      syncCyclesFromPeriodLogs();
 
-      return upsertPeriodLog(input.date, input.flowIntensity, input.note);
+      return response;
     },
     async updateSettings(input: UpdateUserSettingsRequest): Promise<UpdateUserSettingsResponse> {
       demoState.me.settings = {

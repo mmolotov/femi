@@ -1,0 +1,343 @@
+<mxfile host="app.diagrams.net" agent="Codex">
+  <diagram id="femi-real-ui-mockups" name="FEMI Mockups">
+    <mxGraphModel dx="2455" dy="1370" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2600" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="100" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f0e8;strokeColor=#d7c8bb;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="980" width="360" x="500" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=20;fontStyle=1;fontColor=#2d1f1b;" value="FEMI app mockups" vertex="1">
+          <mxGeometry height="48" width="760" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f0e8;strokeColor=#d7c8bb;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="760" width="360" x="60" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="11" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#2d1f1b;" value="Экран 1. Onboarding" vertex="1">
+          <mxGeometry height="24" width="360" x="60" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-517" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="439" width="332" x="514" y="641" as="geometry" />
+        </mxCell>
+        <mxCell id="12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="66" width="332" x="74" y="124" as="geometry" />
+        </mxCell>
+        <mxCell id="13" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2b1715;" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;font-size: 24px; background-color: transparent; color: light-dark(rgb(43, 23, 21), rgb(227, 210, 208));&quot;&gt;FEMI (logo)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="44" width="300" x="86" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="34" width="332" x="74" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="18" width="102" x="86" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="19" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;" value="Сегодня" vertex="1">
+          <mxGeometry height="18" width="102" x="86" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="20" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="История" vertex="1">
+          <mxGeometry height="18" width="92" x="194" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="Настройки" vertex="1">
+          <mxGeometry height="18" width="96" x="286" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="588" width="332" x="74" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="23" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2d1f1b;" value="Короткая настройка перед первой записью" vertex="1">
+          <mxGeometry height="22" width="280" x="86" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="24" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;fontColor=#6b5b52;" value="Один раз укажите обычную длину цикла и менструации.&amp;nbsp;&lt;div&gt;Позже это можно изменить в настройках.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="26" width="300" x="86" y="292" as="geometry" />
+        </mxCell>
+        <mxCell id="25" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#4e4038;" value="Обычная длина цикла" vertex="1">
+          <mxGeometry height="16" width="180" x="86" y="328" as="geometry" />
+        </mxCell>
+        <mxCell id="26" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ddd1c6;" value="" vertex="1">
+          <mxGeometry height="34" width="308" x="86" y="348" as="geometry" />
+        </mxCell>
+        <mxCell id="27" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#2d1f1b;" value="28" vertex="1">
+          <mxGeometry height="18" width="40" x="98" y="356" as="geometry" />
+        </mxCell>
+        <mxCell id="28" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;fontColor=#8a7c72;" value="Обычный диапазон: от 20 до 45 дней" vertex="1">
+          <mxGeometry height="12" width="220" x="86" y="386" as="geometry" />
+        </mxCell>
+        <mxCell id="29" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#4e4038;" value="Обычная длина менструации" vertex="1">
+          <mxGeometry height="16" width="200" x="86" y="406" as="geometry" />
+        </mxCell>
+        <mxCell id="30" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ddd1c6;" value="" vertex="1">
+          <mxGeometry height="34" width="308" x="86" y="426" as="geometry" />
+        </mxCell>
+        <mxCell id="31" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#2d1f1b;" value="5" vertex="1">
+          <mxGeometry height="18" width="40" x="98" y="434" as="geometry" />
+        </mxCell>
+        <mxCell id="32" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;fontColor=#8a7c72;" value="Обычный диапазон: от 2 до 10 дней" vertex="1">
+          <mxGeometry height="12" width="220" x="86" y="464" as="geometry" />
+        </mxCell>
+        <mxCell id="33" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#4e4038;" value="Дата начала последней менструации" vertex="1">
+          <mxGeometry height="16" width="220" x="86" y="484" as="geometry" />
+        </mxCell>
+        <mxCell id="34" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ddd1c6;" value="" vertex="1">
+          <mxGeometry height="34" width="308" x="86" y="504" as="geometry" />
+        </mxCell>
+        <mxCell id="35" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#2d1f1b;" value="01.04.2026" vertex="1">
+          <mxGeometry height="18" width="90" x="98" y="512" as="geometry" />
+        </mxCell>
+        <mxCell id="36" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;fontColor=#8a7c72;" value="От этой даты строится первый прогноз на 6 месяцев." vertex="1">
+          <mxGeometry height="12" width="250" x="86" y="542" as="geometry" />
+        </mxCell>
+        <mxCell id="37" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#2d1f1b;" value="Календарь" vertex="1">
+          <mxGeometry height="16" width="140" x="86" y="577" as="geometry" />
+        </mxCell>
+        <mxCell id="39" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e7ddd3;" value="Месячная сетка с отмеченным последним днем.&lt;div&gt;все прогнозируемые дни менструации до СЕГОДНЯШНЕГО дня считаются фактом, будущие - прогнозом&lt;/div&gt;" vertex="1">
+          <mxGeometry height="156" width="308" x="86" y="604" as="geometry" />
+        </mxCell>
+        <mxCell id="41" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="16" width="308" x="82" y="782" as="geometry" />
+        </mxCell>
+        <mxCell id="42" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#ffffff;" value="Сохранить настройку" vertex="1">
+          <mxGeometry height="20" width="308" x="82" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="101" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#2d1f1b;" value="Экран 2. Today / Home" vertex="1">
+          <mxGeometry height="24" width="360" x="500" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="102" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="66" width="332" x="514" y="124" as="geometry" />
+        </mxCell>
+        <mxCell id="107" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="34" width="332" x="513" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="108" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="18" width="102" x="525" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="109" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;" value="Сегодня" vertex="1">
+          <mxGeometry height="18" width="102" x="525" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="110" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="История" vertex="1">
+          <mxGeometry height="18" width="92" x="633" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="111" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="Настройки" vertex="1">
+          <mxGeometry height="18" width="96" x="725" y="208" as="geometry" />
+        </mxCell>
+        <mxCell id="112" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="146" width="332" x="510" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="113" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2d1f1b;" value="Сегодня" vertex="1">
+          <mxGeometry height="20" width="100" x="522" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="114" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="54" width="94" x="522" y="296" as="geometry" />
+        </mxCell>
+        <mxCell id="115" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#6f4d43;" value="Текущий день&amp;nbsp;&lt;div&gt;цикла&lt;br&gt;N&lt;/div&gt;" vertex="1">
+          <mxGeometry height="28" width="94" x="522" y="308" as="geometry" />
+        </mxCell>
+        <mxCell id="116" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="54" width="94" x="628" y="296" as="geometry" />
+        </mxCell>
+        <mxCell id="117" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#6f4d43;" value="Текущая фаза&lt;br&gt;xxxx" vertex="1">
+          <mxGeometry height="28" width="94" x="628" y="308" as="geometry" />
+        </mxCell>
+        <mxCell id="118" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="54" width="94" x="734" y="296" as="geometry" />
+        </mxCell>
+        <mxCell id="119" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#6f4d43;" value="Прогноз след.&amp;nbsp;&lt;div&gt;менструации&lt;br&gt;xx.xx.xxxx&lt;/div&gt;" vertex="1">
+          <mxGeometry height="34" width="94" x="734" y="304" as="geometry" />
+        </mxCell>
+        <mxCell id="120" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;fontSize=11;fontColor=#6f4d43;" value="Сейчас менструальная фаза&#xa;Сохраняйте симптомы и отмечайте менструальные дни." vertex="1">
+          <mxGeometry height="28" width="306" x="522" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="121" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="232" width="332" x="511.5" y="406" as="geometry" />
+        </mxCell>
+        <mxCell id="122" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#2d1f1b;" value="Календарь" vertex="1">
+          <mxGeometry height="18" width="120" x="523.5" y="422" as="geometry" />
+        </mxCell>
+        <mxCell id="123" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;fontColor=#8a7c72;" value="Logged / forecast / today в одной сетке" vertex="1">
+          <mxGeometry height="12" width="180" x="523.5" y="442" as="geometry" />
+        </mxCell>
+        <mxCell id="124" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e7ddd3;" value="" vertex="1">
+          <mxGeometry height="160" width="306" x="523.5" y="458" as="geometry" />
+        </mxCell>
+        <mxCell id="125" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#6b5b52;" value="Месячная сетка:&amp;nbsp;&lt;div&gt;&lt;div&gt;&amp;nbsp; - тап по дню в календаре = выбрать день;&lt;/div&gt;&lt;div&gt;&amp;nbsp; - ниже сразу обновляется блок&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; Детали дня для выбранной даты&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="112" width="283" x="535.5" y="476" as="geometry" />
+        </mxCell>
+        <mxCell id="128" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="150" width="317.5" x="522.5" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="129" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#2d1f1b;" value="&amp;lt;выбранная дата&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(45, 31, 27), rgb(217, 205, 201));&quot;&gt;из&amp;nbsp;&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(45, 31, 27), rgb(217, 205, 201));&quot;&gt;календаря / или сегодня&amp;gt;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="18" width="180" x="526" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="130" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;fontColor=#6b5b52;" value="Настроение | Энергия | Боль | Качество сна&lt;div&gt;Выделения&lt;br&gt;Необязательная заметка&lt;br&gt;Симптомы: ...&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&amp;nbsp; - если выбран пустой прошлый/сегодняшний день:&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(107, 91, 82), rgb(168, 154, 146));&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; - форма Чек-ин за день&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; - если выбран уже отмеченный день:&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(107, 91, 82), rgb(168, 154, 146));&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; - ниже та же форма, уже с подставленными данными если они есть&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&amp;nbsp; - если выбран будущий день:&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; - форма заблокирована для редактирования&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="91" width="286" x="526" y="709" as="geometry" />
+        </mxCell>
+        <mxCell id="131" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="16" width="306" x="527" y="1040" as="geometry" />
+        </mxCell>
+        <mxCell id="132" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#ffffff;" value="Сохранить запись" vertex="1">
+          <mxGeometry height="20" width="306" x="527" y="1038" as="geometry" />
+        </mxCell>
+        <mxCell id="300" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f0e8;strokeColor=#d7c8bb;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="760" width="360" x="950" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="301" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#2d1f1b;" value="Экран 3. History" vertex="1">
+          <mxGeometry height="24" width="360" x="950" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="304" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="34" width="332" x="964" y="201" as="geometry" />
+        </mxCell>
+        <mxCell id="305" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="Сегодня" vertex="1">
+          <mxGeometry height="18" width="92" x="978" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="306" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="18" width="92" x="1082" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="307" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;" value="История" vertex="1">
+          <mxGeometry height="18" width="92" x="1082" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="308" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="Настройки" vertex="1">
+          <mxGeometry height="18" width="96" x="1180" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="309" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="554" width="332" x="964" y="247" as="geometry" />
+        </mxCell>
+        <mxCell id="310" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2d1f1b;" value="История" vertex="1">
+          <mxGeometry height="20" width="120" x="978" y="263" as="geometry" />
+        </mxCell>
+        <mxCell id="311" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;fontColor=#6b5b52;" value="История циклов, сгруппированная по фазам,&amp;nbsp;&lt;div&gt;с краткой сводкой и деталями по дням внутри каждой фазы.&lt;/div&gt;" vertex="1">
+          <mxGeometry height="30" width="292" x="978" y="287" as="geometry" />
+        </mxCell>
+        <mxCell id="312" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="86" width="304" x="978" y="331" as="geometry" />
+        </mxCell>
+        <mxCell id="313" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=11;fontStyle=1;fontColor=#6f4d43;" value="Карточка цикла&#xa;01.03.2026 - 28.03.2026&#xa;Cycle length 28 | Period length 5" vertex="1">
+          <mxGeometry height="36" width="220" x="990" y="345" as="geometry" />
+        </mxCell>
+        <mxCell id="314" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e7ddd3;" value="" vertex="1">
+          <mxGeometry height="16" width="280" x="990" y="389" as="geometry" />
+        </mxCell>
+        <mxCell id="315" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontColor=#6b5b52;" value="Фазы: Менструальная / Фолликулярная / Овуляторная / Лютеиновая" vertex="1">
+          <mxGeometry height="20" width="280" x="990" y="387" as="geometry" />
+        </mxCell>
+        <mxCell id="316" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e7ddd3;" value="" vertex="1">
+          <mxGeometry height="110" width="304" x="978" y="429" as="geometry" />
+        </mxCell>
+        <mxCell id="317" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;fontColor=#6b5b52;" value="Открытая фаза: Менструальная&#xa;Duration 5 | Average flow medium | Pain 2&#xa;Ниже: теги симптомов и история по дням" vertex="1">
+          <mxGeometry height="42" width="276" x="990" y="445" as="geometry" />
+        </mxCell>
+        <mxCell id="318" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6f1eb;strokeColor=#e7ddd3;" value="" vertex="1">
+          <mxGeometry height="16" width="276" x="990" y="495" as="geometry" />
+        </mxCell>
+        <mxCell id="319" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=9;fontColor=#6b5b52;" value="Дневные карточки по датам внутри выбранной фазы" vertex="1">
+          <mxGeometry height="20" width="276" x="990" y="493" as="geometry" />
+        </mxCell>
+        <mxCell id="320" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="86" width="304" x="978" y="555" as="geometry" />
+        </mxCell>
+        <mxCell id="321" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#6f4d43;" value="Следующая карточка цикла" vertex="1">
+          <mxGeometry height="18" width="180" x="990" y="589" as="geometry" />
+        </mxCell>
+        <mxCell id="400" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f7f0e8;strokeColor=#d7c8bb;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="760" width="360" x="1390" y="104" as="geometry" />
+        </mxCell>
+        <mxCell id="401" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#2d1f1b;" value="Экран 5. Settings" vertex="1">
+          <mxGeometry height="24" width="360" x="1390" y="76" as="geometry" />
+        </mxCell>
+        <mxCell id="404" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="34" width="332" x="1404" y="201" as="geometry" />
+        </mxCell>
+        <mxCell id="405" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="Сегодня" vertex="1">
+          <mxGeometry height="18" width="92" x="1418" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="406" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontColor=#6f6259;" value="История" vertex="1">
+          <mxGeometry height="18" width="92" x="1516" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="407" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="18" width="108" x="1614" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="408" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#ffffff;" value="Настройки" vertex="1">
+          <mxGeometry height="18" width="108" x="1614" y="209" as="geometry" />
+        </mxCell>
+        <mxCell id="409" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="554" width="332" x="1404" y="247" as="geometry" />
+        </mxCell>
+        <mxCell id="410" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2d1f1b;" value="Tracking preferences" vertex="1">
+          <mxGeometry height="20" width="170" x="1418" y="263" as="geometry" />
+        </mxCell>
+        <mxCell id="411" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e7ddd3;" value="" vertex="1">
+          <mxGeometry height="96" width="304" x="1418" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="412" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#6b5b52;" value="Cycle length | Period length | Timezone | Reminders" vertex="1">
+          <mxGeometry height="18" width="276" x="1430" y="333" as="geometry" />
+        </mxCell>
+        <mxCell id="413" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2b1715;strokeColor=#2b1715;" value="" vertex="1">
+          <mxGeometry height="16" width="304" x="1418" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="414" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#ffffff;" value="Сохранить настройки" vertex="1">
+          <mxGeometry height="20" width="304" x="1418" y="403" as="geometry" />
+        </mxCell>
+        <mxCell id="415" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="72" width="304" x="1418" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="416" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#6f4d43;" value="Product / privacy posture" vertex="1">
+          <mxGeometry height="18" width="180" x="1430" y="447" as="geometry" />
+        </mxCell>
+        <mxCell id="417" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="72" width="304" x="1418" y="521" as="geometry" />
+        </mxCell>
+        <mxCell id="418" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#6f4d43;" value="Telegram integration status" vertex="1">
+          <mxGeometry height="18" width="190" x="1430" y="533" as="geometry" />
+        </mxCell>
+        <mxCell id="419" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;" value="" vertex="1">
+          <mxGeometry height="52" width="304" x="1418" y="607" as="geometry" />
+        </mxCell>
+        <mxCell id="420" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#6f4d43;" value="Language switcher" vertex="1">
+          <mxGeometry height="18" width="170" x="1430" y="625" as="geometry" />
+        </mxCell>
+        <mxCell id="421" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#e7ddd3;" value="" vertex="1">
+          <mxGeometry height="68" width="304" x="1418" y="673" as="geometry" />
+        </mxCell>
+        <mxCell id="422" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#6b5b52;" value="Important notice / medical disclaimer" vertex="1">
+          <mxGeometry height="18" width="250" x="1430" y="697" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-506" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2b1715;" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;font-size: 24px; background-color: transparent; color: light-dark(rgb(43, 23, 21), rgb(227, 210, 208));&quot;&gt;FEMI (logo)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="44" width="300" x="526" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-507" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6e7de;strokeColor=#edd3c6;fontSize=11;fontColor=#6f4d43;align=center;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="168" width="305" x="528" y="850" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-509" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;fontColor=#6b5b52;" value="&lt;div&gt;&lt;div&gt;- если выбран пустой прошлый/сегодняшний день:&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; - кнопка Отметить день менструации&lt;/div&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;&amp;nbsp; - если выбран уже отмеченный день:&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; - Интенсивность&lt;/div&gt;&lt;div&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; - Убрать отметку&lt;/div&gt;&lt;/div&gt;&lt;div&gt;- если выбран будущий день: только статус прогноза&lt;/div&gt;" vertex="1">
+          <mxGeometry height="78" width="283" x="540.5" y="882" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-511" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontStyle=1;fontColor=#4e4038;" value="Интенсивность менструации" vertex="1">
+          <mxGeometry height="16" width="180" x="539" y="966" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-512" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ddd1c6;" value="" vertex="1">
+          <mxGeometry height="34" width="272" x="544" y="982" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-513" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#2d1f1b;" value="&amp;lt;value from list&amp;gt;" vertex="1">
+          <mxGeometry height="18" width="80" x="551" y="990" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-516" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff4de;strokeColor=#c9ae92;fontSize=11;fontColor=#5b4338;" value="&amp;lt;фаза на выбранный день&amp;gt;" vertex="1">
+          <mxGeometry height="22" width="96" x="733" y="654" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-518" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#2d1f1b;" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(45, 31, 27), rgb(217, 205, 201));&quot;&gt;Чек-ин&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="18" width="180" x="526" y="694" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-519" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=13;fontStyle=1;fontColor=#2d1f1b;" value="Менструация" vertex="1">
+          <mxGeometry height="18" width="180" x="539" y="852" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-521" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="66" width="332" x="964" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-522" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2b1715;" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;font-size: 24px; background-color: transparent; color: light-dark(rgb(43, 23, 21), rgb(227, 210, 208));&quot;&gt;FEMI (logo)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="44" width="300" x="976" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-523" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffaf5;strokeColor=#eadfd4;" value="" vertex="1">
+          <mxGeometry height="66" width="332" x="1404" y="116" as="geometry" />
+        </mxCell>
+        <mxCell id="qATuBBBA9tpbJrhrtpPM-524" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;fontSize=14;fontStyle=1;fontColor=#2b1715;" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;font-size: 24px; background-color: transparent; color: light-dark(rgb(43, 23, 21), rgb(227, 210, 208));&quot;&gt;FEMI (logo)&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="44" width="300" x="1416" y="128" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

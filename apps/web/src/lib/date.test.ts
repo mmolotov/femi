@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { formatIsoDateForDisplay, formatIsoMonthForDisplay } from "./date";
+import {
+  formatIsoDateForDisplay,
+  formatIsoMonthForDisplay,
+  getCalendarLeadingEmptyDays,
+  getCalendarWeekdayLabels
+} from "./date";
 
 describe("formatIsoDateForDisplay", () => {
   afterEach(() => {
@@ -49,5 +54,33 @@ describe("formatIsoDateForDisplay", () => {
         year: "numeric"
       })
     );
+  });
+
+  it("builds weekday labels with UTC semantics", () => {
+    function DateTimeFormatMock() {
+      return {
+        format: () => "Mon"
+      };
+    }
+
+    const formatterSpy = vi
+      .spyOn(Intl, "DateTimeFormat")
+      .mockImplementation(DateTimeFormatMock as typeof Intl.DateTimeFormat);
+
+    const labels = getCalendarWeekdayLabels("en-US");
+
+    expect(labels).toHaveLength(7);
+    expect(formatterSpy).toHaveBeenCalledWith(
+      "en-US",
+      expect.objectContaining({
+        timeZone: "UTC",
+        weekday: "short"
+      })
+    );
+  });
+
+  it("returns monday-first leading empty days for a month", () => {
+    expect(getCalendarLeadingEmptyDays("2026-04")).toBe(2);
+    expect(getCalendarLeadingEmptyDays("2026-03")).toBe(6);
   });
 });
