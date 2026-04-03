@@ -92,22 +92,35 @@ describe("cycle routes", () => {
       }
     });
 
+    const selectMock = vi
+      .fn()
+      .mockImplementationOnce(() =>
+        createSelectBuilder([
+          {
+            endedOn: new Date("2026-03-05T00:00:00.000Z"),
+            id: "cycle-2",
+            startedOn: new Date("2026-03-01T00:00:00.000Z")
+          },
+          {
+            endedOn: new Date("2026-02-05T00:00:00.000Z"),
+            id: "cycle-1",
+            startedOn: new Date("2026-02-01T00:00:00.000Z")
+          }
+        ])
+      )
+      .mockImplementationOnce(() =>
+        createSelectBuilder([
+          {
+            flowLevel: 2,
+            happenedOn: new Date("2026-03-01T00:00:00.000Z"),
+            notes: null
+          }
+        ])
+      );
+
     await registerCycleRoutes(app, {
       db: {
-        select: vi.fn(() =>
-          createSelectBuilder([
-            {
-              endedOn: new Date("2026-03-05T00:00:00.000Z"),
-              id: "cycle-2",
-              startedOn: new Date("2026-03-01T00:00:00.000Z")
-            },
-            {
-              endedOn: new Date("2026-02-05T00:00:00.000Z"),
-              id: "cycle-1",
-              startedOn: new Date("2026-02-01T00:00:00.000Z")
-            }
-          ])
-        )
+        select: selectMock
       } as never,
       env: {} as never
     });
@@ -125,6 +138,8 @@ describe("cycle routes", () => {
       summary: {
         averageCycleLengthDays: 28,
         averagePeriodLengthDays: 5,
+        currentPhase: expect.any(String),
+        forecast: expect.any(Array),
         latestPeriodStart: "2026-03-01",
         onboardingCompleted: true,
         predictedNextPeriodStart: "2026-03-29"

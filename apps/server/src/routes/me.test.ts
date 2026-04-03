@@ -119,6 +119,11 @@ describe("me routes", () => {
     const updateMock = vi.fn(() => ({
       set: setMock
     }));
+    const transactionMock = vi.fn(async (callback) =>
+      callback({
+        update: updateMock
+      })
+    );
 
     app = await createTestApp();
     resolveAuthenticatedUserMock.mockResolvedValue({
@@ -141,7 +146,7 @@ describe("me routes", () => {
 
     await registerMeRoutes(app, {
       db: {
-        update: updateMock
+        transaction: transactionMock
       } as never,
       env: {} as never
     });
@@ -176,6 +181,100 @@ describe("me routes", () => {
         timezone: "Europe/Berlin"
       }
     });
+  });
+
+  it("seeds onboarding period days up to today", async () => {
+    const returningMock = vi.fn().mockResolvedValue([
+      {
+        cycleLengthDays: 30,
+        onboardingCompleted: true,
+        periodLengthDays: 6,
+        remindersEnabled: true,
+        timezone: "Europe/Berlin"
+      }
+    ]);
+    const periodConflictUpdateMock = vi.fn().mockResolvedValue(undefined);
+    const periodInsertMock = vi.fn(() => ({
+      onConflictDoUpdate: periodConflictUpdateMock
+    }));
+    const cycleConflictUpdateMock = vi.fn().mockResolvedValue(undefined);
+    const cycleInsertMock = vi.fn(() => ({
+      onConflictDoUpdate: cycleConflictUpdateMock
+    }));
+    const whereMock = vi.fn(() => ({
+      returning: returningMock
+    }));
+    const setMock = vi.fn(() => ({
+      where: whereMock
+    }));
+    const updateMock = vi.fn(() => ({
+      set: setMock
+    }));
+    const transactionMock = vi.fn(async (callback) =>
+      callback({
+        insert: vi
+          .fn()
+          .mockImplementationOnce(() => ({
+            values: cycleInsertMock
+          }))
+          .mockImplementationOnce(() => ({
+            values: periodInsertMock
+          })),
+        update: updateMock
+      })
+    );
+
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: false,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {
+        transaction: transactionMock
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      body: {
+        cycleLengthDays: 30,
+        latestPeriodStart: "2026-03-01",
+        periodLengthDays: 6,
+        timezone: "Europe/Berlin"
+      },
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "PATCH",
+      url: "/api/me/settings"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(cycleInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0"
+      })
+    );
+    expect(periodInsertMock).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ userId: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0" })
+      ])
+    );
   });
 
   it("rejects an invalid settings payload", async () => {

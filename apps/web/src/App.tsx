@@ -44,17 +44,14 @@ function AppShell() {
   const session = useSession();
   const tabs: Tab[] = [
     { to: "/", label: messages.app.tabs.today, end: true },
-    { to: "/calendar", label: messages.app.tabs.calendar },
     { to: "/history", label: messages.app.tabs.history },
     { to: "/settings", label: messages.app.tabs.settings }
   ];
 
   return (
     <div className="app-shell">
-      <header className="hero-card">
-        <p className="eyebrow">{messages.app.eyebrow}</p>
-        <h1>{messages.app.heroTitle}</h1>
-        <p className="hero-copy">{messages.app.heroCopy}</p>
+      <header className="hero-card compact-hero-card">
+        <h1 className="brand-mark">FEMI</h1>
       </header>
 
       {status === "loading" ? (

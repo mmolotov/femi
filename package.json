@@ -24,6 +24,9 @@
     "jsdom": "^27.0.0",
     "knip": "^5.0.0",
     "prettier": "^3.0.0",
+    "stylelint": "^17.6.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-order": "^8.1.1",
     "typescript-eslint": "^8.0.0",
     "vite-tsconfig-paths": "^5.0.0",
     "vitest": "^4.0.0"
@@ -31,11 +34,13 @@
   "scripts": {
     "build": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --filter @femi/server build && pnpm --filter @femi/web build",
     "dev:web": "pnpm --filter @femi/web dev",
-    "dev:server": "pnpm --filter @femi/server dev",
-    "dev:worker": "pnpm --filter @femi/server dev:worker",
+    "dev:server": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev",
+    "dev:worker": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev:worker",
     "typecheck": "pnpm --filter @femi/shared typecheck && pnpm --filter @femi/db typecheck && pnpm --filter @femi/server typecheck && pnpm --filter @femi/web typecheck",
     "lint": "eslint . --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
     "lint:fix": "eslint . --fix --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
+    "lint:styles": "stylelint 'apps/web/src/**/*.css'",
+    "lint:styles:fix": "stylelint 'apps/web/src/**/*.css' --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "vitest run",
@@ -43,7 +48,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "analyze": "knip --treat-config-hints-as-errors",
-    "validate": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm analyze && pnpm build",
+    "validate": "pnpm format:check && pnpm lint && pnpm lint:styles && pnpm typecheck && pnpm test:coverage && pnpm analyze && pnpm build",
     "db:migrate": "pnpm --filter @femi/db migrate"
   }
 }

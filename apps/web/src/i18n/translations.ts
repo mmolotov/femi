@@ -39,9 +39,11 @@ export const baseMessages = {
   onboarding: {
     title: "A short setup before the first entry",
     description:
-      "Set your usual cycle and period length once. You can change both later in settings.",
+      "Set your usual cycle, period length, and the first day of your latest period. You can change the lengths later in settings.",
     cycleLengthLabel: "Usual cycle length",
     periodLengthLabel: "Usual period length",
+    latestPeriodStartLabel: "Latest period start date",
+    latestPeriodStartHint: "This anchors the first 6-month forecast.",
     cycleLengthHint: "Common range: 20 to 45 days",
     periodLengthHint: "Common range: 2 to 10 days",
     submitIdle: "Save setup",
@@ -50,26 +52,48 @@ export const baseMessages = {
   },
   today: {
     title: "Today",
-    description: "The first screen is reserved for the shortest daily flow.",
     cycleDayLabel: "Current cycle day",
     cycleDayFallback: "not enough data yet",
+    phaseLabel: "Current phase",
+    phaseFallback: "phase unavailable",
+    phaseFallbackDescription: "Add period days to make the phase model more reliable.",
+    phaseNames: {
+      menstrual: "Menstrual",
+      follicular: "Follicular",
+      ovulatory: "Ovulatory",
+      luteal: "Luteal"
+    },
+    phaseTitles: {
+      menstrual: "Menstrual phase right now",
+      follicular: "Follicular phase right now",
+      ovulatory: "Ovulatory window right now",
+      luteal: "Luteal phase right now"
+    },
+    phaseDescriptions: {
+      menstrual: "Keep period logging and symptom check-ins short. Pain, energy, and cramps matter most here.",
+      follicular: "Energy and mood often shift here. Keep an eye on discharge and symptom changes.",
+      ovulatory: "This is the most likely ovulatory window based on the current forecast model.",
+      luteal: "PMS-like symptoms, mood, sleep, and pain trends usually matter most in this phase."
+    },
     nextPeriodLabel: "Predicted next period",
     nextPeriodFallback: "prediction starts after the first period log",
     activePeriodLabel: "Current state",
     activePeriodYes: "period in progress",
     activePeriodNo: "not in period days",
-    periodActionsTitle: "Period actions",
-    periodActionsDescription: "Use the shortest possible actions for today's period state.",
-    startPeriod: "Log period start",
-    endPeriod: "Log period end",
-    startPeriodError: "Could not log period start.",
-    endPeriodError: "Could not log period end.",
-    saveStateIdle: "Save today's check-in",
+    markPeriodDay: "Mark period day",
+    markPeriodDayPending: "Saving period day…",
+    markPeriodDaySuccess: "Period day saved.",
+    markPeriodDayError: "Could not save the period day.",
+    forecastLabel: "Upcoming forecast",
+    saveStateIdle: "Save check-in",
     saveStatePending: "Saving check-in…",
-    saveSuccess: "Today's entry was saved.",
+    saveSuccess: "The entry for this day was saved.",
     saveError: "Check-in could not be saved.",
     checkinTitle: "Quick daily check-in",
     checkinDescription: "A compact entry for the day. Leave any field empty if it does not matter.",
+    menstrualCheckinTitle: "Period check-in",
+    menstrualCheckinDescription:
+      "Today's check-in is adjusted for menstruation. Focus on pain, energy, and the symptoms that stand out.",
     mood: "Mood",
     energy: "Energy",
     pain: "Pain",
@@ -79,7 +103,16 @@ export const baseMessages = {
     notePlaceholder: "Anything you want to remember for this day.",
     symptomsTitle: "Symptoms",
     symptomsDescription: "Tap to add the symptoms that matter today.",
+    menstrualSymptomsDescription:
+      "Tap the symptoms that best describe today's period experience.",
     symptomNone: "No symptoms selected",
+    dayDetailsTitle: "Day details",
+    dayDetailsDescription: "Select a date in the calendar to update the check-in and period details for that day.",
+    selectedDateToday: "Today",
+    selectedDateFromCalendar: "Selected from the calendar",
+    selectedDateCheckinDescription: "The check-in below always applies to the selected date.",
+    selectedDatePeriodDescription: "Period actions below also apply to the selected date.",
+    futureCheckinLocked: "Future dates can be reviewed, but the check-in stays locked until that day arrives.",
     statusLoaded: "connected",
     scorePlaceholder: "Not set",
     dischargePlaceholder: "Not set",
@@ -93,33 +126,47 @@ export const baseMessages = {
   },
   calendar: {
     title: "Calendar",
-    description: "Month view of logged period days and the next predicted period.",
+    description: "Tap any date to select it. Logged, forecast, and today stay in one grid.",
     previousMonth: "Previous month",
     nextMonth: "Next month",
     legendLogged: "Logged period day",
     legendPredicted: "Predicted period day",
     legendToday: "Today",
+    loggedBadge: "period",
+    predictedBadge: "forecast",
     empty: "No cycle markers for this month yet.",
     loadError: "Calendar data could not be loaded.",
     selectedDateLabel: "Selected date",
     selectedDateFallback: "No date selected",
     flowIntensityLabel: "Flow intensity",
     flowIntensityPlaceholder: "Not set",
-    startPeriod: "Start period here",
-    endPeriod: "End period here",
-    savePeriodDay: "Save period day",
-    savePending: "Saving period log…",
-    saveSuccess: "Period day saved.",
-    saveError: "Period log could not be saved.",
-    startSuccess: "Period start saved.",
-    endSuccess: "Period end saved.",
-    tagsSuffix: "tags"
+    savePeriodDay: "Save period details",
+    savePending: "Saving period details…",
+    saveSuccess: "Period details saved.",
+    saveError: "Could not save period details.",
+    removePeriodDay: "Remove period day",
+    removeSuccess: "Period day removed.",
+    removeError: "Could not remove the period day.",
+    selectedDateLogged: "This date is already marked as a period day.",
+    selectedDateEmpty: "This day is not marked as a period day yet.",
+    selectedDatePredicted: "This day is still part of the forecast, so it stays read-only for now.",
+    futureDateReadOnly: "Future dates are shown as forecast only.",
+    tapToMark: "Select a past or current date, then mark it below.",
+    tagsSuffix: "symptoms"
   },
   history: {
     title: "History",
-    description: "Recent check-ins, period logs, and symptom tags.",
+    description: "Cycle history grouped by phase, with a short summary and daily details inside each phase.",
     empty: "No entries yet.",
     loadError: "History could not be loaded.",
+    cycleLengthLabel: "Cycle length",
+    periodLengthLabel: "Period length",
+    durationLabel: "Duration",
+    averageFlowLabel: "Average flow",
+    averageMoodLabel: "Mood",
+    averageEnergyLabel: "Energy",
+    averagePainLabel: "Pain",
+    noneLabel: "none",
     checkinLabel: "Check-in",
     periodLabel: "Period",
     symptomsLabel: "Symptoms",
@@ -228,6 +275,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Один раз укажите обычную длину цикла и менструации. Позже это можно изменить в настройках.",
       cycleLengthLabel: "Обычная длина цикла",
       periodLengthLabel: "Обычная длина менструации",
+      latestPeriodStartLabel: "Дата начала последней менструации",
+      latestPeriodStartHint: "От этой даты строится первый прогноз на 6 месяцев.",
       cycleLengthHint: "Обычный диапазон: от 20 до 45 дней",
       periodLengthHint: "Обычный диапазон: от 2 до 10 дней",
       submitIdle: "Сохранить настройку",
@@ -236,14 +285,44 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     today: {
       title: "Сегодня",
-      description: "Первый экран оставлен под самый короткий ежедневный сценарий.",
       cycleDayLabel: "Текущий день цикла",
       cycleDayFallback: "пока недостаточно данных",
+      phaseLabel: "Текущая фаза",
+      phaseFallback: "фаза недоступна",
+      phaseFallbackDescription:
+        "Добавьте дни менструации, чтобы модель фаз работала точнее.",
+      phaseNames: {
+        menstrual: "Менструальная",
+        follicular: "Фолликулярная",
+        ovulatory: "Овуляторная",
+        luteal: "Лютеиновая"
+      },
+      phaseTitles: {
+        menstrual: "Сейчас менструальная фаза",
+        follicular: "Сейчас фолликулярная фаза",
+        ovulatory: "Сейчас овуляторное окно",
+        luteal: "Сейчас лютеиновая фаза"
+      },
+      phaseDescriptions: {
+        menstrual:
+          "Сохраняйте отметки менструации и короткие чек-ины. Здесь особенно важны боль, энергия и спазмы.",
+        follicular:
+          "В этой фазе часто меняются энергия и настроение. Следите за выделениями и симптомами.",
+        ovulatory:
+          "Это наиболее вероятное овуляторное окно по текущей модели прогноза.",
+        luteal:
+          "В этой фазе обычно важнее всего ПМС-подобные симптомы, настроение, сон и боль."
+      },
       nextPeriodLabel: "Прогноз следующей менструации",
       nextPeriodFallback: "прогноз появится после первой записи о менструации",
       activePeriodLabel: "Текущее состояние",
       activePeriodYes: "идут дни менструации",
       activePeriodNo: "сейчас не дни менструации",
+      markPeriodDay: "Отметить день менструации",
+      markPeriodDayPending: "Сохраняем день менструации…",
+      markPeriodDaySuccess: "День менструации сохранен.",
+      markPeriodDayError: "Не удалось сохранить день менструации.",
+      forecastLabel: "Ближайший прогноз",
       periodActionsTitle: "Действия по менструации",
       periodActionsDescription:
         "Используйте самые короткие действия, чтобы зафиксировать текущее состояние.",
@@ -251,13 +330,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       endPeriod: "Отметить конец менструации",
       startPeriodError: "Не удалось отметить начало менструации.",
       endPeriodError: "Не удалось отметить конец менструации.",
-      saveStateIdle: "Сохранить запись за сегодня",
+      saveStateIdle: "Сохранить чек-ин",
       saveStatePending: "Сохраняем чек-ин…",
-      saveSuccess: "Запись за сегодня сохранена.",
+      saveSuccess: "Запись за выбранный день сохранена.",
       saveError: "Не удалось сохранить чек-ин.",
       checkinTitle: "Быстрый ежедневный чек-ин",
+      menstrualCheckinTitle: "Чек-ин во время менструации",
       checkinDescription:
         "Компактная запись на день. Оставьте поле пустым, если оно сейчас не важно.",
+      menstrualCheckinDescription:
+        "Сегодняшний чек-ин адаптирован под менструацию. Сфокусируйтесь на боли, энергии и заметных симптомах.",
       mood: "Настроение",
       energy: "Энергия",
       pain: "Боль",
@@ -267,7 +349,21 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "Все, что вы хотите запомнить за этот день.",
       symptomsTitle: "Симптомы",
       symptomsDescription: "Нажмите, чтобы отметить симптомы, которые важны сегодня.",
+      menstrualSymptomsDescription:
+        "Нажмите, чтобы отметить симптомы, которые лучше всего описывают сегодняшний день менструации.",
       symptomNone: "Симптомы не выбраны",
+      dayDetailsTitle: "Детали дня",
+      dayDetailsDescription:
+        "Выберите дату в календаре, чтобы обновить чек-ин и детали менструации для этого дня.",
+      selectedDateToday: "Сегодня",
+      selectedDateFromCalendar: "Выбрано из календаря",
+      selectedDateCheckinDescription:
+        "Форма чек-ина ниже всегда относится к выбранной дате.",
+      selectedDatePeriodDescription:
+        "Действия по менструации ниже тоже относятся к выбранной дате.",
+      futureCheckinLocked:
+        "Будущие даты можно просматривать, но чек-ин для них остаётся заблокированным до наступления этого дня.",
+      statusLoaded: "подключено",
       scorePlaceholder: "Не указано",
       dischargePlaceholder: "Не указано",
       dischargeOptions: {
@@ -280,16 +376,24 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     calendar: {
       title: "Календарь",
-      description: "Вид месяца с отмеченными днями менструации и прогнозом следующего цикла.",
+      description:
+        "Нажмите на дату, чтобы выбрать её. Отмеченные дни, прогноз и сегодняшний день остаются в одной сетке.",
       previousMonth: "Предыдущий месяц",
       nextMonth: "Следующий месяц",
       legendLogged: "Записанный день менструации",
       legendPredicted: "Прогнозируемый день менструации",
       legendToday: "Сегодня",
+      loggedBadge: "менстр.",
+      predictedBadge: "прогноз",
       empty: "Для этого месяца пока нет отметок цикла.",
       loadError: "Не удалось загрузить календарь.",
       selectedDateLabel: "Выбранная дата",
       selectedDateFallback: "Дата не выбрана",
+      selectedDateLogged: "Эта дата уже отмечена как день менструации.",
+      selectedDateEmpty: "Этот день пока не отмечен как день менструации.",
+      selectedDatePredicted: "Этот день пока остаётся частью прогноза и доступен только для просмотра.",
+      futureDateReadOnly: "Будущие даты отображаются только как прогноз.",
+      tapToMark: "Выберите прошлую или текущую дату, затем отметьте её ниже.",
       flowIntensityLabel: "Интенсивность",
       flowIntensityPlaceholder: "Не указано",
       startPeriod: "Начать здесь",
@@ -298,15 +402,26 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Сохраняем запись о дне…",
       saveSuccess: "День менструации сохранен.",
       saveError: "Не удалось сохранить день менструации.",
+      removePeriodDay: "Убрать день менструации",
+      removeSuccess: "День менструации удален.",
+      removeError: "Не удалось удалить день менструации.",
       startSuccess: "Начало менструации сохранено.",
       endSuccess: "Конец менструации сохранен.",
-      tagsSuffix: "тега"
+      tagsSuffix: "симптомы"
     },
     history: {
       title: "История",
       description: "Недавние чек-ины, записи по менструации и теги симптомов.",
       empty: "Записей пока нет.",
       loadError: "Не удалось загрузить историю.",
+      cycleLengthLabel: "Длина цикла",
+      periodLengthLabel: "Длина менструации",
+      durationLabel: "Продолжительность",
+      averageFlowLabel: "Средняя интенсивность",
+      averageMoodLabel: "Настроение",
+      averageEnergyLabel: "Энергия",
+      averagePainLabel: "Боль",
+      noneLabel: "нет",
       checkinLabel: "Чек-ин",
       periodLabel: "Менструация",
       symptomsLabel: "Симптомы",
@@ -412,6 +527,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Define una vez tu duración habitual del ciclo y del período. Luego podrás cambiar ambas en ajustes.",
       cycleLengthLabel: "Duración habitual del ciclo",
       periodLengthLabel: "Duración habitual del período",
+      latestPeriodStartLabel: "Fecha de inicio del último período",
+      latestPeriodStartHint: "Desde esta fecha se construye la primera previsión de 6 meses.",
       cycleLengthHint: "Rango común: de 20 a 45 días",
       periodLengthHint: "Rango común: de 2 a 10 días",
       submitIdle: "Guardar configuración",
@@ -423,11 +540,42 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "La primera pantalla está reservada para el flujo diario más corto.",
       cycleDayLabel: "Día actual del ciclo",
       cycleDayFallback: "todavía no hay suficientes datos",
+      phaseLabel: "Fase actual",
+      phaseFallback: "fase no disponible",
+      phaseFallbackDescription:
+        "Añade días de período para que el modelo de fases sea más fiable.",
+      phaseNames: {
+        menstrual: "Menstrual",
+        follicular: "Folicular",
+        ovulatory: "Ovulatoria",
+        luteal: "Lútea"
+      },
+      phaseTitles: {
+        menstrual: "Ahora estás en fase menstrual",
+        follicular: "Ahora estás en fase folicular",
+        ovulatory: "Ahora estás en la ventana ovulatoria",
+        luteal: "Ahora estás en fase lútea"
+      },
+      phaseDescriptions: {
+        menstrual:
+          "Mantén cortos los registros del período y los check-ins. Aquí importan sobre todo el dolor, la energía y los cólicos.",
+        follicular:
+          "En esta fase suelen cambiar la energía y el ánimo. Observa el flujo y los síntomas.",
+        ovulatory:
+          "Esta es la ventana ovulatoria más probable según el modelo de previsión actual.",
+        luteal:
+          "En esta fase suelen importar más los síntomas tipo PMS, el ánimo, el sueño y el dolor."
+      },
       nextPeriodLabel: "Próximo período previsto",
       nextPeriodFallback: "la predicción comienza tras el primer registro del período",
       activePeriodLabel: "Estado actual",
       activePeriodYes: "período en curso",
       activePeriodNo: "fuera de los días del período",
+      markPeriodDay: "Marcar día de período",
+      markPeriodDayPending: "Guardando día de período…",
+      markPeriodDaySuccess: "Día de período guardado.",
+      markPeriodDayError: "No se pudo guardar el día de período.",
+      forecastLabel: "Próxima previsión",
       periodActionsTitle: "Acciones del período",
       periodActionsDescription:
         "Usa las acciones más cortas posibles para registrar el estado del período de hoy.",
@@ -440,8 +588,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       saveSuccess: "La entrada de hoy se guardó.",
       saveError: "No se pudo guardar el check-in.",
       checkinTitle: "Check-in diario rápido",
+      menstrualCheckinTitle: "Check-in menstrual",
       checkinDescription:
         "Una entrada compacta para el día. Deja cualquier campo vacío si no importa hoy.",
+      menstrualCheckinDescription:
+        "El check-in de hoy está ajustado para la menstruación. Céntrate en dolor, energía y síntomas destacados.",
       mood: "Ánimo",
       energy: "Energía",
       pain: "Dolor",
@@ -451,7 +602,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "Lo que quieras recordar de este día.",
       symptomsTitle: "Síntomas",
       symptomsDescription: "Toca para añadir los síntomas que importan hoy.",
+      menstrualSymptomsDescription:
+        "Toca para añadir los síntomas que mejor describen la menstruación de hoy.",
       symptomNone: "No hay síntomas seleccionados",
+      statusLoaded: "conectado",
       scorePlaceholder: "Sin indicar",
       dischargePlaceholder: "Sin indicar",
       dischargeOptions: {
@@ -471,10 +625,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       legendLogged: "Día de período registrado",
       legendPredicted: "Día de período previsto",
       legendToday: "Hoy",
+      loggedBadge: "regla",
+      predictedBadge: "previsión",
       empty: "Todavía no hay marcas del ciclo para este mes.",
       loadError: "No se pudo cargar el calendario.",
       selectedDateLabel: "Fecha seleccionada",
       selectedDateFallback: "No hay fecha seleccionada",
+      selectedDateLogged: "Esta fecha ya está marcada como día de período.",
+      tapToMark:
+        "Toca cualquier fecha sin marcar para registrar un día de período al instante.",
       flowIntensityLabel: "Intensidad",
       flowIntensityPlaceholder: "Sin indicar",
       startPeriod: "Iniciar período aquí",
@@ -483,15 +642,26 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Guardando registro del período…",
       saveSuccess: "Día de período guardado.",
       saveError: "No se pudo guardar el día de período.",
+      removePeriodDay: "Quitar día de período",
+      removeSuccess: "Día de período eliminado.",
+      removeError: "No se pudo eliminar el día de período.",
       startSuccess: "Inicio del período guardado.",
       endSuccess: "Fin del período guardado.",
-      tagsSuffix: "etiquetas"
+      tagsSuffix: "síntomas"
     },
     history: {
       title: "Historial",
       description: "Check-ins recientes, registros del período y etiquetas de síntomas.",
       empty: "Todavía no hay entradas.",
       loadError: "No se pudo cargar el historial.",
+      cycleLengthLabel: "Duración del ciclo",
+      periodLengthLabel: "Duración del período",
+      durationLabel: "Duración",
+      averageFlowLabel: "Flujo medio",
+      averageMoodLabel: "Ánimo",
+      averageEnergyLabel: "Energía",
+      averagePainLabel: "Dolor",
+      noneLabel: "ninguno",
       checkinLabel: "Check-in",
       periodLabel: "Período",
       symptomsLabel: "Síntomas",
@@ -597,6 +767,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Defina uma vez a duração habitual do ciclo e da menstruação. Você poderá alterar as duas depois nas configurações.",
       cycleLengthLabel: "Duração habitual do ciclo",
       periodLengthLabel: "Duração habitual da menstruação",
+      latestPeriodStartLabel: "Data de início da última menstruação",
+      latestPeriodStartHint: "A partir desta data é criada a primeira previsão de 6 meses.",
       cycleLengthHint: "Faixa comum: de 20 a 45 dias",
       periodLengthHint: "Faixa comum: de 2 a 10 dias",
       submitIdle: "Salvar configuração",
@@ -608,11 +780,42 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "A primeira tela fica reservada para o fluxo diário mais curto.",
       cycleDayLabel: "Dia atual do ciclo",
       cycleDayFallback: "ainda não há dados suficientes",
+      phaseLabel: "Fase atual",
+      phaseFallback: "fase indisponível",
+      phaseFallbackDescription:
+        "Adicione dias menstruais para tornar o modelo de fases mais confiável.",
+      phaseNames: {
+        menstrual: "Menstrual",
+        follicular: "Folicular",
+        ovulatory: "Ovulatória",
+        luteal: "Lútea"
+      },
+      phaseTitles: {
+        menstrual: "Agora é a fase menstrual",
+        follicular: "Agora é a fase folicular",
+        ovulatory: "Agora é a janela ovulatória",
+        luteal: "Agora é a fase lútea"
+      },
+      phaseDescriptions: {
+        menstrual:
+          "Mantenha o registro menstrual e os check-ins curtos. Aqui dor, energia e cólicas importam mais.",
+        follicular:
+          "Nesta fase, energia e humor costumam mudar. Observe o fluxo e os sintomas.",
+        ovulatory:
+          "Esta é a janela ovulatória mais provável com base no modelo atual de previsão.",
+        luteal:
+          "Nesta fase, costumam importar mais sintomas de TPM, humor, sono e dor."
+      },
       nextPeriodLabel: "Próxima menstruação prevista",
       nextPeriodFallback: "a previsão começa após o primeiro registro menstrual",
       activePeriodLabel: "Estado atual",
       activePeriodYes: "menstruação em andamento",
       activePeriodNo: "fora dos dias de menstruação",
+      markPeriodDay: "Marcar dia menstrual",
+      markPeriodDayPending: "Salvando dia menstrual…",
+      markPeriodDaySuccess: "Dia menstrual salvo.",
+      markPeriodDayError: "Não foi possível salvar o dia menstrual.",
+      forecastLabel: "Próxima previsão",
       periodActionsTitle: "Ações de menstruação",
       periodActionsDescription:
         "Use as ações mais curtas possíveis para registrar o estado menstrual de hoje.",
@@ -625,8 +828,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       saveSuccess: "A entrada de hoje foi salva.",
       saveError: "Não foi possível salvar o check-in.",
       checkinTitle: "Check-in diário rápido",
+      menstrualCheckinTitle: "Check-in menstrual",
       checkinDescription:
         "Uma entrada compacta para o dia. Deixe qualquer campo vazio se ele não for importante hoje.",
+      menstrualCheckinDescription:
+        "O check-in de hoje está ajustado para a menstruação. Foque em dor, energia e sintomas mais marcantes.",
       mood: "Humor",
       energy: "Energia",
       pain: "Dor",
@@ -636,7 +842,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "Qualquer coisa que você queira lembrar deste dia.",
       symptomsTitle: "Sintomas",
       symptomsDescription: "Toque para adicionar os sintomas que importam hoje.",
+      menstrualSymptomsDescription:
+        "Toque para marcar os sintomas que melhor descrevem a menstruação de hoje.",
       symptomNone: "Nenhum sintoma selecionado",
+      statusLoaded: "conectado",
       scorePlaceholder: "Não definido",
       dischargePlaceholder: "Não definido",
       dischargeOptions: {
@@ -655,10 +864,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       legendLogged: "Dia menstrual registrado",
       legendPredicted: "Dia menstrual previsto",
       legendToday: "Hoje",
+      loggedBadge: "menstr.",
+      predictedBadge: "previsão",
       empty: "Ainda não há marcações de ciclo para este mês.",
       loadError: "Não foi possível carregar o calendário.",
       selectedDateLabel: "Data selecionada",
       selectedDateFallback: "Nenhuma data selecionada",
+      selectedDateLogged: "Esta data já está marcada como dia menstrual.",
+      tapToMark:
+        "Toque em qualquer data ainda não marcada para registrar um dia menstrual na hora.",
       flowIntensityLabel: "Intensidade",
       flowIntensityPlaceholder: "Não definido",
       startPeriod: "Iniciar menstruação aqui",
@@ -667,15 +881,26 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Salvando registro menstrual…",
       saveSuccess: "Dia menstrual salvo.",
       saveError: "Não foi possível salvar o dia menstrual.",
+      removePeriodDay: "Remover dia menstrual",
+      removeSuccess: "Dia menstrual removido.",
+      removeError: "Não foi possível remover o dia menstrual.",
       startSuccess: "Início da menstruação salvo.",
       endSuccess: "Fim da menstruação salvo.",
-      tagsSuffix: "tags"
+      tagsSuffix: "sintomas"
     },
     history: {
       title: "Histórico",
       description: "Check-ins recentes, registros menstruais e tags de sintomas.",
       empty: "Ainda não há registros.",
       loadError: "Não foi possível carregar o histórico.",
+      cycleLengthLabel: "Duração do ciclo",
+      periodLengthLabel: "Duração da menstruação",
+      durationLabel: "Duração",
+      averageFlowLabel: "Fluxo médio",
+      averageMoodLabel: "Humor",
+      averageEnergyLabel: "Energia",
+      averagePainLabel: "Dor",
+      noneLabel: "nenhum",
       checkinLabel: "Check-in",
       periodLabel: "Menstruação",
       symptomsLabel: "Sintomas",
@@ -781,6 +1006,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Tipik döngü ve adet sürenizi bir kez ayarlayın. Daha sonra bunları ayarlardan değiştirebilirsiniz.",
       cycleLengthLabel: "Tipik döngü süresi",
       periodLengthLabel: "Tipik adet süresi",
+      latestPeriodStartLabel: "Son adetin başlangıç tarihi",
+      latestPeriodStartHint: "İlk 6 aylık tahmin bu tarihten oluşturulur.",
       cycleLengthHint: "Yaygın aralık: 20 ila 45 gün",
       periodLengthHint: "Yaygın aralık: 2 ila 10 gün",
       submitIdle: "Kurulumu kaydet",
@@ -792,11 +1019,42 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "İlk ekran en kısa günlük akış için ayrıldı.",
       cycleDayLabel: "Güncel döngü günü",
       cycleDayFallback: "henüz yeterli veri yok",
+      phaseLabel: "Güncel faz",
+      phaseFallback: "faz kullanılamıyor",
+      phaseFallbackDescription:
+        "Faz modelinin daha doğru çalışması için adet günleri ekleyin.",
+      phaseNames: {
+        menstrual: "Menstrüel",
+        follicular: "Foliküler",
+        ovulatory: "Ovulatuvar",
+        luteal: "Luteal"
+      },
+      phaseTitles: {
+        menstrual: "Şu anda menstrüel fazdasın",
+        follicular: "Şu anda foliküler fazdasın",
+        ovulatory: "Şu anda olası ovulasyon penceresindesin",
+        luteal: "Şu anda luteal fazdasın"
+      },
+      phaseDescriptions: {
+        menstrual:
+          "Adet kaydını ve check-in'leri kısa tutun. Bu fazda ağrı, enerji ve kramplar daha önemlidir.",
+        follicular:
+          "Bu fazda enerji ve ruh hali sık değişir. Akıntıyı ve belirtileri izleyin.",
+        ovulatory:
+          "Bu, mevcut tahmin modeline göre en olası ovulasyon penceresidir.",
+        luteal:
+          "Bu fazda PMS benzeri belirtiler, ruh hali, uyku ve ağrı daha önemli olur."
+      },
       nextPeriodLabel: "Tahmini sonraki adet",
       nextPeriodFallback: "tahmin ilk adet kaydından sonra başlar",
       activePeriodLabel: "Güncel durum",
       activePeriodYes: "adet devam ediyor",
       activePeriodNo: "adet günlerinde değil",
+      markPeriodDay: "Adet gününü işaretle",
+      markPeriodDayPending: "Adet günü kaydediliyor…",
+      markPeriodDaySuccess: "Adet günü kaydedildi.",
+      markPeriodDayError: "Adet günü kaydedilemedi.",
+      forecastLabel: "Yaklaşan tahmin",
       periodActionsTitle: "Adet işlemleri",
       periodActionsDescription:
         "Bugünkü adet durumunu kaydetmek için mümkün olan en kısa işlemleri kullanın.",
@@ -809,8 +1067,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       saveSuccess: "Bugünkü kayıt kaydedildi.",
       saveError: "Check-in kaydedilemedi.",
       checkinTitle: "Hızlı günlük check-in",
+      menstrualCheckinTitle: "Adet check-in'i",
       checkinDescription:
         "Gün için kompakt bir kayıt. Gerekli değilse herhangi bir alanı boş bırakın.",
+      menstrualCheckinDescription:
+        "Bugünkü check-in adet dönemine göre uyarlanmıştır. Ağrı, enerji ve öne çıkan belirtilere odaklanın.",
       mood: "Ruh hali",
       energy: "Enerji",
       pain: "Ağrı",
@@ -820,7 +1081,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "Bu gün için hatırlamak istediğiniz her şey.",
       symptomsTitle: "Belirtiler",
       symptomsDescription: "Bugün önemli olan belirtileri eklemek için dokunun.",
+      menstrualSymptomsDescription:
+        "Bugünkü adet deneyimini en iyi anlatan belirtileri seçmek için dokunun.",
       symptomNone: "Belirti seçilmedi",
+      statusLoaded: "bağlandı",
       scorePlaceholder: "Ayarlanmadı",
       dischargePlaceholder: "Ayarlanmadı",
       dischargeOptions: {
@@ -839,10 +1103,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       legendLogged: "Kaydedilmiş adet günü",
       legendPredicted: "Tahmini adet günü",
       legendToday: "Bugün",
+      loggedBadge: "adet",
+      predictedBadge: "tahmin",
       empty: "Bu ay için henüz döngü işareti yok.",
       loadError: "Takvim yüklenemedi.",
       selectedDateLabel: "Seçilen tarih",
       selectedDateFallback: "Tarih seçilmedi",
+      selectedDateLogged: "Bu tarih zaten adet günü olarak işaretlenmiş.",
+      tapToMark:
+        "Henüz işaretlenmemiş herhangi bir tarihe dokunarak adet gününü anında kaydedin.",
       flowIntensityLabel: "Yoğunluk",
       flowIntensityPlaceholder: "Ayarlanmadı",
       startPeriod: "Adeti burada başlat",
@@ -851,15 +1120,26 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Adet kaydı kaydediliyor…",
       saveSuccess: "Adet günü kaydedildi.",
       saveError: "Adet günü kaydedilemedi.",
+      removePeriodDay: "Adet gününü kaldır",
+      removeSuccess: "Adet günü kaldırıldı.",
+      removeError: "Adet günü kaldırılamadı.",
       startSuccess: "Adet başlangıcı kaydedildi.",
       endSuccess: "Adet bitişi kaydedildi.",
-      tagsSuffix: "etiket"
+      tagsSuffix: "semptom"
     },
     history: {
       title: "Geçmiş",
       description: "Son check-in'ler, adet kayıtları ve semptom etiketleri.",
       empty: "Henüz kayıt yok.",
       loadError: "Geçmiş yüklenemedi.",
+      cycleLengthLabel: "Döngü süresi",
+      periodLengthLabel: "Adet süresi",
+      durationLabel: "Süre",
+      averageFlowLabel: "Ortalama akış",
+      averageMoodLabel: "Ruh hali",
+      averageEnergyLabel: "Enerji",
+      averagePainLabel: "Ağrı",
+      noneLabel: "yok",
       checkinLabel: "Check-in",
       periodLabel: "Adet",
       symptomsLabel: "Belirtiler",
@@ -963,6 +1243,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Один раз вкажіть звичну тривалість циклу та менструації. Пізніше це можна змінити в налаштуваннях.",
       cycleLengthLabel: "Звична тривалість циклу",
       periodLengthLabel: "Звична тривалість менструації",
+      latestPeriodStartLabel: "Дата початку останньої менструації",
+      latestPeriodStartHint: "Від цієї дати будується перший прогноз на 6 місяців.",
       cycleLengthHint: "Поширений діапазон: від 20 до 45 днів",
       periodLengthHint: "Поширений діапазон: від 2 до 10 днів",
       submitIdle: "Зберегти налаштування",
@@ -974,11 +1256,42 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "Перший екран відведено під найкоротший щоденний сценарій.",
       cycleDayLabel: "Поточний день циклу",
       cycleDayFallback: "поки недостатньо даних",
+      phaseLabel: "Поточна фаза",
+      phaseFallback: "фаза недоступна",
+      phaseFallbackDescription:
+        "Додайте дні менструації, щоб модель фаз працювала точніше.",
+      phaseNames: {
+        menstrual: "Менструальна",
+        follicular: "Фолікулярна",
+        ovulatory: "Овуляторна",
+        luteal: "Лютеїнова"
+      },
+      phaseTitles: {
+        menstrual: "Зараз менструальна фаза",
+        follicular: "Зараз фолікулярна фаза",
+        ovulatory: "Зараз овуляторне вікно",
+        luteal: "Зараз лютеїнова фаза"
+      },
+      phaseDescriptions: {
+        menstrual:
+          "Залишайте відмітки менструації та короткі чек-іни. Тут найважливіші біль, енергія та спазми.",
+        follicular:
+          "У цій фазі часто змінюються енергія та настрій. Слідкуйте за виділеннями та симптомами.",
+        ovulatory:
+          "Це найімовірніше овуляторне вікно за поточною моделлю прогнозу.",
+        luteal:
+          "У цій фазі зазвичай найважливіші ПМС-подібні симптоми, настрій, сон і біль."
+      },
       nextPeriodLabel: "Прогноз наступної менструації",
       nextPeriodFallback: "прогноз з'явиться після першого запису про менструацію",
       activePeriodLabel: "Поточний стан",
       activePeriodYes: "менструація триває",
       activePeriodNo: "зараз не дні менструації",
+      markPeriodDay: "Позначити день менструації",
+      markPeriodDayPending: "Зберігаємо день менструації…",
+      markPeriodDaySuccess: "День менструації збережено.",
+      markPeriodDayError: "Не вдалося зберегти день менструації.",
+      forecastLabel: "Найближчий прогноз",
       periodActionsTitle: "Дії щодо менструації",
       periodActionsDescription: "Використовуйте найкоротші дії, щоб зафіксувати сьогоднішній стан.",
       startPeriod: "Позначити початок менструації",
@@ -990,8 +1303,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       saveSuccess: "Запис за сьогодні збережено.",
       saveError: "Не вдалося зберегти чек-ін.",
       checkinTitle: "Швидкий щоденний чек-ін",
+      menstrualCheckinTitle: "Чек-ін під час менструації",
       checkinDescription:
         "Компактний запис на день. Залишайте поле порожнім, якщо воно зараз не важливе.",
+      menstrualCheckinDescription:
+        "Сьогоднішній чек-ін адаптований під менструацію. Зосередьтеся на болю, енергії та помітних симптомах.",
       mood: "Настрій",
       energy: "Енергія",
       pain: "Біль",
@@ -1001,7 +1317,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "Усе, що ви хочете запам'ятати про цей день.",
       symptomsTitle: "Симптоми",
       symptomsDescription: "Натисніть, щоб додати симптоми, які важливі сьогодні.",
+      menstrualSymptomsDescription:
+        "Натисніть, щоб позначити симптоми, які найкраще описують сьогоднішній день менструації.",
       symptomNone: "Симптоми не вибрані",
+      statusLoaded: "підключено",
       scorePlaceholder: "Не вказано",
       dischargePlaceholder: "Не вказано",
       dischargeOptions: {
@@ -1020,10 +1339,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       legendLogged: "Записаний день менструації",
       legendPredicted: "Прогнозований день менструації",
       legendToday: "Сьогодні",
+      loggedBadge: "менстр.",
+      predictedBadge: "прогноз",
       empty: "Для цього місяця поки немає позначок циклу.",
       loadError: "Не вдалося завантажити календар.",
       selectedDateLabel: "Обрана дата",
       selectedDateFallback: "Дату не вибрано",
+      selectedDateLogged: "Ця дата вже позначена як день менструації.",
+      tapToMark:
+        "Натисніть на будь-яку непозначену дату, щоб одразу записати день менструації.",
       flowIntensityLabel: "Інтенсивність",
       flowIntensityPlaceholder: "Не вказано",
       startPeriod: "Почати тут",
@@ -1032,15 +1356,26 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Зберігаємо запис про день…",
       saveSuccess: "День менструації збережено.",
       saveError: "Не вдалося зберегти день менструації.",
+      removePeriodDay: "Прибрати день менструації",
+      removeSuccess: "День менструації видалено.",
+      removeError: "Не вдалося видалити день менструації.",
       startSuccess: "Початок менструації збережено.",
       endSuccess: "Завершення менструації збережено.",
-      tagsSuffix: "теги"
+      tagsSuffix: "симптоми"
     },
     history: {
       title: "Історія",
       description: "Нещодавні чек-іни, записи про менструацію та теги симптомів.",
       empty: "Записів поки немає.",
       loadError: "Не вдалося завантажити історію.",
+      cycleLengthLabel: "Тривалість циклу",
+      periodLengthLabel: "Тривалість менструації",
+      durationLabel: "Тривалість",
+      averageFlowLabel: "Середня інтенсивність",
+      averageMoodLabel: "Настрій",
+      averageEnergyLabel: "Енергія",
+      averagePainLabel: "Біль",
+      noneLabel: "немає",
       checkinLabel: "Чек-ін",
       periodLabel: "Менструація",
       symptomsLabel: "Симптоми",
@@ -1146,6 +1481,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "حددي مرة واحدة طول الدورة المعتاد وطول الحيض. يمكنك تغييرهما لاحقًا من الإعدادات.",
       cycleLengthLabel: "الطول المعتاد للدورة",
       periodLengthLabel: "الطول المعتاد للحيض",
+      latestPeriodStartLabel: "تاريخ بداية آخر حيض",
+      latestPeriodStartHint: "من هذا التاريخ يتم إنشاء أول توقع لمدة 6 أشهر.",
       cycleLengthHint: "النطاق الشائع: من 20 إلى 45 يومًا",
       periodLengthHint: "النطاق الشائع: من 2 إلى 10 أيام",
       submitIdle: "حفظ الإعداد",
@@ -1157,11 +1494,42 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "تم تخصيص الشاشة الأولى لأقصر تدفق يومي ممكن.",
       cycleDayLabel: "اليوم الحالي من الدورة",
       cycleDayFallback: "لا توجد بيانات كافية بعد",
+      phaseLabel: "المرحلة الحالية",
+      phaseFallback: "المرحلة غير متاحة",
+      phaseFallbackDescription:
+        "أضيفي أيام الحيض لكي يعمل نموذج المراحل بدقة أكبر.",
+      phaseNames: {
+        menstrual: "الحيض",
+        follicular: "الجريبية",
+        ovulatory: "الإباضية",
+        luteal: "الأصفرية"
+      },
+      phaseTitles: {
+        menstrual: "أنت الآن في مرحلة الحيض",
+        follicular: "أنت الآن في المرحلة الجريبية",
+        ovulatory: "أنت الآن في نافذة الإباضة",
+        luteal: "أنت الآن في المرحلة الأصفرية"
+      },
+      phaseDescriptions: {
+        menstrual:
+          "اجعلي تسجيل الحيض والمتابعة اليومية مختصرين. هنا يكون الألم والطاقة والتشنجات أهم ما يجب متابعته.",
+        follicular:
+          "في هذه المرحلة غالبًا ما تتغير الطاقة والمزاج. راقبي الإفرازات والأعراض.",
+        ovulatory:
+          "هذه هي نافذة الإباضة الأكثر احتمالًا وفق نموذج التوقع الحالي.",
+        luteal:
+          "في هذه المرحلة تصبح أعراض ما قبل الحيض والمزاج والنوم والألم أكثر أهمية عادة."
+      },
       nextPeriodLabel: "موعد الحيض المتوقع التالي",
       nextPeriodFallback: "يبدأ التوقع بعد أول تسجيل للحيض",
       activePeriodLabel: "الحالة الحالية",
       activePeriodYes: "الحيض جارٍ",
       activePeriodNo: "ليست ضمن أيام الحيض",
+      markPeriodDay: "تحديد يوم حيض",
+      markPeriodDayPending: "جارٍ حفظ يوم الحيض…",
+      markPeriodDaySuccess: "تم حفظ يوم الحيض.",
+      markPeriodDayError: "تعذر حفظ يوم الحيض.",
+      forecastLabel: "التوقع القادم",
       periodActionsTitle: "إجراءات الحيض",
       periodActionsDescription: "استخدمي أقصر الإجراءات الممكنة لتسجيل حالة الحيض اليوم.",
       startPeriod: "تسجيل بداية الحيض",
@@ -1173,7 +1541,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       saveSuccess: "تم حفظ إدخال اليوم.",
       saveError: "تعذر حفظ المتابعة.",
       checkinTitle: "متابعة يومية سريعة",
+      menstrualCheckinTitle: "متابعة أثناء الحيض",
       checkinDescription: "إدخال مختصر لليوم. اتركي أي حقل فارغًا إذا لم يكن مهمًا الآن.",
+      menstrualCheckinDescription:
+        "تم تكييف متابعة اليوم مع الحيض. ركزي على الألم والطاقة والأعراض الأبرز.",
       mood: "المزاج",
       energy: "الطاقة",
       pain: "الألم",
@@ -1183,7 +1554,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "أي شيء تريدين تذكره عن هذا اليوم.",
       symptomsTitle: "الأعراض",
       symptomsDescription: "اضغطي لإضافة الأعراض المهمة اليوم.",
+      menstrualSymptomsDescription:
+        "اضغطي لتحديد الأعراض التي تصف تجربة الحيض اليوم بشكل أفضل.",
       symptomNone: "لا توجد أعراض محددة",
+      statusLoaded: "متصل",
       scorePlaceholder: "غير مضبوط",
       dischargePlaceholder: "غير مضبوط",
       dischargeOptions: {
@@ -1202,10 +1576,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       legendLogged: "يوم حيض مسجل",
       legendPredicted: "يوم حيض متوقع",
       legendToday: "اليوم",
+      loggedBadge: "حيض",
+      predictedBadge: "توقع",
       empty: "لا توجد علامات دورة لهذا الشهر بعد.",
       loadError: "تعذر تحميل التقويم.",
       selectedDateLabel: "التاريخ المحدد",
       selectedDateFallback: "لا يوجد تاريخ محدد",
+      selectedDateLogged: "هذا التاريخ محدد بالفعل كيوم حيض.",
+      tapToMark:
+        "اضغطي على أي تاريخ غير محدد لتسجيل يوم حيض فورًا.",
       flowIntensityLabel: "الشدة",
       flowIntensityPlaceholder: "غير مضبوط",
       startPeriod: "ابدئي الحيض هنا",
@@ -1214,15 +1593,26 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "جارٍ حفظ سجل الحيض…",
       saveSuccess: "تم حفظ يوم الحيض.",
       saveError: "تعذر حفظ يوم الحيض.",
+      removePeriodDay: "إزالة يوم الحيض",
+      removeSuccess: "تمت إزالة يوم الحيض.",
+      removeError: "تعذر إزالة يوم الحيض.",
       startSuccess: "تم حفظ بداية الحيض.",
       endSuccess: "تم حفظ نهاية الحيض.",
-      tagsSuffix: "وسوم"
+      tagsSuffix: "أعراض"
     },
     history: {
       title: "السجل",
       description: "المتابعات الأخيرة وسجلات الدورة وعلامات الأعراض.",
       empty: "لا توجد إدخالات بعد.",
       loadError: "تعذر تحميل السجل.",
+      cycleLengthLabel: "طول الدورة",
+      periodLengthLabel: "طول الحيض",
+      durationLabel: "المدة",
+      averageFlowLabel: "متوسط الشدة",
+      averageMoodLabel: "المزاج",
+      averageEnergyLabel: "الطاقة",
+      averagePainLabel: "الألم",
+      noneLabel: "لا شيء",
       checkinLabel: "متابعة",
       periodLabel: "الحيض",
       symptomsLabel: "الأعراض",

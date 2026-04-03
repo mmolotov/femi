@@ -7,19 +7,14 @@ import { describe, expect, it } from "vitest";
 import { App } from "./App";
 
 describe("App shell", () => {
-  it("renders the foundation hero copy", async () => {
+  it("renders the compact brand header", async () => {
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>
     );
 
-    expect(
-      await screen.findByText(/Simple cycle tracking, built for calm daily use/i)
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText(/Milestone 1 adds onboarding, period logging, daily check-ins/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "FEMI" })).toBeInTheDocument();
     expect(await screen.findByRole("link", { name: "Settings" })).toBeInTheDocument();
   });
 

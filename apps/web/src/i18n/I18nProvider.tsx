@@ -93,7 +93,10 @@ function detectInitialLanguage(): SupportedLanguage {
     return "en";
   }
 
-  const storedLanguage = normalizeLanguage(window.localStorage.getItem(STORAGE_KEY));
+  const storedLanguage =
+    typeof window.localStorage?.getItem === "function"
+      ? normalizeLanguage(window.localStorage.getItem(STORAGE_KEY))
+      : null;
 
   if (storedLanguage) {
     return storedLanguage;
@@ -121,7 +124,9 @@ export function I18nProvider({ children }: PropsWithChildren) {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, language);
+    if (typeof window.localStorage?.setItem === "function") {
+      window.localStorage.setItem(STORAGE_KEY, language);
+    }
     document.documentElement.lang = language;
     document.documentElement.dir = direction;
   }, [direction, language]);

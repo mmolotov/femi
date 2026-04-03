@@ -3,12 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   addDaysToIsoDate,
   buildCalendarMonthDays,
+  buildCyclePeriodWindows,
+  buildPeriodForecast,
   calculateAverageCycleLength,
   calculateAveragePeriodLength,
   calculateCurrentCycleDay,
   differenceInDays,
   isPeriodActive,
   predictNextPeriodStart,
+  resolveCyclePhase,
   resolvePeriodEnd
 } from "./index.js";
 
@@ -42,6 +45,27 @@ describe("cycle utilities", () => {
     expect(predictNextPeriodStart("2026-03-01", [28, 28], 30)).toBe("2026-03-29");
   });
 
+  it("builds a rolling forecast for the next six months", () => {
+    expect(
+      buildPeriodForecast({
+        averageCycleLengthDays: 28,
+        averagePeriodLengthDays: 5,
+        fromDate: "2026-03-01",
+        latestCycleStart: "2026-03-01"
+      })
+    ).toContainEqual({
+      periodEnd: "2026-04-02",
+      periodStart: "2026-03-29"
+    });
+  });
+
+  it("resolves the current cycle phase", () => {
+    expect(resolveCyclePhase(3, 28, 5)).toBe("menstrual");
+    expect(resolveCyclePhase(8, 28, 5)).toBe("follicular");
+    expect(resolveCyclePhase(14, 28, 5)).toBe("ovulatory");
+    expect(resolveCyclePhase(23, 28, 5)).toBe("luteal");
+  });
+
   it("resolves an open period end using fallback length", () => {
     expect(resolvePeriodEnd("2026-03-01", null, 5)).toBe("2026-03-05");
   });
@@ -54,6 +78,7 @@ describe("cycle utilities", () => {
   it("builds calendar markers with logged and predicted period days", () => {
     const days = buildCalendarMonthDays({
       currentCycleStart: "2026-03-01",
+      currentPeriodEnd: "2026-03-05",
       month: "2026-03",
       periodDays: [
         {
@@ -75,10 +100,26 @@ describe("cycle utilities", () => {
     });
     expect(days.find((day) => day.date === "2026-03-03")).toMatchObject({
       isInCurrentCycle: true,
+      isPredictedPeriodDay: true,
       isToday: true
     });
     expect(days.find((day) => day.date === "2026-03-29")).toMatchObject({
       isPredictedPeriodDay: true
     });
+  });
+
+  it("groups period days into cycle windows using the first day as cycle start", () => {
+    expect(
+      buildCyclePeriodWindows(["2026-03-03", "2026-03-01", "2026-03-04", "2026-03-29"], 5)
+    ).toEqual([
+      {
+        endedOn: "2026-03-05",
+        startedOn: "2026-03-01"
+      },
+      {
+        endedOn: "2026-04-02",
+        startedOn: "2026-03-29"
+      }
+    ]);
   });
 });

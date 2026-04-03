@@ -1,7 +1,10 @@
 import type { Database } from "@femi/db";
 import { cycles, dailyCheckins, periodLogs, symptomLogs } from "@femi/db";
 import {
+  addDaysToIsoDate,
   buildCalendarMonthDays,
+  buildCyclePeriodWindows,
+  buildPeriodForecast,
   calculateAverageCycleLength,
   calculateAveragePeriodLength,
   calculateCurrentCycleDay,
@@ -16,16 +19,15 @@ import {
   formatIsoDate,
   historyQuerySchema,
   historyResponseSchema,
-  isPeriodActive,
   periodLogEntrySchema,
   periodEndRequestSchema,
   periodLogRequestSchema,
   periodLogResponseSchema,
   periodStartRequestSchema,
-  predictNextPeriodStart,
-  type DailyCheckinEntry,
+  resolveCyclePhase,
   type FlowIntensity,
-  type PeriodLogEntry,
+  type HistoryDay,
+  type CyclePhase,
   type SymptomKey
 } from "@femi/shared";
 import { and, asc, desc, eq, gte, isNull, lte } from "drizzle-orm";
@@ -50,6 +52,16 @@ type PeriodLogRow = {
   flowLevel: number | null;
   happenedOn: Date;
   notes: string | null;
+};
+
+type CheckinRow = {
+  discharge: string | null;
+  energy: number | null;
+  happenedOn: Date;
+  mood: number | null;
+  note: string | null;
+  painLevel: number | null;
+  sleepQuality: number | null;
 };
 
 const dateParamsSchema = z.object({
@@ -110,6 +122,206 @@ function getPeriodLengths(rows: readonly CycleRow[]): number[] {
     .map((row) => differenceInDays(formatIsoDate(row.startedOn), formatIsoDate(row.endedOn)) + 1);
 }
 
+function sortDatesAscending(dates: Iterable<string>): string[] {
+  return [...dates].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+}
+
+function maxIsoDate(left: string, right: string): string {
+  return left > right ? left : right;
+}
+
+function minIsoDate(left: string, right: string): string {
+  return left < right ? left : right;
+}
+
+function buildPeriodDateSet(rows: readonly PeriodLogRow[]): Set<string> {
+  return new Set(rows.map((row) => formatIsoDate(row.happenedOn)));
+}
+
+function inferPeriodEndDate(input: {
+  cycleEndedOn: string | null;
+  cycleStart: string;
+  fallbackPeriodLengthDays: number;
+  nextCycleStart: string | null;
+  periodDates: ReadonlySet<string>;
+}): string {
+  const fallbackEnd = input.nextCycleStart
+    ? minIsoDate(
+        addDaysToIsoDate(input.cycleStart, input.fallbackPeriodLengthDays - 1),
+        addDaysToIsoDate(input.nextCycleStart, -1)
+      )
+    : addDaysToIsoDate(input.cycleStart, input.fallbackPeriodLengthDays - 1);
+  let resolvedEnd = input.cycleEndedOn ?? fallbackEnd;
+
+  if (input.periodDates.has(input.cycleStart)) {
+    let cursor = input.cycleStart;
+
+    while (true) {
+      const nextDate = addDaysToIsoDate(cursor, 1);
+
+      if (input.nextCycleStart && differenceInDays(nextDate, input.nextCycleStart) >= 0) {
+        break;
+      }
+
+      if (!input.periodDates.has(nextDate)) {
+        break;
+      }
+
+      cursor = nextDate;
+    }
+
+    resolvedEnd = maxIsoDate(resolvedEnd, cursor);
+  }
+
+  if (input.nextCycleStart && differenceInDays(resolvedEnd, input.nextCycleStart) >= 0) {
+    return addDaysToIsoDate(input.nextCycleStart, -1);
+  }
+
+  return resolvedEnd;
+}
+
+function createHistoryDay(
+  date: string,
+  phase: CyclePhase,
+  cycleRows: readonly CycleRow[],
+  checkinRow: CheckinRow | null,
+  periodRow: PeriodLogRow | null,
+  symptomKeys: readonly SymptomKey[]
+): HistoryDay {
+  return {
+    checkin:
+      checkinRow === null
+        ? null
+        : dailyCheckinEntrySchema.parse({
+            date,
+            discharge: checkinRow.discharge,
+            energy: checkinRow.energy,
+            mood: checkinRow.mood,
+            note: checkinRow.note,
+            painLevel: checkinRow.painLevel,
+            sleepQuality: checkinRow.sleepQuality,
+            symptomKeys
+          }),
+    date,
+    period:
+      periodRow === null
+        ? null
+        : periodLogEntrySchema.parse({
+            cycleEnded: cycleRows.some((cycleRow) => toIsoDate(cycleRow.endedOn) === date),
+            cycleStarted: cycleRows.some((cycleRow) => formatIsoDate(cycleRow.startedOn) === date),
+            date,
+            flowIntensity: levelToFlowIntensity(periodRow.flowLevel),
+            note: periodRow.notes
+          }),
+    phase,
+    symptomKeys: [...symptomKeys]
+  };
+}
+
+function averageNullable(values: readonly number[]): number | null {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function getCommonSymptoms(days: readonly HistoryDay[]): SymptomKey[] {
+  const counts = new Map<SymptomKey, number>();
+
+  for (const day of days) {
+    for (const symptomKey of day.symptomKeys) {
+      counts.set(symptomKey, (counts.get(symptomKey) ?? 0) + 1);
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((left, right) => {
+      if (right[1] !== left[1]) {
+        return right[1] - left[1];
+      }
+
+      return left[0].localeCompare(right[0]);
+    })
+    .slice(0, 3)
+    .map(([symptomKey]) => symptomKey);
+}
+
+function buildPhaseRanges(
+  cycleStart: string,
+  cycleLengthDays: number,
+  periodEnd: string
+): Array<{
+  endDate: string;
+  phase: CyclePhase;
+  startDate: string;
+}> {
+  const cycleEnd = addDaysToIsoDate(cycleStart, cycleLengthDays - 1);
+  const periodLengthDays = differenceInDays(cycleStart, periodEnd) + 1;
+  const ranges: Array<{ endDate: string; phase: CyclePhase; startDate: string }> = [];
+
+  const ovulationStartDay = Math.min(
+    cycleLengthDays,
+    Math.max(periodLengthDays + 1, cycleLengthDays - 16)
+  );
+  const ovulationEndDay = Math.min(cycleLengthDays, Math.max(ovulationStartDay, cycleLengthDays - 12));
+  const phaseDayWindows: Array<{ endDay: number; phase: CyclePhase; startDay: number }> = [
+    {
+      endDay: periodLengthDays,
+      phase: "menstrual",
+      startDay: 1
+    },
+    {
+      endDay: Math.max(periodLengthDays, ovulationStartDay - 1),
+      phase: "follicular",
+      startDay: periodLengthDays + 1
+    },
+    {
+      endDay: ovulationEndDay,
+      phase: "ovulatory",
+      startDay: ovulationStartDay
+    },
+    {
+      endDay: cycleLengthDays,
+      phase: "luteal",
+      startDay: ovulationEndDay + 1
+    }
+  ];
+
+  for (const window of phaseDayWindows) {
+    if (window.startDay > window.endDay || window.startDay > cycleLengthDays) {
+      continue;
+    }
+
+    const startDate = addDaysToIsoDate(cycleStart, window.startDay - 1);
+    const endDate = minIsoDate(addDaysToIsoDate(cycleStart, window.endDay - 1), cycleEnd);
+
+    if (differenceInDays(startDate, endDate) < 0) {
+      continue;
+    }
+
+    ranges.push({
+      endDate,
+      phase: window.phase,
+      startDate
+    });
+  }
+
+  return ranges;
+}
+
+function getDateRange(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  let cursor = startDate;
+
+  while (differenceInDays(cursor, endDate) >= 0) {
+    dates.push(cursor);
+    cursor = addDaysToIsoDate(cursor, 1);
+  }
+
+  return dates;
+}
+
 function levelToFlowIntensity(level: number | null): FlowIntensity | null {
   if (level === null) {
     return null;
@@ -164,6 +376,18 @@ async function loadCycleRows(db: Database, userId: string): Promise<CycleRow[]> 
     .orderBy(desc(cycles.startedOn));
 }
 
+async function loadPeriodRows(db: Database, userId: string): Promise<PeriodLogRow[]> {
+  return db
+    .select({
+      flowLevel: periodLogs.flowLevel,
+      happenedOn: periodLogs.happenedOn,
+      notes: periodLogs.notes
+    })
+    .from(periodLogs)
+    .where(eq(periodLogs.userId, userId))
+    .orderBy(asc(periodLogs.happenedOn));
+}
+
 async function loadSummaryData(
   db: Database,
   userId: string,
@@ -173,13 +397,22 @@ async function loadSummaryData(
     periodLengthDays: number;
   }
 ) {
-  const cycleRows = await loadCycleRows(db, userId);
+  const [cycleRows, periodRows] = await Promise.all([loadCycleRows(db, userId), loadPeriodRows(db, userId)]);
   const latestCycle = cycleRows[0] ?? null;
   const cycleLengths = getCycleLengths(cycleRows);
   const periodLengths = getPeriodLengths(cycleRows);
   const today = getTodayIsoDate();
   const latestPeriodStart = latestCycle ? formatIsoDate(latestCycle.startedOn) : null;
-  const latestPeriodEnd = latestCycle ? toIsoDate(latestCycle.endedOn) : null;
+  const latestPeriodEnd =
+    latestCycle && latestPeriodStart
+      ? inferPeriodEndDate({
+          cycleEndedOn: toIsoDate(latestCycle.endedOn),
+          cycleStart: latestPeriodStart,
+          fallbackPeriodLengthDays: settings.periodLengthDays,
+          nextCycleStart: null,
+          periodDates: buildPeriodDateSet(periodRows)
+        })
+      : null;
   const averageCycleLengthDays = calculateAverageCycleLength(
     cycleLengths,
     settings.cycleLengthDays
@@ -188,31 +421,43 @@ async function loadSummaryData(
     periodLengths,
     settings.periodLengthDays
   );
+  const currentCycleDay = calculateCurrentCycleDay(latestPeriodStart, today);
+  const forecast = buildPeriodForecast({
+    averageCycleLengthDays,
+    averagePeriodLengthDays,
+    fromDate: today,
+    latestCycleStart: latestPeriodStart
+  });
+  const predictedNextPeriodStart = forecast[0]?.periodStart ?? null;
+  const currentPhase = resolveCyclePhase(
+    currentCycleDay,
+    averageCycleLengthDays,
+    averagePeriodLengthDays
+  );
 
   return {
     averageCycleLengthDays,
     averagePeriodLengthDays,
     cycleLengths,
     cycleRows,
+    forecast,
     latestPeriodEnd,
     latestPeriodStart,
     summary: {
-      activePeriod: isPeriodActive(
-        today,
-        latestPeriodStart,
-        latestPeriodEnd,
-        averagePeriodLengthDays
-      ),
+      activePeriod:
+        (latestPeriodStart !== null &&
+          latestPeriodEnd !== null &&
+          differenceInDays(latestPeriodStart, today) >= 0 &&
+          differenceInDays(today, latestPeriodEnd) >= 0) ||
+        periodRows.some((row) => formatIsoDate(row.happenedOn) === today),
       averageCycleLengthDays,
       averagePeriodLengthDays,
-      currentCycleDay: calculateCurrentCycleDay(latestPeriodStart, today),
+      currentCycleDay,
+      currentPhase,
+      forecast,
       latestPeriodStart,
       onboardingCompleted: settings.onboardingCompleted,
-      predictedNextPeriodStart: predictNextPeriodStart(
-        latestPeriodStart,
-        cycleLengths,
-        averageCycleLengthDays
-      ),
+      predictedNextPeriodStart,
       today
     }
   };
@@ -319,6 +564,42 @@ async function syncSymptomKeys(
   );
 }
 
+async function syncLoggedPeriodCycle(
+  db: Database,
+  userId: string,
+  date: string,
+  settings: {
+    periodLengthDays: number;
+  }
+): Promise<void> {
+  await syncCyclesFromPeriodLogs(db, userId, settings.periodLengthDays);
+}
+
+async function syncCyclesFromPeriodLogs(
+  db: Database,
+  userId: string,
+  fallbackPeriodLengthDays: number
+): Promise<void> {
+  const periodDates = sortDatesAscending(buildPeriodDateSet(await loadPeriodRows(db, userId)));
+  const cycleWindows = buildCyclePeriodWindows(periodDates, fallbackPeriodLengthDays);
+
+  await db.delete(cycles).where(and(eq(cycles.userId, userId), eq(cycles.predicted, false)));
+
+  if (cycleWindows.length === 0) {
+    return;
+  }
+
+  await db.insert(cycles).values(
+    cycleWindows.map((cycleWindow, index) => ({
+      endedOn:
+        index === cycleWindows.length - 1 ? null : parseIsoDate(cycleWindow.endedOn),
+      predicted: false,
+      startedOn: parseIsoDate(cycleWindow.startedOn),
+      userId
+    }))
+  );
+}
+
 async function buildPeriodEntry(
   db: Database,
   userId: string,
@@ -378,7 +659,7 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const { averagePeriodLengthDays, summary } = await loadSummaryData(
+      const { averagePeriodLengthDays, forecast, latestPeriodEnd, summary } = await loadSummaryData(
         deps.db,
         authenticatedUser.user.id,
         authenticatedUser.settings
@@ -450,6 +731,7 @@ export async function registerCycleRoutes(
         calendarResponseSchema.parse({
           days: buildCalendarMonthDays({
             currentCycleStart: summary.latestPeriodStart,
+            currentPeriodEnd: latestPeriodEnd,
             month: parsedQuery.data.month,
             periodDays: Array.from(markerMap.entries()).map(([date, value]) => ({
               date,
@@ -458,6 +740,7 @@ export async function registerCycleRoutes(
             })),
             predictedNextPeriodStart: summary.predictedNextPeriodStart,
             predictedPeriodLengthDays: averagePeriodLengthDays,
+            predictedPeriods: forecast,
             today: summary.today
           }),
           month: parsedQuery.data.month
@@ -485,7 +768,7 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const limit = parsedQuery.data.limit ?? 30;
+      const limit = parsedQuery.data.limit ?? 6;
       const [checkinRows, periodRows, symptomRows, cycleRows] = await Promise.all([
         deps.db
           .select({
@@ -499,18 +782,8 @@ export async function registerCycleRoutes(
           })
           .from(dailyCheckins)
           .where(eq(dailyCheckins.userId, authenticatedUser.user.id))
-          .orderBy(desc(dailyCheckins.happenedOn))
-          .limit(limit),
-        deps.db
-          .select({
-            flowLevel: periodLogs.flowLevel,
-            happenedOn: periodLogs.happenedOn,
-            notes: periodLogs.notes
-          })
-          .from(periodLogs)
-          .where(eq(periodLogs.userId, authenticatedUser.user.id))
-          .orderBy(desc(periodLogs.happenedOn))
-          .limit(limit),
+          .orderBy(asc(dailyCheckins.happenedOn)),
+        loadPeriodRows(deps.db, authenticatedUser.user.id),
         deps.db
           .select({
             happenedOn: symptomLogs.happenedOn,
@@ -518,96 +791,106 @@ export async function registerCycleRoutes(
           })
           .from(symptomLogs)
           .where(eq(symptomLogs.userId, authenticatedUser.user.id))
-          .orderBy(desc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey))
-          .limit(limit * 8),
+          .orderBy(asc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey)),
         loadCycleRows(deps.db, authenticatedUser.user.id)
       ]);
 
-      const dayMap = new Map<
-        string,
-        {
-          checkin: DailyCheckinEntry | null;
-          period: PeriodLogEntry | null;
-          symptomKeys: SymptomKey[];
-        }
-      >();
+      const today = getTodayIsoDate();
+      const cycleLengths = getCycleLengths(cycleRows);
+      const periodLengths = getPeriodLengths(cycleRows);
+      const averageCycleLengthDays = calculateAverageCycleLength(
+        cycleLengths,
+        authenticatedUser.settings.cycleLengthDays
+      );
+      const averagePeriodLengthDays = calculateAveragePeriodLength(
+        periodLengths,
+        authenticatedUser.settings.periodLengthDays
+      );
+      const periodRowsByDate = new Map(periodRows.map((row) => [formatIsoDate(row.happenedOn), row]));
+      const checkinRowsByDate = new Map(checkinRows.map((row) => [formatIsoDate(row.happenedOn), row]));
+      const symptomKeysByDate = new Map<string, SymptomKey[]>();
 
       for (const row of symptomRows) {
         const date = formatIsoDate(row.happenedOn);
-        const existing = dayMap.get(date) ?? {
-          checkin: null,
-          period: null,
-          symptomKeys: []
-        };
+        const existing = symptomKeysByDate.get(date) ?? [];
 
-        dayMap.set(date, {
-          ...existing,
-          symptomKeys: [...existing.symptomKeys, row.symptomKey as SymptomKey]
-        });
+        symptomKeysByDate.set(date, [...existing, row.symptomKey as SymptomKey]);
       }
 
-      for (const row of checkinRows) {
-        const date = formatIsoDate(row.happenedOn);
-        const existing = dayMap.get(date) ?? {
-          checkin: null,
-          period: null,
-          symptomKeys: []
-        };
+      const periodDates = buildPeriodDateSet(periodRows);
+      const cycleRowsAscending = [...cycleRows].sort((left, right) =>
+        left.startedOn < right.startedOn ? -1 : left.startedOn > right.startedOn ? 1 : 0
+      );
+      const recentCycles = cycleRowsAscending.slice(-limit);
+      const historyCycles = recentCycles
+        .map((cycleRow, index) => {
+          const nextCycle = recentCycles[index + 1] ?? null;
+          const startedOn = formatIsoDate(cycleRow.startedOn);
+          const nextCycleStart = nextCycle ? formatIsoDate(nextCycle.startedOn) : null;
+          const observedCycleLengthDays = nextCycleStart
+            ? differenceInDays(startedOn, nextCycleStart)
+            : differenceInDays(startedOn, today) + 1;
+          const cycleLengthDays = Math.max(1, observedCycleLengthDays);
+          const periodEnd = inferPeriodEndDate({
+            cycleEndedOn: toIsoDate(cycleRow.endedOn),
+            cycleStart: startedOn,
+            fallbackPeriodLengthDays: averagePeriodLengthDays,
+            nextCycleStart,
+            periodDates
+          });
+          const phases = buildPhaseRanges(startedOn, cycleLengthDays, periodEnd).map((range) => {
+            const days = getDateRange(range.startDate, range.endDate).map((date) =>
+              createHistoryDay(
+                date,
+                range.phase,
+                cycleRows,
+                checkinRowsByDate.get(date) ?? null,
+                periodRowsByDate.get(date) ?? null,
+                symptomKeysByDate.get(date) ?? []
+              )
+            );
+            const flowLevels = days
+              .map((day) => day.period?.flowIntensity)
+              .filter((value): value is FlowIntensity => value !== null && value !== undefined)
+              .map((value) => flowIntensityToLevelMap[value]);
+            const painLevels = days
+              .map((day) => day.checkin?.painLevel)
+              .filter((value): value is number => value !== null && value !== undefined);
+            const moodValues = days
+              .map((day) => day.checkin?.mood)
+              .filter((value): value is number => value !== null && value !== undefined);
+            const energyValues = days
+              .map((day) => day.checkin?.energy)
+              .filter((value): value is number => value !== null && value !== undefined);
 
-        dayMap.set(date, {
-          ...existing,
-          checkin: dailyCheckinEntrySchema.parse({
-            date,
-            discharge: row.discharge,
-            energy: row.energy,
-            mood: row.mood,
-            note: row.note,
-            painLevel: row.painLevel,
-            sleepQuality: row.sleepQuality,
-            symptomKeys: existing.symptomKeys
-          })
-        });
-      }
+            return {
+              averageEnergy: averageNullable(energyValues),
+              averageFlowIntensityLevel: averageNullable(flowLevels),
+              averageMood: averageNullable(moodValues),
+              averagePainLevel: averageNullable(painLevels),
+              commonSymptoms: getCommonSymptoms(days),
+              days,
+              endDate: range.endDate,
+              phase: range.phase,
+              startDate: range.startDate,
+              totalDays: days.length
+            };
+          });
 
-      for (const row of periodRows) {
-        const date = formatIsoDate(row.happenedOn);
-        const existing = dayMap.get(date) ?? {
-          checkin: null,
-          period: null,
-          symptomKeys: []
-        };
-
-        dayMap.set(date, {
-          ...existing,
-          period: periodLogEntrySchema.parse({
-            cycleEnded: cycleRows.some((cycleRow) => toIsoDate(cycleRow.endedOn) === date),
-            cycleStarted: cycleRows.some((cycleRow) => formatIsoDate(cycleRow.startedOn) === date),
-            date,
-            flowIntensity: levelToFlowIntensity(row.flowLevel),
-            note: row.notes
-          })
-        });
-      }
-
-      const days = Array.from(dayMap.entries())
-        .sort(([left], [right]) => (left < right ? 1 : left > right ? -1 : 0))
-        .slice(0, limit)
-        .map(([date, value]) => ({
-          checkin:
-            value.checkin === null
-              ? null
-              : dailyCheckinEntrySchema.parse({
-                  ...value.checkin,
-                  symptomKeys: value.symptomKeys
-                }),
-          date,
-          period: value.period,
-          symptomKeys: value.symptomKeys
-        }));
+          return {
+            cycleId: cycleRow.id,
+            cycleLengthDays: nextCycleStart ? differenceInDays(startedOn, nextCycleStart) : null,
+            endedOn: nextCycleStart ? addDaysToIsoDate(nextCycleStart, -1) : null,
+            periodLengthDays: differenceInDays(startedOn, periodEnd) + 1,
+            phases,
+            startedOn
+          };
+        })
+        .reverse();
 
       return reply.send(
         historyResponseSchema.parse({
-          days
+          cycles: historyCycles
         })
       );
     } catch (error) {
@@ -806,9 +1089,14 @@ export async function registerCycleRoutes(
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
 
-      await upsertPeriodLog(deps.db, authenticatedUser.user.id, parsedBody.data.date, {
-        flowIntensity: parsedBody.data.flowIntensity,
-        note: parsedBody.data.note
+      await deps.db.transaction(async (transaction) => {
+        await upsertPeriodLog(transaction, authenticatedUser.user.id, parsedBody.data.date, {
+          flowIntensity: parsedBody.data.flowIntensity,
+          note: parsedBody.data.note
+        });
+        await syncLoggedPeriodCycle(transaction, authenticatedUser.user.id, parsedBody.data.date, {
+          periodLengthDays: authenticatedUser.settings.periodLengthDays
+        });
       });
 
       const cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
@@ -823,6 +1111,47 @@ export async function registerCycleRoutes(
           )
         })
       );
+    } catch (error) {
+      if (error instanceof AuthContextError) {
+        return reply.code(error.statusCode).send({
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.delete("/api/period/log/:date", async (request, reply) => {
+    const parsedParams = dateParamsSchema.safeParse(request.params);
+
+    if (!parsedParams.success) {
+      return reply.code(400).send({
+        error: "Invalid period log date."
+      });
+    }
+
+    try {
+      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+
+      await deps.db.transaction(async (transaction) => {
+        await transaction
+          .delete(periodLogs)
+          .where(
+            and(
+              eq(periodLogs.userId, authenticatedUser.user.id),
+              eq(periodLogs.happenedOn, parseIsoDate(parsedParams.data.date))
+            )
+          );
+
+        await syncCyclesFromPeriodLogs(
+          transaction,
+          authenticatedUser.user.id,
+          authenticatedUser.settings.periodLengthDays
+        );
+      });
+
+      return reply.code(204).send();
     } catch (error) {
       if (error instanceof AuthContextError) {
         return reply.code(error.statusCode).send({
