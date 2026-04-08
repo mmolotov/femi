@@ -517,6 +517,7 @@ export function isPeriodActive(
 export type CalendarMonthDayMarkerInput = {
   date: string;
   flowIntensity?: FlowIntensity | null;
+  isPeriodDay?: boolean;
   symptomKeys?: readonly SymptomKey[];
 };
 
@@ -573,12 +574,13 @@ export function buildCalendarMonthDays({
       ...currentPredictedPeriod,
       ...(predictedPeriods ?? fallbackPredictedPeriods)
     ];
+    const hasLoggedPeriod = loggedDay !== undefined && loggedDay.isPeriodDay !== false;
     const isPredictedPeriodDay =
       resolvedPredictedPeriods.some(
         (period) =>
           differenceInDays(period.periodStart, date) >= 0 &&
           differenceInDays(date, period.periodEnd) >= 0
-      ) && loggedDay === undefined;
+      ) && !hasLoggedPeriod;
 
     const isInCurrentCycle =
       currentCycleStart !== null &&
@@ -589,7 +591,7 @@ export function buildCalendarMonthDays({
       date,
       flowIntensity: loggedDay?.flowIntensity ?? null,
       isInCurrentCycle,
-      isLoggedPeriodDay: loggedDay !== undefined,
+      isLoggedPeriodDay: hasLoggedPeriod,
       isPredictedPeriodDay,
       isToday: date === today,
       symptomKeys: [...(loggedDay?.symptomKeys ?? [])]

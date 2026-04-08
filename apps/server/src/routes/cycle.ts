@@ -706,6 +706,7 @@ export async function registerCycleRoutes(
         string,
         {
           flowIntensity: FlowIntensity | null;
+          isPeriodDay: boolean;
           symptomKeys: SymptomKey[];
         }
       >();
@@ -715,6 +716,7 @@ export async function registerCycleRoutes(
 
         markerMap.set(date, {
           flowIntensity: levelToFlowIntensity(row.flowLevel),
+          isPeriodDay: true,
           symptomKeys: markerMap.get(date)?.symptomKeys ?? []
         });
       }
@@ -723,6 +725,7 @@ export async function registerCycleRoutes(
         const date = formatIsoDate(row.happenedOn);
         const existing = markerMap.get(date) ?? {
           flowIntensity: null,
+          isPeriodDay: false,
           symptomKeys: []
         };
 
@@ -741,6 +744,7 @@ export async function registerCycleRoutes(
             periodDays: Array.from(markerMap.entries()).map(([date, value]) => ({
               date,
               flowIntensity: value.flowIntensity,
+              isPeriodDay: value.isPeriodDay,
               symptomKeys: value.symptomKeys
             })),
             predictedNextPeriodStart: summary.predictedNextPeriodStart,

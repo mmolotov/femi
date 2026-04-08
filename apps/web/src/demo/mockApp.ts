@@ -296,17 +296,27 @@ function getSummary(): CycleSummaryResponse {
 
 function getCalendar(month: string): CalendarResponse {
   const summary = getSummary().summary;
+  const markerDates = new Set<string>([
+    ...Object.keys(demoState.periodLogs),
+    ...Object.keys(demoState.checkins)
+  ]);
+  const periodDays = Array.from(markerDates).map((date) => {
+    const periodLog = demoState.periodLogs[date];
+
+    return {
+      date,
+      flowIntensity: periodLog?.flowIntensity ?? null,
+      isPeriodDay: periodLog !== undefined,
+      symptomKeys: demoState.checkins[date]?.symptomKeys ?? []
+    };
+  });
 
   return {
     days: buildCalendarMonthDays({
       currentCycleStart: summary.latestPeriodStart,
       currentPeriodEnd: demoState.cycles[0] ? inferCyclePeriodEnd(demoState.cycles[0], null) : null,
       month,
-      periodDays: Object.entries(demoState.periodLogs).map(([date, value]) => ({
-        date,
-        flowIntensity: value.flowIntensity,
-        symptomKeys: demoState.checkins[date]?.symptomKeys ?? []
-      })),
+      periodDays,
       predictedNextPeriodStart: summary.predictedNextPeriodStart,
       predictedPeriodLengthDays: summary.averagePeriodLengthDays,
       predictedPeriods: summary.forecast,
