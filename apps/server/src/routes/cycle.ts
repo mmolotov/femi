@@ -801,12 +801,7 @@ export async function registerCycleRoutes(
       ]);
 
       const today = getTodayIsoDate();
-      const cycleLengths = getCycleLengths(cycleRows);
       const periodLengths = getPeriodLengths(cycleRows);
-      const averageCycleLengthDays = calculateAverageCycleLength(
-        cycleLengths,
-        authenticatedUser.settings.cycleLengthDays
-      );
       const averagePeriodLengthDays = calculateAveragePeriodLength(
         periodLengths,
         authenticatedUser.settings.periodLengthDays

@@ -27,3 +27,25 @@ You MUST read the overview resource to understand the complete workflow. The inf
 </CRITICAL_INSTRUCTION>
 
 <!-- BACKLOG.MD MCP GUIDELINES END -->
+
+## Pre-commit checks
+
+Run these locally **before every commit** so problems are caught here, not in the CI `Quality` workflow. The list mirrors exactly what CI runs.
+
+Quick path — one command runs the full suite:
+
+```bash
+pnpm validate
+```
+
+Or run steps individually (same order as CI):
+
+1. `pnpm format:check` — Prettier formatting (auto-fix: `pnpm format`)
+2. `pnpm lint` — ESLint (auto-fix: `pnpm lint:fix`)
+3. `pnpm lint:styles` — Stylelint for CSS (auto-fix: `pnpm lint:styles:fix`)
+4. `pnpm typecheck` — TypeScript across all workspaces
+5. `pnpm test:coverage` — Vitest unit tests with coverage
+6. `pnpm analyze` — Knip (unused exports / dependencies)
+7. `pnpm build` — Full workspace build
+
+If any step fails, fix it before creating the commit. Do not push and rely on CI to surface issues.
