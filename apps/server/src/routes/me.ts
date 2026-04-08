@@ -1,6 +1,10 @@
 import type { Database } from "@femi/db";
 import { cycles, periodLogs, userSettings } from "@femi/db";
-import { meResponseSchema, updateUserSettingsRequestSchema, updateUserSettingsResponseSchema } from "@femi/shared";
+import {
+  meResponseSchema,
+  updateUserSettingsRequestSchema,
+  updateUserSettingsResponseSchema
+} from "@femi/shared";
 import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
@@ -30,7 +34,11 @@ function addDays(date: string, days: number): string {
   return formatIsoDate(nextDate);
 }
 
-function buildLoggedPeriodDates(latestPeriodStart: string, periodLengthDays: number, today: string) {
+function buildLoggedPeriodDates(
+  latestPeriodStart: string,
+  periodLengthDays: number,
+  today: string
+) {
   const periodEnd = addDays(latestPeriodStart, periodLengthDays - 1);
   const loggedEnd = periodEnd < today ? periodEnd : today;
 

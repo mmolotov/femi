@@ -29,7 +29,11 @@ function addMonths(month: string, delta: number): string {
   return shiftMonth(month, delta);
 }
 
-function buildLoggedPeriodDates(latestPeriodStart: string, periodLengthDays: number, today: string) {
+function buildLoggedPeriodDates(
+  latestPeriodStart: string,
+  periodLengthDays: number,
+  today: string
+) {
   const periodEnd = addDaysToIsoDate(latestPeriodStart, periodLengthDays - 1);
   const loggedEnd = periodEnd < today ? periodEnd : today;
 
@@ -78,9 +82,11 @@ export function OnboardingGate() {
         currentCycleStart: latestPeriodStart,
         currentPeriodEnd: addDaysToIsoDate(latestPeriodStart, periodLengthDays - 1),
         month: previewMonth,
-        periodDays: buildLoggedPeriodDates(latestPeriodStart, periodLengthDays, today).map((date) => ({
-          date
-        })),
+        periodDays: buildLoggedPeriodDates(latestPeriodStart, periodLengthDays, today).map(
+          (date) => ({
+            date
+          })
+        ),
         predictedNextPeriodStart: previewForecast[0]?.periodStart ?? null,
         predictedPeriodLengthDays: periodLengthDays,
         predictedPeriods: previewForecast,

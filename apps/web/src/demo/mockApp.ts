@@ -58,7 +58,11 @@ function getToday(): string {
   return formatIsoDate(new Date());
 }
 
-function buildLoggedPeriodDates(latestPeriodStart: string, periodLengthDays: number, today: string) {
+function buildLoggedPeriodDates(
+  latestPeriodStart: string,
+  periodLengthDays: number,
+  today: string
+) {
   const periodEnd = addDaysToIsoDate(latestPeriodStart, periodLengthDays - 1);
   const loggedEnd = periodEnd < today ? periodEnd : today;
 
@@ -362,10 +366,17 @@ function buildPhaseRanges(
     cycleLengthDays,
     Math.max(periodLengthDays + 1, cycleLengthDays - 16)
   );
-  const ovulationEndDay = Math.min(cycleLengthDays, Math.max(ovulationStartDay, cycleLengthDays - 12));
+  const ovulationEndDay = Math.min(
+    cycleLengthDays,
+    Math.max(ovulationStartDay, cycleLengthDays - 12)
+  );
   const windows: Array<{ endDay: number; phase: CyclePhase; startDay: number }> = [
     { endDay: periodLengthDays, phase: "menstrual", startDay: 1 },
-    { endDay: Math.max(periodLengthDays, ovulationStartDay - 1), phase: "follicular", startDay: periodLengthDays + 1 },
+    {
+      endDay: Math.max(periodLengthDays, ovulationStartDay - 1),
+      phase: "follicular",
+      startDay: periodLengthDays + 1
+    },
     { endDay: ovulationEndDay, phase: "ovulatory", startDay: ovulationStartDay },
     { endDay: cycleLengthDays, phase: "luteal", startDay: ovulationEndDay + 1 }
   ];
@@ -453,7 +464,9 @@ function getHistory(limit = 6): HistoryResponse {
 
         return {
           cycleId: `${cycle.startedOn}-${index}`,
-          cycleLengthDays: nextCycleStart ? differenceInDays(cycle.startedOn, nextCycleStart) : null,
+          cycleLengthDays: nextCycleStart
+            ? differenceInDays(cycle.startedOn, nextCycleStart)
+            : null,
           endedOn: nextCycleStart ? addDaysToIsoDate(nextCycleStart, -1) : null,
           periodLengthDays,
           phases,

@@ -110,8 +110,8 @@ function getSelectedCycleDay(
   }
 
   const offset = differenceInDays(latestPeriodStart, selectedDate);
-  const normalizedOffset = ((offset % averageCycleLengthDays) + averageCycleLengthDays) %
-    averageCycleLengthDays;
+  const normalizedOffset =
+    ((offset % averageCycleLengthDays) + averageCycleLengthDays) % averageCycleLengthDays;
 
   return normalizedOffset + 1;
 }
@@ -130,7 +130,9 @@ export function TodayRoute() {
   const [periodSuccess, setPeriodSuccess] = useState<string | null>(null);
   const [selectedFlowIntensity, setSelectedFlowIntensity] = useState<FlowIntensity | "">("");
   const [month, setMonth] = useState(summary ? summary.today.slice(0, 7) : formatMonth(new Date()));
-  const [selectedDate, setSelectedDate] = useState(summary ? summary.today : formatIsoDate(new Date()));
+  const [selectedDate, setSelectedDate] = useState(
+    summary ? summary.today : formatIsoDate(new Date())
+  );
 
   const loadCalendar = useCallback(
     async (nextMonth: string) => {
@@ -213,14 +215,20 @@ export function TodayRoute() {
   const selectedCycleDay = useMemo(
     () =>
       summary
-        ? getSelectedCycleDay(summary.latestPeriodStart, selectedDate, summary.averageCycleLengthDays)
+        ? getSelectedCycleDay(
+            summary.latestPeriodStart,
+            selectedDate,
+            summary.averageCycleLengthDays
+          )
         : null,
     [selectedDate, summary]
   );
 
   const selectedPhase = useMemo(() => {
     if (!summary || selectedCycleDay === null) {
-      return selectedDay?.isLoggedPeriodDay || selectedDay?.isPredictedPeriodDay ? "menstrual" : null;
+      return selectedDay?.isLoggedPeriodDay || selectedDay?.isPredictedPeriodDay
+        ? "menstrual"
+        : null;
     }
 
     if (selectedDay?.isLoggedPeriodDay || selectedDay?.isPredictedPeriodDay) {
@@ -336,7 +344,9 @@ export function TodayRoute() {
   return (
     <>
       <Panel
-        aside={<strong className="panel-date">{formatIsoDateForDisplay(summary.today, language)}</strong>}
+        aside={
+          <strong className="panel-date">{formatIsoDateForDisplay(summary.today, language)}</strong>
+        }
         title={messages.today.title}
       >
         <div className="metric-grid">
@@ -365,7 +375,6 @@ export function TodayRoute() {
             </strong>
           </div>
         </div>
-
       </Panel>
 
       <Panel description={messages.calendar.description} title={messages.calendar.title}>
@@ -464,11 +473,16 @@ export function TodayRoute() {
                     >
                       <span className="calendar-day-symptom-glyphs" aria-hidden="true">
                         {Array.from({ length: Math.min(day.symptomKeys.length, 4) }, (_, index) => (
-                          <i key={`${day.date}-symptom-${index}`} className="calendar-day-symptom-dot" />
+                          <i
+                            key={`${day.date}-symptom-${index}`}
+                            className="calendar-day-symptom-dot"
+                          />
                         ))}
                       </span>
                       {day.symptomKeys.length > 4 ? (
-                        <span className="calendar-day-symptom-more">+{day.symptomKeys.length - 4}</span>
+                        <span className="calendar-day-symptom-more">
+                          +{day.symptomKeys.length - 4}
+                        </span>
                       ) : null}
                     </span>
                   ) : null}
@@ -481,16 +495,23 @@ export function TodayRoute() {
         )}
       </Panel>
 
-      <Panel description={messages.today.dayDetailsDescription} title={messages.today.dayDetailsTitle}>
+      <Panel
+        description={messages.today.dayDetailsDescription}
+        title={messages.today.dayDetailsTitle}
+      >
         <div className="day-details-header">
           <div className="day-details-meta">
             <strong>{selectedDateLabel}</strong>
             <span className="muted">
-              {isSelectedToday ? messages.today.selectedDateToday : messages.today.selectedDateFromCalendar}
+              {isSelectedToday
+                ? messages.today.selectedDateToday
+                : messages.today.selectedDateFromCalendar}
             </span>
           </div>
           <span className={`phase-pill ${getPhaseTone(selectedPhase)}`}>
-            {selectedPhase ? messages.today.phaseNames[selectedPhase] : messages.today.phaseFallback}
+            {selectedPhase
+              ? messages.today.phaseNames[selectedPhase]
+              : messages.today.phaseFallback}
           </span>
         </div>
 
@@ -542,7 +563,9 @@ export function TodayRoute() {
                     }}
                     type="button"
                   >
-                    {isSavingPeriod ? messages.calendar.savePending : messages.calendar.savePeriodDay}
+                    {isSavingPeriod
+                      ? messages.calendar.savePending
+                      : messages.calendar.savePeriodDay}
                   </button>
                   <button
                     className="primary-button action-row-end"
@@ -567,7 +590,9 @@ export function TodayRoute() {
                   }}
                   type="button"
                 >
-                  {isSavingPeriod ? messages.today.markPeriodDayPending : messages.today.markPeriodDay}
+                  {isSavingPeriod
+                    ? messages.today.markPeriodDayPending
+                    : messages.today.markPeriodDay}
                 </button>
               </>
             )}
@@ -787,7 +812,9 @@ export function TodayRoute() {
                 </div>
 
                 {checkinError ? <p className="inline-error">{checkinError}</p> : null}
-                {saveSuccess ? <p className="inline-success">{messages.today.saveSuccess}</p> : null}
+                {saveSuccess ? (
+                  <p className="inline-success">{messages.today.saveSuccess}</p>
+                ) : null}
 
                 <button
                   className="primary-button"

@@ -156,7 +156,9 @@ describe("TodayRoute", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^2026-03-01$/i }));
 
-    expect(await screen.findByText(/this day is not marked as a period day yet/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/this day is not marked as a period day yet/i)
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^mark period day$/i }));
 

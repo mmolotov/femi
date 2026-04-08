@@ -264,7 +264,10 @@ function buildPhaseRanges(
     cycleLengthDays,
     Math.max(periodLengthDays + 1, cycleLengthDays - 16)
   );
-  const ovulationEndDay = Math.min(cycleLengthDays, Math.max(ovulationStartDay, cycleLengthDays - 12));
+  const ovulationEndDay = Math.min(
+    cycleLengthDays,
+    Math.max(ovulationStartDay, cycleLengthDays - 12)
+  );
   const phaseDayWindows: Array<{ endDay: number; phase: CyclePhase; startDay: number }> = [
     {
       endDay: periodLengthDays,
@@ -397,7 +400,10 @@ async function loadSummaryData(
     periodLengthDays: number;
   }
 ) {
-  const [cycleRows, periodRows] = await Promise.all([loadCycleRows(db, userId), loadPeriodRows(db, userId)]);
+  const [cycleRows, periodRows] = await Promise.all([
+    loadCycleRows(db, userId),
+    loadPeriodRows(db, userId)
+  ]);
   const latestCycle = cycleRows[0] ?? null;
   const cycleLengths = getCycleLengths(cycleRows);
   const periodLengths = getPeriodLengths(cycleRows);
@@ -591,8 +597,7 @@ async function syncCyclesFromPeriodLogs(
 
   await db.insert(cycles).values(
     cycleWindows.map((cycleWindow, index) => ({
-      endedOn:
-        index === cycleWindows.length - 1 ? null : parseIsoDate(cycleWindow.endedOn),
+      endedOn: index === cycleWindows.length - 1 ? null : parseIsoDate(cycleWindow.endedOn),
       predicted: false,
       startedOn: parseIsoDate(cycleWindow.startedOn),
       userId
@@ -806,8 +811,12 @@ export async function registerCycleRoutes(
         periodLengths,
         authenticatedUser.settings.periodLengthDays
       );
-      const periodRowsByDate = new Map(periodRows.map((row) => [formatIsoDate(row.happenedOn), row]));
-      const checkinRowsByDate = new Map(checkinRows.map((row) => [formatIsoDate(row.happenedOn), row]));
+      const periodRowsByDate = new Map(
+        periodRows.map((row) => [formatIsoDate(row.happenedOn), row])
+      );
+      const checkinRowsByDate = new Map(
+        checkinRows.map((row) => [formatIsoDate(row.happenedOn), row])
+      );
       const symptomKeysByDate = new Map<string, SymptomKey[]>();
 
       for (const row of symptomRows) {

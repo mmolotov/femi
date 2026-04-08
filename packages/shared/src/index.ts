@@ -378,7 +378,10 @@ export function resolveCyclePhase(
     cycleLengthDays,
     Math.max(periodLengthDays + 1, cycleLengthDays - 16)
   );
-  const ovulationEndDay = Math.min(cycleLengthDays, Math.max(ovulationStartDay, cycleLengthDays - 12));
+  const ovulationEndDay = Math.min(
+    cycleLengthDays,
+    Math.max(ovulationStartDay, cycleLengthDays - 12)
+  );
 
   if (cycleDay < ovulationStartDay) {
     return "follicular";
@@ -566,11 +569,16 @@ export function buildCalendarMonthDays({
             }
           ]
         : [];
-    const resolvedPredictedPeriods = [...currentPredictedPeriod, ...(predictedPeriods ?? fallbackPredictedPeriods)];
-    const isPredictedPeriodDay = resolvedPredictedPeriods.some(
-      (period) =>
-        differenceInDays(period.periodStart, date) >= 0 && differenceInDays(date, period.periodEnd) >= 0
-    ) && loggedDay === undefined;
+    const resolvedPredictedPeriods = [
+      ...currentPredictedPeriod,
+      ...(predictedPeriods ?? fallbackPredictedPeriods)
+    ];
+    const isPredictedPeriodDay =
+      resolvedPredictedPeriods.some(
+        (period) =>
+          differenceInDays(period.periodStart, date) >= 0 &&
+          differenceInDays(date, period.periodEnd) >= 0
+      ) && loggedDay === undefined;
 
     const isInCurrentCycle =
       currentCycleStart !== null &&

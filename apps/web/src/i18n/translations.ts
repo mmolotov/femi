@@ -70,7 +70,8 @@ export const baseMessages = {
       luteal: "Luteal phase right now"
     },
     phaseDescriptions: {
-      menstrual: "Keep period logging and symptom check-ins short. Pain, energy, and cramps matter most here.",
+      menstrual:
+        "Keep period logging and symptom check-ins short. Pain, energy, and cramps matter most here.",
       follicular: "Energy and mood often shift here. Keep an eye on discharge and symptom changes.",
       ovulatory: "This is the most likely ovulatory window based on the current forecast model.",
       luteal: "PMS-like symptoms, mood, sleep, and pain trends usually matter most in this phase."
@@ -103,16 +104,17 @@ export const baseMessages = {
     notePlaceholder: "Anything you want to remember for this day.",
     symptomsTitle: "Symptoms",
     symptomsDescription: "Tap to add the symptoms that matter today.",
-    menstrualSymptomsDescription:
-      "Tap the symptoms that best describe today's period experience.",
+    menstrualSymptomsDescription: "Tap the symptoms that best describe today's period experience.",
     symptomNone: "No symptoms selected",
     dayDetailsTitle: "Day details",
-    dayDetailsDescription: "Select a date in the calendar to update the check-in and period details for that day.",
+    dayDetailsDescription:
+      "Select a date in the calendar to update the check-in and period details for that day.",
     selectedDateToday: "Today",
     selectedDateFromCalendar: "Selected from the calendar",
     selectedDateCheckinDescription: "The check-in below always applies to the selected date.",
     selectedDatePeriodDescription: "Period actions below also apply to the selected date.",
-    futureCheckinLocked: "Future dates can be reviewed, but the check-in stays locked until that day arrives.",
+    futureCheckinLocked:
+      "Future dates can be reviewed, but the check-in stays locked until that day arrives.",
     statusLoaded: "connected",
     scorePlaceholder: "Not set",
     dischargePlaceholder: "Not set",
@@ -156,7 +158,8 @@ export const baseMessages = {
   },
   history: {
     title: "History",
-    description: "Cycle history grouped by phase, with a short summary and daily details inside each phase.",
+    description:
+      "Cycle history grouped by phase, with a short summary and daily details inside each phase.",
     empty: "No entries yet.",
     loadError: "History could not be loaded.",
     cycleLengthLabel: "Cycle length",
@@ -289,8 +292,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       cycleDayFallback: "пока недостаточно данных",
       phaseLabel: "Текущая фаза",
       phaseFallback: "фаза недоступна",
-      phaseFallbackDescription:
-        "Добавьте дни менструации, чтобы модель фаз работала точнее.",
+      phaseFallbackDescription: "Добавьте дни менструации, чтобы модель фаз работала точнее.",
       phaseNames: {
         menstrual: "Менструальная",
         follicular: "Фолликулярная",
@@ -308,10 +310,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
           "Сохраняйте отметки менструации и короткие чек-ины. Здесь особенно важны боль, энергия и спазмы.",
         follicular:
           "В этой фазе часто меняются энергия и настроение. Следите за выделениями и симптомами.",
-        ovulatory:
-          "Это наиболее вероятное овуляторное окно по текущей модели прогноза.",
-        luteal:
-          "В этой фазе обычно важнее всего ПМС-подобные симптомы, настроение, сон и боль."
+        ovulatory: "Это наиболее вероятное овуляторное окно по текущей модели прогноза.",
+        luteal: "В этой фазе обычно важнее всего ПМС-подобные симптомы, настроение, сон и боль."
       },
       nextPeriodLabel: "Прогноз следующей менструации",
       nextPeriodFallback: "прогноз появится после первой записи о менструации",
@@ -357,8 +357,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Выберите дату в календаре, чтобы обновить чек-ин и детали менструации для этого дня.",
       selectedDateToday: "Сегодня",
       selectedDateFromCalendar: "Выбрано из календаря",
-      selectedDateCheckinDescription:
-        "Форма чек-ина ниже всегда относится к выбранной дате.",
+      selectedDateCheckinDescription: "Форма чек-ина ниже всегда относится к выбранной дате.",
       selectedDatePeriodDescription:
         "Действия по менструации ниже тоже относятся к выбранной дате.",
       futureCheckinLocked:
@@ -391,7 +390,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       selectedDateFallback: "Дата не выбрана",
       selectedDateLogged: "Эта дата уже отмечена как день менструации.",
       selectedDateEmpty: "Этот день пока не отмечен как день менструации.",
-      selectedDatePredicted: "Этот день пока остаётся частью прогноза и доступен только для просмотра.",
+      selectedDatePredicted:
+        "Этот день пока остаётся частью прогноза и доступен только для просмотра.",
       futureDateReadOnly: "Будущие даты отображаются только как прогноз.",
       tapToMark: "Выберите прошлую или текущую дату, затем отметьте её ниже.",
       flowIntensityLabel: "Интенсивность",
@@ -542,8 +542,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       cycleDayFallback: "todavía no hay suficientes datos",
       phaseLabel: "Fase actual",
       phaseFallback: "fase no disponible",
-      phaseFallbackDescription:
-        "Añade días de período para que el modelo de fases sea más fiable.",
+      phaseFallbackDescription: "Añade días de período para que el modelo de fases sea más fiable.",
       phaseNames: {
         menstrual: "Menstrual",
         follicular: "Folicular",
@@ -632,8 +631,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       selectedDateLabel: "Fecha seleccionada",
       selectedDateFallback: "No hay fecha seleccionada",
       selectedDateLogged: "Esta fecha ya está marcada como día de período.",
-      tapToMark:
-        "Toca cualquier fecha sin marcar para registrar un día de período al instante.",
+      tapToMark: "Toca cualquier fecha sin marcar para registrar un día de período al instante.",
       flowIntensityLabel: "Intensidad",
       flowIntensityPlaceholder: "Sin indicar",
       startPeriod: "Iniciar período aquí",
@@ -799,12 +797,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseDescriptions: {
         menstrual:
           "Mantenha o registro menstrual e os check-ins curtos. Aqui dor, energia e cólicas importam mais.",
-        follicular:
-          "Nesta fase, energia e humor costumam mudar. Observe o fluxo e os sintomas.",
-        ovulatory:
-          "Esta é a janela ovulatória mais provável com base no modelo atual de previsão.",
-        luteal:
-          "Nesta fase, costumam importar mais sintomas de TPM, humor, sono e dor."
+        follicular: "Nesta fase, energia e humor costumam mudar. Observe o fluxo e os sintomas.",
+        ovulatory: "Esta é a janela ovulatória mais provável com base no modelo atual de previsão.",
+        luteal: "Nesta fase, costumam importar mais sintomas de TPM, humor, sono e dor."
       },
       nextPeriodLabel: "Próxima menstruação prevista",
       nextPeriodFallback: "a previsão começa após o primeiro registro menstrual",
@@ -1021,8 +1016,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       cycleDayFallback: "henüz yeterli veri yok",
       phaseLabel: "Güncel faz",
       phaseFallback: "faz kullanılamıyor",
-      phaseFallbackDescription:
-        "Faz modelinin daha doğru çalışması için adet günleri ekleyin.",
+      phaseFallbackDescription: "Faz modelinin daha doğru çalışması için adet günleri ekleyin.",
       phaseNames: {
         menstrual: "Menstrüel",
         follicular: "Foliküler",
@@ -1038,12 +1032,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseDescriptions: {
         menstrual:
           "Adet kaydını ve check-in'leri kısa tutun. Bu fazda ağrı, enerji ve kramplar daha önemlidir.",
-        follicular:
-          "Bu fazda enerji ve ruh hali sık değişir. Akıntıyı ve belirtileri izleyin.",
-        ovulatory:
-          "Bu, mevcut tahmin modeline göre en olası ovulasyon penceresidir.",
-        luteal:
-          "Bu fazda PMS benzeri belirtiler, ruh hali, uyku ve ağrı daha önemli olur."
+        follicular: "Bu fazda enerji ve ruh hali sık değişir. Akıntıyı ve belirtileri izleyin.",
+        ovulatory: "Bu, mevcut tahmin modeline göre en olası ovulasyon penceresidir.",
+        luteal: "Bu fazda PMS benzeri belirtiler, ruh hali, uyku ve ağrı daha önemli olur."
       },
       nextPeriodLabel: "Tahmini sonraki adet",
       nextPeriodFallback: "tahmin ilk adet kaydından sonra başlar",
@@ -1110,8 +1101,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       selectedDateLabel: "Seçilen tarih",
       selectedDateFallback: "Tarih seçilmedi",
       selectedDateLogged: "Bu tarih zaten adet günü olarak işaretlenmiş.",
-      tapToMark:
-        "Henüz işaretlenmemiş herhangi bir tarihe dokunarak adet gününü anında kaydedin.",
+      tapToMark: "Henüz işaretlenmemiş herhangi bir tarihe dokunarak adet gününü anında kaydedin.",
       flowIntensityLabel: "Yoğunluk",
       flowIntensityPlaceholder: "Ayarlanmadı",
       startPeriod: "Adeti burada başlat",
@@ -1258,8 +1248,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       cycleDayFallback: "поки недостатньо даних",
       phaseLabel: "Поточна фаза",
       phaseFallback: "фаза недоступна",
-      phaseFallbackDescription:
-        "Додайте дні менструації, щоб модель фаз працювала точніше.",
+      phaseFallbackDescription: "Додайте дні менструації, щоб модель фаз працювала точніше.",
       phaseNames: {
         menstrual: "Менструальна",
         follicular: "Фолікулярна",
@@ -1277,10 +1266,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
           "Залишайте відмітки менструації та короткі чек-іни. Тут найважливіші біль, енергія та спазми.",
         follicular:
           "У цій фазі часто змінюються енергія та настрій. Слідкуйте за виділеннями та симптомами.",
-        ovulatory:
-          "Це найімовірніше овуляторне вікно за поточною моделлю прогнозу.",
-        luteal:
-          "У цій фазі зазвичай найважливіші ПМС-подібні симптоми, настрій, сон і біль."
+        ovulatory: "Це найімовірніше овуляторне вікно за поточною моделлю прогнозу.",
+        luteal: "У цій фазі зазвичай найважливіші ПМС-подібні симптоми, настрій, сон і біль."
       },
       nextPeriodLabel: "Прогноз наступної менструації",
       nextPeriodFallback: "прогноз з'явиться після першого запису про менструацію",
@@ -1346,8 +1333,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       selectedDateLabel: "Обрана дата",
       selectedDateFallback: "Дату не вибрано",
       selectedDateLogged: "Ця дата вже позначена як день менструації.",
-      tapToMark:
-        "Натисніть на будь-яку непозначену дату, щоб одразу записати день менструації.",
+      tapToMark: "Натисніть на будь-яку непозначену дату, щоб одразу записати день менструації.",
       flowIntensityLabel: "Інтенсивність",
       flowIntensityPlaceholder: "Не вказано",
       startPeriod: "Почати тут",
@@ -1496,8 +1482,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       cycleDayFallback: "لا توجد بيانات كافية بعد",
       phaseLabel: "المرحلة الحالية",
       phaseFallback: "المرحلة غير متاحة",
-      phaseFallbackDescription:
-        "أضيفي أيام الحيض لكي يعمل نموذج المراحل بدقة أكبر.",
+      phaseFallbackDescription: "أضيفي أيام الحيض لكي يعمل نموذج المراحل بدقة أكبر.",
       phaseNames: {
         menstrual: "الحيض",
         follicular: "الجريبية",
@@ -1513,12 +1498,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseDescriptions: {
         menstrual:
           "اجعلي تسجيل الحيض والمتابعة اليومية مختصرين. هنا يكون الألم والطاقة والتشنجات أهم ما يجب متابعته.",
-        follicular:
-          "في هذه المرحلة غالبًا ما تتغير الطاقة والمزاج. راقبي الإفرازات والأعراض.",
-        ovulatory:
-          "هذه هي نافذة الإباضة الأكثر احتمالًا وفق نموذج التوقع الحالي.",
-        luteal:
-          "في هذه المرحلة تصبح أعراض ما قبل الحيض والمزاج والنوم والألم أكثر أهمية عادة."
+        follicular: "في هذه المرحلة غالبًا ما تتغير الطاقة والمزاج. راقبي الإفرازات والأعراض.",
+        ovulatory: "هذه هي نافذة الإباضة الأكثر احتمالًا وفق نموذج التوقع الحالي.",
+        luteal: "في هذه المرحلة تصبح أعراض ما قبل الحيض والمزاج والنوم والألم أكثر أهمية عادة."
       },
       nextPeriodLabel: "موعد الحيض المتوقع التالي",
       nextPeriodFallback: "يبدأ التوقع بعد أول تسجيل للحيض",
@@ -1554,8 +1536,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       notePlaceholder: "أي شيء تريدين تذكره عن هذا اليوم.",
       symptomsTitle: "الأعراض",
       symptomsDescription: "اضغطي لإضافة الأعراض المهمة اليوم.",
-      menstrualSymptomsDescription:
-        "اضغطي لتحديد الأعراض التي تصف تجربة الحيض اليوم بشكل أفضل.",
+      menstrualSymptomsDescription: "اضغطي لتحديد الأعراض التي تصف تجربة الحيض اليوم بشكل أفضل.",
       symptomNone: "لا توجد أعراض محددة",
       statusLoaded: "متصل",
       scorePlaceholder: "غير مضبوط",
@@ -1583,8 +1564,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       selectedDateLabel: "التاريخ المحدد",
       selectedDateFallback: "لا يوجد تاريخ محدد",
       selectedDateLogged: "هذا التاريخ محدد بالفعل كيوم حيض.",
-      tapToMark:
-        "اضغطي على أي تاريخ غير محدد لتسجيل يوم حيض فورًا.",
+      tapToMark: "اضغطي على أي تاريخ غير محدد لتسجيل يوم حيض فورًا.",
       flowIntensityLabel: "الشدة",
       flowIntensityPlaceholder: "غير مضبوط",
       startPeriod: "ابدئي الحيض هنا",
