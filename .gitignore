@@ -26,5 +26,6 @@ test-results/
 
 .idea/
 .vscode/
+.mcp.json
 
 *.log
