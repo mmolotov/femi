@@ -4,6 +4,7 @@ import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { AppDataProvider, useAppData } from "./data/AppDataProvider";
 import { I18nProvider, useI18n } from "./i18n/I18nProvider";
 import { SessionProvider, useSession } from "./session/SessionProvider";
+import { ThemeProvider, useTheme } from "./theme/ThemeProvider";
 
 const CalendarRoute = lazy(async () => {
   const module = await import("./routes/CalendarRoute");
@@ -37,6 +38,28 @@ type Tab = {
   end?: boolean;
 };
 
+function ThemeToggle() {
+  const { messages } = useI18n();
+  const { resolved, toggle } = useTheme();
+  const isDark = resolved === "dark";
+  const indicator = isDark ? messages.theme.indicatorDark : messages.theme.indicatorLight;
+
+  return (
+    <button
+      aria-label={messages.theme.toggleAriaLabel}
+      aria-pressed={isDark}
+      className="theme-toggle"
+      onClick={toggle}
+      type="button"
+    >
+      <span aria-hidden="true" className="theme-toggle-icon">
+        {isDark ? "☾" : "☀"}
+      </span>
+      <span className="theme-toggle-label">{indicator}</span>
+    </button>
+  );
+}
+
 function AppShell() {
   const location = useLocation();
   const { messages } = useI18n();
@@ -52,6 +75,12 @@ function AppShell() {
     <div className="app-shell">
       <header className="hero-card compact-hero-card">
         <h1 className="brand-mark">FEMI</h1>
+        <div className="hero-meta">
+          <span className="hero-eyebrow">
+            <strong>vol. 01</strong> · personal cycle journal
+          </span>
+          <ThemeToggle />
+        </div>
       </header>
 
       {status === "loading" ? (
@@ -108,12 +137,14 @@ function AppShell() {
 
 export function App() {
   return (
-    <I18nProvider>
-      <SessionProvider>
-        <AppDataProvider>
-          <AppShell />
-        </AppDataProvider>
-      </SessionProvider>
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        <SessionProvider>
+          <AppDataProvider>
+            <AppShell />
+          </AppDataProvider>
+        </SessionProvider>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

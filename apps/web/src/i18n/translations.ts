@@ -241,6 +241,16 @@ export const baseMessages = {
       "This copy matches the project disclaimer and should remain visible in the product.",
     importantNotice:
       "femi is not a medical app and does not provide medical advice, diagnosis, or treatment recommendations."
+  },
+  theme: {
+    title: "Appearance",
+    description: "Switch between paper and ink themes, or follow your system preference.",
+    light: "Paper",
+    dark: "Ink",
+    system: "System",
+    toggleAriaLabel: "Switch theme",
+    indicatorLight: "Paper",
+    indicatorDark: "Ink"
   }
 };
 
@@ -495,6 +505,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Этот текст повторяет project disclaimer и должен оставаться видимым в продукте.",
       importantNotice:
         "femi не является медицинским приложением и не дает медицинских рекомендаций, диагнозов или назначений лечения."
+    },
+    theme: {
+      title: "Оформление",
+      description: "Переключайтесь между светлой и тёмной темой или следуйте системным настройкам.",
+      light: "Бумага",
+      dark: "Чернила",
+      system: "Система",
+      toggleAriaLabel: "Сменить тему",
+      indicatorLight: "Бумага",
+      indicatorDark: "Чернила"
     }
   },
   es: {
@@ -733,6 +753,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Este texto coincide con el disclaimer del proyecto y debe permanecer visible en el producto.",
       importantNotice:
         "femi no es una aplicación médica y no ofrece recomendaciones médicas, diagnóstico ni tratamiento."
+    },
+    theme: {
+      title: "Apariencia",
+      description: "Cambia entre los temas claro y oscuro, o sigue la preferencia del sistema.",
+      light: "Papel",
+      dark: "Tinta",
+      system: "Sistema",
+      toggleAriaLabel: "Cambiar tema",
+      indicatorLight: "Papel",
+      indicatorDark: "Tinta"
     }
   },
   pt: {
@@ -969,6 +999,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Este texto espelha o disclaimer do projeto e deve permanecer visível no produto.",
       importantNotice:
         "femi não é um aplicativo médico e não fornece aconselhamento médico, diagnóstico ou recomendações de tratamento."
+    },
+    theme: {
+      title: "Aparência",
+      description: "Alterne entre os temas claro e escuro, ou siga a preferência do sistema.",
+      light: "Papel",
+      dark: "Tinta",
+      system: "Sistema",
+      toggleAriaLabel: "Trocar tema",
+      indicatorLight: "Papel",
+      indicatorDark: "Tinta"
     }
   },
   tr: {
@@ -1201,6 +1241,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Bu metin proje disclaimer'ı ile uyumludur ve üründe görünür kalmalıdır.",
       importantNotice:
         "femi tıbbi bir uygulama değildir ve tıbbi tavsiye, teşhis veya tedavi önerisi sunmaz."
+    },
+    theme: {
+      title: "Görünüm",
+      description: "Açık ve koyu temalar arasında geçiş yapın veya sistem tercihinizi kullanın.",
+      light: "Kağıt",
+      dark: "Mürekkep",
+      system: "Sistem",
+      toggleAriaLabel: "Temayı değiştir",
+      indicatorLight: "Kağıt",
+      indicatorDark: "Mürekkep"
     }
   },
   uk: {
@@ -1435,6 +1485,17 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Цей текст повторює project disclaimer і має залишатися видимим у продукті.",
       importantNotice:
         "femi не є медичним застосунком і не надає медичних рекомендацій, діагнозів або призначень лікування."
+    },
+    theme: {
+      title: "Оформлення",
+      description:
+        "Перемикайтеся між світлою та темною темами або дотримуйтеся системних налаштувань.",
+      light: "Папір",
+      dark: "Чорнило",
+      system: "Система",
+      toggleAriaLabel: "Змінити тему",
+      indicatorLight: "Папір",
+      indicatorDark: "Чорнило"
     }
   },
   ar: {
@@ -1663,6 +1724,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       importantNoticeDescription:
         "يتطابق هذا النص مع disclaimer الخاص بالمشروع ويجب أن يبقى ظاهرًا داخل المنتج.",
       importantNotice: "femi ليس تطبيقًا طبيًا ولا يقدم نصائح طبية أو تشخيصًا أو توصيات علاجية."
+    },
+    theme: {
+      title: "المظهر",
+      description: "بدّل بين الوضع الفاتح والداكن، أو اتبع تفضيلات النظام.",
+      light: "ورق",
+      dark: "حبر",
+      system: "النظام",
+      toggleAriaLabel: "تبديل المظهر",
+      indicatorLight: "ورق",
+      indicatorDark: "حبر"
     }
   }
 };
