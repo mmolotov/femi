@@ -94,8 +94,11 @@ We will ship the product in small, coherent slices. Each milestone should result
 ## Current Delivery Status
 
 - `Milestone 0`: done
-- `Milestone 1`: implemented and now treated as the current product baseline
-- `Milestone 2`: next
+- `Milestone 1`: **current milestone — in progress**
+- `Milestone 2`: open
+- `Milestone 3`: open
+- `Milestone 4`: open
+- `Milestone 5`: open
 
 ## Milestone 0: Foundation
 
