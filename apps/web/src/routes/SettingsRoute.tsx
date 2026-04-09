@@ -4,11 +4,18 @@ import { Panel } from "../components/Panel";
 import { useAppData } from "../data/AppDataProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import { useSession } from "../session/SessionProvider";
+import { type ThemeChoice, useTheme } from "../theme/ThemeProvider";
 
 export function SettingsRoute() {
   const { language, languages, messages, setLanguage } = useI18n();
   const { me, updateSettings } = useAppData();
   const session = useSession();
+  const { choice: themeChoice, setChoice: setThemeChoice } = useTheme();
+  const themeOptions: Array<{ value: ThemeChoice; label: string }> = [
+    { value: "light", label: messages.theme.light },
+    { value: "dark", label: messages.theme.dark },
+    { value: "system", label: messages.theme.system }
+  ];
   const [cycleLengthDays, setCycleLengthDays] = useState(me?.settings.cycleLengthDays ?? 28);
   const [periodLengthDays, setPeriodLengthDays] = useState(me?.settings.periodLengthDays ?? 5);
   const [timezone, setTimezone] = useState(
@@ -183,6 +190,25 @@ export function SettingsRoute() {
             </div>
           ) : null}
         </dl>
+      </Panel>
+
+      <Panel description={messages.theme.description} title={messages.theme.title}>
+        <div className="theme-segment" role="radiogroup" aria-label={messages.theme.title}>
+          {themeOptions.map((option) => (
+            <button
+              key={option.value}
+              aria-checked={themeChoice === option.value}
+              className={themeChoice === option.value ? "active" : ""}
+              onClick={() => {
+                setThemeChoice(option.value);
+              }}
+              role="radio"
+              type="button"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </Panel>
 
       <Panel
