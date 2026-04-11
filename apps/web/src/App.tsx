@@ -38,6 +38,37 @@ type Tab = {
   end?: boolean;
 };
 
+function TelegramDiagnosticsPanel() {
+  const session = useSession();
+
+  if (session.status !== "preview" && session.status !== "error") {
+    return null;
+  }
+
+  return (
+    <details className="status-banner muted-banner">
+      <summary>Telegram diagnostics</summary>
+      <code>
+        environment={session.environment}
+        <br />
+        hasTelegramObject={String(session.diagnostics.hasTelegramObject)}
+        <br />
+        hasWebAppObject={String(session.diagnostics.hasWebAppObject)}
+        <br />
+        hasTgWebAppPlatformParam={String(session.diagnostics.hasTgWebAppPlatformParam)}
+        <br />
+        hasUnsafeUser={String(session.diagnostics.hasUnsafeUser)}
+        <br />
+        directInitDataLength={String(session.diagnostics.directInitDataLength)}
+        <br />
+        sdkInitDataLength={String(session.diagnostics.sdkInitDataLength)}
+        <br />
+        sessionInitDataLength={String(session.initDataRaw?.length ?? 0)}
+      </code>
+    </details>
+  );
+}
+
 function ThemeToggle() {
   const { messages } = useI18n();
   const { resolved, toggle } = useTheme();
@@ -100,6 +131,8 @@ function AppShell() {
           <span>{error ?? messages.app.syncErrorBody}</span>
         </section>
       ) : null}
+
+      <TelegramDiagnosticsPanel />
 
       <nav className="tab-bar" aria-label={messages.app.primaryNavLabel}>
         {tabs.map((tab) => (

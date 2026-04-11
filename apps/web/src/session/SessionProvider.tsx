@@ -1,7 +1,11 @@
 import { createContext, type PropsWithChildren, useContext, useEffect, useState } from "react";
 
 import { useI18n } from "../i18n/I18nProvider";
-import { initializeTelegramRuntime, type TelegramEnvironment } from "../lib/telegram";
+import {
+  initializeTelegramRuntime,
+  type TelegramDiagnostics,
+  type TelegramEnvironment
+} from "../lib/telegram";
 
 type SessionUser = {
   firstName: string | null;
@@ -15,6 +19,7 @@ type SessionUser = {
 type SessionStatus = "authenticating" | "authenticated" | "error" | "preview";
 
 type SessionContextValue = {
+  diagnostics: TelegramDiagnostics;
   environment: TelegramEnvironment;
   error: string | null;
   initDataRaw: string | null;
@@ -23,6 +28,15 @@ type SessionContextValue = {
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
+
+const emptyDiagnostics: TelegramDiagnostics = {
+  directInitDataLength: 0,
+  hasTelegramObject: false,
+  hasTgWebAppPlatformParam: false,
+  hasUnsafeUser: false,
+  hasWebAppObject: false,
+  sdkInitDataLength: 0
+};
 
 function isSessionUser(value: unknown): value is SessionUser {
   if (!value || typeof value !== "object") {
@@ -44,6 +58,7 @@ function isSessionUser(value: unknown): value is SessionUser {
 export function SessionProvider({ children }: PropsWithChildren) {
   const { messages } = useI18n();
   const [state, setState] = useState<SessionContextValue>({
+    diagnostics: emptyDiagnostics,
     environment: "browser",
     error: null,
     initDataRaw: null,
@@ -66,6 +81,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
       if (!runtime.initDataRaw) {
         setState({
+          diagnostics: runtime.diagnostics,
           environment: runtime.environment,
           error: null,
           initDataRaw: null,
@@ -103,6 +119,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         }
 
         setState({
+          diagnostics: runtime.diagnostics,
           environment: runtime.environment,
           error: null,
           initDataRaw: runtime.initDataRaw,
@@ -115,6 +132,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         }
 
         setState({
+          diagnostics: runtime.diagnostics,
           environment: runtime.environment,
           error: error instanceof Error ? error.message : messages.app.telegramAuthFailed,
           initDataRaw: runtime.initDataRaw ?? null,
