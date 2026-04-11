@@ -1,20 +1,4 @@
 services:
-  caddy:
-    image: caddy:2
-    depends_on:
-      - web
-      - server
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:-localhost}
-      CADDY_EMAIL: ${CADDY_EMAIL:-ops@example.com}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-
   web:
     build:
       context: ..
@@ -22,6 +6,18 @@ services:
     depends_on:
       server:
         condition: service_started
+    networks:
+      - default
+      - edge
+    labels:
+      - caddy=${APP_DOMAIN:-localhost}
+      - caddy.encode=zstd gzip
+      - caddy.@api.path=/api /api/*
+      - caddy.0_reverse_proxy=@api server:3001
+      - caddy.@telegram.path=/telegram /telegram/*
+      - caddy.1_reverse_proxy=@telegram server:3001
+      - caddy.2_reverse_proxy={{upstreams 4173}}
+      - caddy_ingress_network=${EDGE_NETWORK_NAME:-edge}
 
   server:
     build:
@@ -42,6 +38,9 @@ services:
       PORT: 3001
       WEB_APP_URL: ${WEB_APP_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - default
+      - edge
 
   worker:
     build:
@@ -112,7 +111,10 @@ services:
       S3_BACKUP_SECRET_KEY: ${S3_BACKUP_SECRET_KEY}
       BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
 
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK_NAME:-edge}
+
 volumes:
-  caddy_data:
-  caddy_config:
   postgres_data:

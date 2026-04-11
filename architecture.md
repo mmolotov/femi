@@ -59,7 +59,7 @@ Telegram Client
 Telegram Mini App WebView
     |
     v
-Caddy :443
+Shared Caddy ingress in /opt/infra :443
     |-- /          -> web
     |-- /api/*     -> server
     |-- /telegram/*-> server
@@ -74,11 +74,11 @@ Docker network
 
 ## Deployment Model
 
-All services run on one VPS via Docker Compose.
+All application services run on one VPS via Docker Compose.
 
 ### Publicly reachable
 
-- `caddy` on ports `80` and `443`
+- shared `caddy-docker-proxy` in `/opt/infra` on ports `80` and `443`
 
 ### Internal only
 
@@ -95,18 +95,21 @@ Any low-cost VPS provider, this is enough for the MVP.
 
 ### Containers
 
-Use a single `docker-compose.yml` with these services:
+Use an application `docker-compose.yml` with these services:
 
-- `caddy`
 - `web`
 - `server`
 - `worker`
 - `postgres`
 - optional `backup` job container
 
+The shared ingress layer is deployed separately from the `infra` repository and discovers
+application routes through Docker labels on the app services attached to the shared `edge`
+network.
+
 ### Reverse Proxy
 
-Use `Caddy 2` for:
+Use shared `Caddy Docker Proxy` in `/opt/infra` for:
 
 - automatic HTTPS
 - reverse proxying `/api` and Telegram webhook routes to `server`
@@ -204,7 +207,6 @@ Why PostgreSQL:
   /shared
 /infrastructure
   docker-compose.yml
-  Caddyfile
   /backup
 ```
 

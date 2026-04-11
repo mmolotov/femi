@@ -59,6 +59,13 @@ For local development, keep:
 - `WEB_APP_URL=http://localhost:5173`
 - `DATABASE_URL=postgres://femi:femi@localhost:5432/femi`
 
+If you use the repository Compose file locally, make sure the shared ingress network name
+from `EDGE_NETWORK_NAME` exists first. For a default setup, create it once:
+
+```bash
+docker network create edge
+```
+
 ### 2. Enable pnpm and install dependencies
 
 ```bash
@@ -129,7 +136,17 @@ The Playwright happy-path scenario uses browser demo mode:
 
 This keeps the end-to-end flow testable without a live Telegram session.
 
-## Container Setup
+## Server Deployment
+
+The server deployment model assumes:
+
+- shared ingress is already running from `/opt/infra`
+- the shared Docker network from `infra` already exists, usually `edge`
+- `femi` is deployed as its own stack in `/opt/femi`
+
+The `femi` Compose stack no longer publishes ports `80/443` itself. Instead, the `web`
+service advertises the public routes to the shared `caddy-docker-proxy`, and requests for
+`/api/*` and `/telegram/*` are forwarded to the `server` container across the shared network.
 
 ### 1. Prepare environment
 
@@ -139,19 +156,25 @@ cp .env.example .env
 
 Set at least these values in `.env`:
 
+- `APP_DOMAIN`
+- `EDGE_NETWORK_NAME`
 - `BOT_TOKEN`
 - `TELEGRAM_BOT_SECRET_TOKEN`
 - `WEB_APP_URL`
 - `TELEGRAM_WEBHOOK_URL`
 
-For Docker Compose, `WEB_APP_URL` should match the public URL served by Caddy, for example:
+Recommended production values:
 
 ```env
-WEB_APP_URL=https://your-domain.example
-TELEGRAM_WEBHOOK_URL=https://your-domain.example/telegram/webhook
+APP_DOMAIN=femi.your-domain.example
+EDGE_NETWORK_NAME=edge
+WEB_APP_URL=https://femi.your-domain.example
+TELEGRAM_WEBHOOK_URL=https://femi.your-domain.example/telegram/webhook
 ```
 
-### 2. Build and start the full stack
+`EDGE_NETWORK_NAME` must match the external network created by `/opt/infra`.
+
+### 2. Build and start the app stack
 
 ```bash
 docker compose -f infrastructure/docker-compose.yml up --build
@@ -165,7 +188,6 @@ The stack starts these services:
 - `worker`
 - `web`
 - `backup`
-- `caddy`
 
 The `migrate` service runs once before `server` and `worker`.
 
@@ -187,6 +209,67 @@ docker compose -f infrastructure/docker-compose.yml down
 docker compose -f infrastructure/docker-compose.yml build --no-cache
 docker compose -f infrastructure/docker-compose.yml up
 ```
+
+### 6. Verify through the public domain
+
+```bash
+docker compose -f infrastructure/docker-compose.yml ps
+docker compose -f infrastructure/docker-compose.yml logs -f server
+curl -I https://femi.your-domain.example/
+curl -I https://femi.your-domain.example/api/health
+```
+
+Expected result:
+
+- `https://femi.your-domain.example/` returns `200`
+- `https://femi.your-domain.example/api/health` returns `200`
+- server logs show successful startup and, when configured, Telegram webhook registration
+
+## GitHub Deploy Workflow
+
+The repository includes a deployment workflow at
+[`deploy-femi.yml`](./.github/workflows/deploy-femi.yml).
+
+It is intentionally scoped only to `/opt/femi`:
+
+- runs `pnpm validate` on GitHub-hosted runners
+- connects to the VPS over `SSH`
+- updates the checkout in `/opt/femi`
+- runs `docker compose -f infrastructure/docker-compose.yml up -d --build`
+- checks `https://$APP_DOMAIN/api/health`
+
+It does not deploy or modify `/opt/infra`.
+
+### Required GitHub secrets
+
+- `DEPLOY_HOST` — VPS hostname or IP
+- `DEPLOY_USER` — deploy user with access to `/opt/femi` and Docker
+- `DEPLOY_SSH_KEY` — private SSH key for that user
+- `DEPLOY_KNOWN_HOSTS` — output of `ssh-keyscan` for the VPS
+- optional `DEPLOY_SSH_PORT` — custom SSH port, default is `22`
+
+### Required server-side preparation
+
+- `/opt/femi` already exists as a Git checkout of this repository
+- `/opt/femi/.env` already exists and contains production values
+- the deploy user can run `git` and `docker compose` in `/opt/femi`
+- `/opt/infra` and the shared `edge` ingress network are already up
+- the `/opt/femi` checkout stays clean between deploys; uncommitted server-side edits will block deployment
+
+### Triggers
+
+- automatic deploy on push to `main`
+- manual deploy from `workflow_dispatch`, with an optional `ref` input
+
+### Prepare `DEPLOY_KNOWN_HOSTS`
+
+From a trusted machine, collect the host key:
+
+```bash
+ssh-keyscan -H your-server.example.com
+```
+
+Store the output as the `DEPLOY_KNOWN_HOSTS` GitHub secret.
 
 ## Backup Restore
 
