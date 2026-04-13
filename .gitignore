@@ -29,5 +29,6 @@ certs/
 .idea/
 .vscode/
 .mcp.json
+backlog/
 
 *.log
