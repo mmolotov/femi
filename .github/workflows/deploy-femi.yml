@@ -110,14 +110,29 @@ jobs:
             -f infrastructure/docker-compose.prod.yml \
             up -d --build
 
-          curl --fail --silent --show-error \
-            --retry 5 \
-            --retry-delay 5 \
-            "https://${APP_DOMAIN}/api/health" > /dev/null
+          docker compose \
+            --env-file .env \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            up -d
 
           docker compose \
             --env-file .env \
             -f infrastructure/docker-compose.yml \
             -f infrastructure/docker-compose.prod.yml \
             ps
+
+          attempt=1
+          max_attempts=20
+
+          until curl --fail --silent --show-error "https://${APP_DOMAIN}/api/health" > /dev/null; do
+            if [ "${attempt}" -ge "${max_attempts}" ]; then
+              echo "Public health check failed after ${max_attempts} attempts." >&2
+              exit 1
+            fi
+
+            echo "Public health check attempt ${attempt}/${max_attempts} failed; waiting for ingress/TLS to converge..."
+            attempt=$((attempt + 1))
+            sleep 3
+          done
           EOF
