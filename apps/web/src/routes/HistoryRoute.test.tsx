@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { useAppDataMock } = vi.hoisted(() => ({
   useAppDataMock: vi.fn()
@@ -12,9 +12,32 @@ vi.mock("../data/AppDataProvider", () => ({
 }));
 
 import { I18nProvider } from "../i18n/I18nProvider";
+import { useI18n } from "../i18n/I18nProvider";
 import { HistoryRoute } from "./HistoryRoute";
 
+function HistoryRouteHarness() {
+  const { setLanguage } = useI18n();
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          setLanguage("ru");
+        }}
+        type="button"
+      >
+        Switch language
+      </button>
+      <HistoryRoute />
+    </>
+  );
+}
+
 describe("HistoryRoute", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders cycle history grouped by phase", async () => {
     const getHistory = vi.fn().mockResolvedValue({
       cycles: [
@@ -74,7 +97,7 @@ describe("HistoryRoute", () => {
 
     render(
       <I18nProvider>
-        <HistoryRoute />
+        <HistoryRouteHarness />
       </I18nProvider>
     );
 
@@ -86,5 +109,70 @@ describe("HistoryRoute", () => {
     expect(screen.getByText(/cycle length 28/i)).toBeInTheDocument();
     expect(screen.getByText(/average flow 3/i)).toBeInTheDocument();
     expect(screen.getAllByText(/^Cramps$/i).length).toBeGreaterThan(0);
+  });
+
+  it("does not refetch history when only the language changes", async () => {
+    const getHistory = vi.fn().mockResolvedValue({
+      cycles: []
+    });
+
+    useAppDataMock.mockReturnValue({
+      api: {
+        getHistory
+      },
+      status: "ready"
+    });
+
+    render(
+      <I18nProvider>
+        <HistoryRouteHarness />
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(getHistory).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /switch language/i }));
+
+    await waitFor(() => {
+      expect(getHistory).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("uses the latest language fallback copy if history loading fails after a language switch", async () => {
+    const getHistory = vi.fn().mockRejectedValue(undefined);
+    let appData = {
+      api: null as null | { getHistory: typeof getHistory },
+      status: "loading" as "loading" | "ready"
+    };
+
+    useAppDataMock.mockImplementation(() => appData);
+
+    const { rerender } = render(
+      <I18nProvider>
+        <HistoryRouteHarness />
+      </I18nProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /switch language/i }));
+
+    appData = {
+      api: {
+        getHistory
+      },
+      status: "ready"
+    };
+
+    rerender(
+      <I18nProvider>
+        <HistoryRouteHarness />
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(getHistory).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Не удалось загрузить историю.")).toBeInTheDocument();
+    });
   });
 });

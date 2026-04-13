@@ -18,10 +18,51 @@ function hasUniqueValues(values: readonly string[]): boolean {
   return new Set(values).size === values.length;
 }
 
-const isoDateSchema = z.string().regex(isoDatePattern, "Expected a date in YYYY-MM-DD format.");
-const yearMonthSchema = z.string().regex(yearMonthPattern, "Expected a month in YYYY-MM format.");
+export function isValidIsoDate(value: string): boolean {
+  if (!isoDatePattern.test(value)) {
+    return false;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return false;
+  }
+
+  const normalizedDate = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    normalizedDate.getUTCFullYear() === year &&
+    normalizedDate.getUTCMonth() === month - 1 &&
+    normalizedDate.getUTCDate() === day
+  );
+}
+
+export function isValidYearMonth(value: string): boolean {
+  if (!yearMonthPattern.test(value)) {
+    return false;
+  }
+
+  const [year, month] = value.split("-").map(Number);
+
+  return Number.isInteger(year) && Number.isInteger(month) && month >= 1 && month <= 12;
+}
+
+export const isoDateSchema = z
+  .string()
+  .regex(isoDatePattern, "Expected a date in YYYY-MM-DD format.")
+  .refine((value) => isValidIsoDate(value), {
+    message: "Expected a real calendar date in YYYY-MM-DD format."
+  });
+export const yearMonthSchema = z
+  .string()
+  .regex(yearMonthPattern, "Expected a month in YYYY-MM format.")
+  .refine((value) => isValidYearMonth(value), {
+    message: "Expected a real month in YYYY-MM format."
+  });
 const timezoneSchema = z.string().trim().min(1).max(64);
 const optionalNoteSchema = z.string().trim().max(1000).optional();
+const nullableOptionalNoteSchema = z.string().trim().max(1000).nullable().optional();
 export const cyclePhaseValues = ["menstrual", "follicular", "ovulatory", "luteal"] as const;
 
 export const cycleLengthDaysSchema = z
@@ -199,22 +240,22 @@ export const periodLogResponseSchema = z.object({
 
 export const dailyCheckinRequestSchema = z
   .object({
-    mood: wellbeingScoreSchema.optional(),
-    energy: wellbeingScoreSchema.optional(),
-    painLevel: painLevelSchema.optional(),
-    discharge: dischargeSchema.optional(),
-    sleepQuality: wellbeingScoreSchema.optional(),
-    note: optionalNoteSchema,
+    mood: wellbeingScoreSchema.nullable().optional(),
+    energy: wellbeingScoreSchema.nullable().optional(),
+    painLevel: painLevelSchema.nullable().optional(),
+    discharge: dischargeSchema.nullable().optional(),
+    sleepQuality: wellbeingScoreSchema.nullable().optional(),
+    note: nullableOptionalNoteSchema,
     symptomKeys: symptomKeysArraySchema.default([])
   })
   .refine(
     (value) =>
-      value.mood !== undefined ||
-      value.energy !== undefined ||
-      value.painLevel !== undefined ||
-      value.discharge !== undefined ||
-      value.sleepQuality !== undefined ||
-      value.note !== undefined ||
+      "mood" in value ||
+      "energy" in value ||
+      "painLevel" in value ||
+      "discharge" in value ||
+      "sleepQuality" in value ||
+      "note" in value ||
       value.symptomKeys.length > 0,
     {
       message: "At least one check-in value must be provided."
@@ -282,6 +323,29 @@ function parseIsoDateValue(value: string): Date {
 
 export function formatIsoDate(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+export function getIsoDateInTimeZone(date: Date, timezone: string): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      day: "2-digit",
+      month: "2-digit",
+      timeZone: timezone,
+      year: "numeric"
+    });
+    const parts = formatter.formatToParts(date);
+    const year = parts.find((part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+    const day = parts.find((part) => part.type === "day")?.value;
+
+    if (year && month && day) {
+      return `${year}-${month}-${day}`;
+    }
+  } catch {
+    // Fall back to the existing UTC-based date if the stored timezone is invalid.
+  }
+
+  return formatIsoDate(date);
 }
 
 export function addDaysToIsoDate(date: string, days: number): string {
@@ -410,7 +474,14 @@ export function buildPeriodForecast({
   periodEnd: string;
   periodStart: string;
 }> {
-  if (!latestCycleStart) {
+  if (
+    !latestCycleStart ||
+    !Number.isInteger(averageCycleLengthDays) ||
+    !Number.isInteger(averagePeriodLengthDays) ||
+    averageCycleLengthDays < 1 ||
+    averagePeriodLengthDays < 1 ||
+    months < 1
+  ) {
     return [];
   }
 

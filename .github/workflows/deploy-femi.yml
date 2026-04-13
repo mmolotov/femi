@@ -93,7 +93,10 @@ jobs:
           git fetch --tags --prune origin
           git checkout --detach "${deploy_ref}"
 
-          docker compose -f infrastructure/docker-compose.yml up -d --build
+          docker compose \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            up -d --build
 
           set -a
           . ./.env
@@ -104,5 +107,8 @@ jobs:
             --retry-delay 5 \
             "https://${APP_DOMAIN}/api/health" > /dev/null
 
-          docker compose -f infrastructure/docker-compose.yml ps
+          docker compose \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            ps
           EOF

@@ -59,13 +59,6 @@ For local development, keep:
 - `WEB_APP_URL=http://localhost:5173`
 - `DATABASE_URL=postgres://femi:femi@localhost:5432/femi`
 
-If you use the repository Compose file locally, make sure the shared ingress network name
-from `EDGE_NETWORK_NAME` exists first. For a default setup, create it once:
-
-```bash
-docker network create edge
-```
-
 ### 2. Enable pnpm and install dependencies
 
 ```bash
@@ -80,6 +73,7 @@ docker compose -f infrastructure/docker-compose.yml up -d postgres
 ```
 
 This publishes PostgreSQL to `127.0.0.1:5432` for local development only.
+The base `infrastructure/docker-compose.yml` does not require the shared `edge` network.
 
 ### 4. Apply database migrations
 
@@ -147,6 +141,7 @@ The server deployment model assumes:
 The `femi` Compose stack no longer publishes ports `80/443` itself. Instead, the `web`
 service advertises the public routes to the shared `caddy-docker-proxy`, and requests for
 `/api/*` and `/telegram/*` are forwarded to the `server` container across the shared network.
+Use `infrastructure/docker-compose.prod.yml` only on hosts where that shared ingress layer already exists.
 
 ### 1. Prepare environment
 
@@ -158,6 +153,7 @@ Set at least these values in `.env`:
 
 - `APP_DOMAIN`
 - `EDGE_NETWORK_NAME`
+- `POSTGRES_VOLUME_NAME`
 - `BOT_TOKEN`
 - `TELEGRAM_BOT_SECRET_TOKEN`
 - `WEB_APP_URL`
@@ -168,16 +164,32 @@ Recommended production values:
 ```env
 APP_DOMAIN=femi.your-domain.example
 EDGE_NETWORK_NAME=edge
+POSTGRES_VOLUME_NAME=femi-postgres-data
 WEB_APP_URL=https://femi.your-domain.example
 TELEGRAM_WEBHOOK_URL=https://femi.your-domain.example/telegram/webhook
 ```
 
 `EDGE_NETWORK_NAME` must match the external network created by `/opt/infra`.
+`POSTGRES_VOLUME_NAME` should point at a pre-created external Docker volume for production data.
 
-### 2. Build and start the app stack
+### 2. Create the production Postgres volume once
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up --build
+docker volume create femi-postgres-data
+```
+
+Or create the exact volume name referenced by `POSTGRES_VOLUME_NAME`.
+
+The production override treats the database volume as external, so accidental
+`docker compose ... down -v` on the app stack will not delete the Postgres data volume.
+
+### 3. Build and start the app stack
+
+```bash
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  up --build
 ```
 
 The stack starts these services:
@@ -191,33 +203,54 @@ The stack starts these services:
 
 The `migrate` service runs once before `server` and `worker`.
 
-### 3. Run in background
+### 4. Run in background
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up -d --build
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  up -d --build
 ```
 
-### 4. Stop the stack
+### 5. Stop the stack
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml down
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  down
 ```
 
-### 5. Rebuild after dependency or Dockerfile changes
+### 6. Rebuild after dependency or Dockerfile changes
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml build --no-cache
-docker compose -f infrastructure/docker-compose.yml up
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  build --no-cache
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  up
 ```
 
-### 6. Verify through the public domain
+### 7. Verify through the public domain
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml ps
-docker compose -f infrastructure/docker-compose.yml logs -f server
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  ps
+docker compose \
+  -f infrastructure/docker-compose.yml \
+  -f infrastructure/docker-compose.prod.yml \
+  logs -f server
 curl -I https://femi.your-domain.example/
 curl -I https://femi.your-domain.example/api/health
 ```
+
+Do not use `docker compose ... down -v` for the production app stack. Keep that as a local-only
+reset command for disposable development environments.
 
 Expected result:
 
@@ -235,7 +268,7 @@ It is intentionally scoped only to `/opt/femi`:
 - runs `pnpm validate` on GitHub-hosted runners
 - connects to the VPS over `SSH`
 - updates the checkout in `/opt/femi`
-- runs `docker compose -f infrastructure/docker-compose.yml up -d --build`
+- runs `docker compose -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.prod.yml up -d --build`
 - checks `https://$APP_DOMAIN/api/health`
 
 It does not deploy or modify `/opt/infra`.

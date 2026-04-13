@@ -95,7 +95,7 @@ Any low-cost VPS provider, this is enough for the MVP.
 
 ### Containers
 
-Use an application `docker-compose.yml` with these services:
+Use a base application `docker-compose.yml` plus a production ingress override with these services:
 
 - `web`
 - `server`
@@ -207,6 +207,7 @@ Why PostgreSQL:
   /shared
 /infrastructure
   docker-compose.yml
+  docker-compose.prod.yml
   /backup
 ```
 

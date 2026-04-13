@@ -10,18 +10,6 @@ services:
       - ../.env
     environment:
       WEB_APP_URL: ${WEB_APP_URL}
-    networks:
-      - default
-      - edge
-    labels:
-      - caddy=${APP_DOMAIN:-localhost}
-      - caddy.encode=zstd gzip
-      - caddy.@api.path=/api /api/*
-      - caddy.0_reverse_proxy=@api server:3001
-      - caddy.@telegram.path=/telegram /telegram/*
-      - caddy.1_reverse_proxy=@telegram server:3001
-      - caddy.2_reverse_proxy={{upstreams 4173}}
-      - caddy_ingress_network=${EDGE_NETWORK_NAME:-edge}
 
   server:
     build:
@@ -42,9 +30,6 @@ services:
       PORT: 3001
       WEB_APP_URL: ${WEB_APP_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-    networks:
-      - default
-      - edge
 
   worker:
     build:
@@ -114,11 +99,6 @@ services:
       S3_BACKUP_ACCESS_KEY: ${S3_BACKUP_ACCESS_KEY}
       S3_BACKUP_SECRET_KEY: ${S3_BACKUP_SECRET_KEY}
       BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
-
-networks:
-  edge:
-    external: true
-    name: ${EDGE_NETWORK_NAME:-edge}
 
 volumes:
   postgres_data:

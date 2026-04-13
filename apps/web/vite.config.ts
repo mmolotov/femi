@@ -1,8 +1,21 @@
+import fs from "node:fs";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig, loadEnv } from "vite";
+
+function loadHttpsCerts(dir: string) {
+  const certPath = path.resolve(dir, "certs/femi.local.pem");
+  const keyPath = path.resolve(dir, "certs/femi.local-key.pem");
+
+  if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+    return { cert: fs.readFileSync(certPath), key: fs.readFileSync(keyPath) };
+  }
+
+  return undefined;
+}
 
 export default defineConfig(({ mode }) => {
   const workspaceRoot = fileURLToPath(new URL("../..", import.meta.url));
@@ -57,6 +70,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: "0.0.0.0",
+      https: loadHttpsCerts(import.meta.dirname),
       port: 5173,
       proxy: {
         "/api": backendUrl,

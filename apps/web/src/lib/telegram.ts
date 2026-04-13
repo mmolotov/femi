@@ -19,18 +19,10 @@ import {
 
 export type TelegramEnvironment = "telegram" | "browser";
 
-export type TelegramDiagnostics = {
-  directInitDataLength: number;
-  hasTelegramObject: boolean;
-  hasTgWebAppPlatformParam: boolean;
-  hasUnsafeUser: boolean;
-  hasWebAppObject: boolean;
-  sdkInitDataLength: number;
-};
+const viewportMountTimeoutMs = 1500;
 
 type TelegramBootstrapResult = {
   cleanup: VoidFunction;
-  diagnostics: TelegramDiagnostics;
   environment: TelegramEnvironment;
   initDataRaw?: string;
 };
@@ -62,32 +54,38 @@ function hasTelegramRuntime(): boolean {
   }
 
   const search = telegramWindow.location.search;
+  const webApp = telegramWindow.Telegram?.WebApp;
+  const hasInitData = typeof webApp?.initData === "string" && webApp.initData.trim().length > 0;
+  const hasInitUser = Boolean(webApp?.initDataUnsafe?.user);
 
-  return search.includes("tgWebAppPlatform=") || Boolean(telegramWindow.Telegram?.WebApp);
+  return search.includes("tgWebAppPlatform=") || hasInitData || hasInitUser;
 }
 
-function collectTelegramDiagnostics(sdkInitDataRaw?: string): TelegramDiagnostics {
-  const telegramWindow = readTelegramWindow();
-  const webApp = telegramWindow?.Telegram?.WebApp;
-  const directInitData = typeof webApp?.initData === "string" ? webApp.initData : "";
+async function waitForViewportMount(): Promise<boolean> {
+  if (isViewportMounted()) {
+    return true;
+  }
 
-  return {
-    directInitDataLength: directInitData.length,
-    hasTelegramObject: Boolean(telegramWindow?.Telegram),
-    hasTgWebAppPlatformParam: Boolean(
-      telegramWindow?.location.search.includes("tgWebAppPlatform=")
-    ),
-    hasUnsafeUser: Boolean(webApp?.initDataUnsafe?.user),
-    hasWebAppObject: Boolean(webApp),
-    sdkInitDataLength: sdkInitDataRaw?.length ?? 0
-  };
+  if (!mountViewport.isAvailable()) {
+    return false;
+  }
+
+  return Promise.race([
+    mountViewport()
+      .then(() => true)
+      .catch(() => false),
+    new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        resolve(isViewportMounted());
+      }, viewportMountTimeoutMs);
+    })
+  ]);
 }
 
 export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResult> {
   if (typeof window === "undefined" || !hasTelegramRuntime()) {
     return {
       cleanup: () => {},
-      diagnostics: collectTelegramDiagnostics(),
       environment: "browser"
     };
   }
@@ -114,15 +112,13 @@ export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResu
       cleanupCallbacks.push(bindMiniAppCssVars());
     }
 
-    if (mountViewport.isAvailable() && !isViewportMounted()) {
-      await mountViewport();
-    }
+    const viewportMounted = await waitForViewportMount();
 
-    if (bindViewportCssVars.isAvailable() && !isViewportCssVarsBound()) {
+    if (viewportMounted && bindViewportCssVars.isAvailable() && !isViewportCssVarsBound()) {
       cleanupCallbacks.push(bindViewportCssVars());
     }
 
-    if (expandViewport.isAvailable()) {
+    if (viewportMounted && expandViewport.isAvailable()) {
       expandViewport();
     }
 
@@ -139,8 +135,7 @@ export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResu
         }
         cleanupSdk();
       },
-      diagnostics: collectTelegramDiagnostics(initDataRaw),
-      environment: initDataRaw ? "telegram" : "browser",
+      environment: "telegram",
       initDataRaw
     };
   } catch {
@@ -151,8 +146,7 @@ export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResu
         }
         cleanupSdk();
       },
-      diagnostics: collectTelegramDiagnostics(),
-      environment: "browser"
+      environment: "telegram"
     };
   }
 }

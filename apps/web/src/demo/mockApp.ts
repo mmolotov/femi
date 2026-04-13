@@ -7,7 +7,7 @@ import {
   calculateAveragePeriodLength,
   calculateCurrentCycleDay,
   differenceInDays,
-  formatIsoDate,
+  getIsoDateInTimeZone,
   resolveCyclePhase,
   type CalendarResponse,
   type CyclePhase,
@@ -55,7 +55,7 @@ const flowIntensityLevel: Record<FlowIntensity, number> = {
 };
 
 function getToday(): string {
-  return formatIsoDate(new Date());
+  return getIsoDateInTimeZone(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
 }
 
 function buildLoggedPeriodDates(
@@ -522,10 +522,6 @@ function syncCyclesFromPeriodLogs(): void {
     .sort((left, right) => (left.startedOn < right.startedOn ? 1 : -1));
 }
 
-export function isDemoAppMode(): boolean {
-  return hasDemoFlag();
-}
-
 export function createDemoApiClient(): ApiClient {
   demoState = cloneState(createInitialState(hasDemoFlag() ? "reset" : "preview"));
 
@@ -597,7 +593,7 @@ export function createDemoApiClient(): ApiClient {
       return response;
     },
     async saveCheckin(date: string, input: DailyCheckinRequest): Promise<DailyCheckinResponse> {
-      demoState.checkins[date] = {
+      const nextEntry = {
         date,
         discharge: input.discharge ?? null,
         energy: input.energy ?? null,
@@ -607,6 +603,25 @@ export function createDemoApiClient(): ApiClient {
         sleepQuality: input.sleepQuality ?? null,
         symptomKeys: [...input.symptomKeys]
       };
+
+      const hasAnyValue =
+        nextEntry.discharge !== null ||
+        nextEntry.energy !== null ||
+        nextEntry.mood !== null ||
+        nextEntry.note !== null ||
+        nextEntry.painLevel !== null ||
+        nextEntry.sleepQuality !== null ||
+        nextEntry.symptomKeys.length > 0;
+
+      if (!hasAnyValue) {
+        delete demoState.checkins[date];
+
+        return {
+          entry: null
+        };
+      }
+
+      demoState.checkins[date] = nextEntry;
 
       return {
         entry: demoState.checkins[date]
