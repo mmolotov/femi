@@ -22,12 +22,16 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    outputs:
+      resolved_ref: ${{ steps.resolve-ref.outputs.resolved_ref }}
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -44,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Resolve validated ref
+        id: resolve-ref
+        run: echo "resolved_ref=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Validate repository
         run: pnpm validate
 
@@ -59,7 +66,7 @@ jobs:
       DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
       DEPLOY_PATH: /opt/femi
       DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
-      DEPLOY_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.sha }}
+      DEPLOY_REF: ${{ needs.validate.outputs.resolved_ref }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
 
     steps:
