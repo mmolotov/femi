@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  date,
   integer,
   jsonb,
   pgTable,
@@ -47,8 +48,8 @@ export const cycles = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    startedOn: timestamp("started_on", { mode: "date" }).notNull(),
-    endedOn: timestamp("ended_on", { mode: "date" }),
+    startedOn: date("started_on", { mode: "date" }).notNull(),
+    endedOn: date("ended_on", { mode: "date" }),
     predicted: boolean("predicted").default(false).notNull(),
     ...timestamps
   },
@@ -67,7 +68,7 @@ export const periodLogs = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+    happenedOn: date("happened_on", { mode: "date" }).notNull(),
     flowLevel: integer("flow_level"),
     notes: text("notes"),
     ...timestamps
@@ -87,7 +88,7 @@ export const dailyCheckins = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+    happenedOn: date("happened_on", { mode: "date" }).notNull(),
     mood: integer("mood"),
     energy: integer("energy"),
     painLevel: integer("pain_level"),
@@ -111,7 +112,7 @@ export const symptomLogs = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+    happenedOn: date("happened_on", { mode: "date" }).notNull(),
     symptomKey: varchar("symptom_key", { length: 64 }).notNull(),
     severity: integer("severity"),
     ...timestamps
@@ -132,7 +133,7 @@ export const notes = pgTable("notes", {
     .references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }),
   body: text("body").notNull(),
-  happenedOn: timestamp("happened_on", { mode: "date" }),
+  happenedOn: date("happened_on", { mode: "date" }),
   ...timestamps
 });
 
@@ -168,7 +169,7 @@ export const contraceptionLogs = pgTable("contraception_logs", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+  happenedOn: date("happened_on", { mode: "date" }).notNull(),
   method: varchar("method", { length: 64 }).notNull(),
   notes: text("notes"),
   ...timestamps

@@ -16,9 +16,11 @@ import {
   dailyCheckinResponseSchema,
   differenceInDays,
   flowIntensityValues,
-  formatIsoDate,
+  formatIsoDate as formatUtcIsoDate,
+  getIsoDateInTimeZone,
   historyQuerySchema,
   historyResponseSchema,
+  isoDateSchema,
   periodLogEntrySchema,
   periodEndRequestSchema,
   periodLogRequestSchema,
@@ -65,7 +67,7 @@ type CheckinRow = {
 };
 
 const dateParamsSchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a date in YYYY-MM-DD format.")
+  date: isoDateSchema
 });
 
 const flowIntensityToLevelMap: Record<FlowIntensity, number> = {
@@ -84,18 +86,51 @@ const flowLevels = flowIntensityValues.reduce<Record<number, FlowIntensity>>(
   {}
 );
 
+function isValidDateValue(value: Date | null | undefined): value is Date {
+  return value instanceof Date && Number.isFinite(value.getTime());
+}
+
 function parseIsoDate(date: string): Date {
   const [year, month, day] = date.split("-").map(Number);
 
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-function toIsoDate(value: Date | null): string | null {
-  return value ? formatIsoDate(value) : null;
+function formatStoredDate(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    date.getUTCDate()
+  ).padStart(2, "0")}`;
 }
 
-function getTodayIsoDate(): string {
-  return formatIsoDate(new Date());
+function toIsoDate(value: Date | null): string | null {
+  return value ? formatStoredDate(value) : null;
+}
+
+function getTodayIsoDate(timezone: string): string {
+  return getIsoDateInTimeZone(new Date(), timezone);
+}
+
+function isFutureIsoDate(date: string, today: string): boolean {
+  return date > today;
+}
+
+function hasOwnField<T extends object>(value: T, key: keyof T): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function sanitizeCycleRow(row: CycleRow): CycleRow | null {
+  if (!isValidDateValue(row.startedOn)) {
+    return null;
+  }
+
+  return {
+    ...row,
+    endedOn: isValidDateValue(row.endedOn) ? row.endedOn : null
+  };
+}
+
+function filterRowsWithValidHappenedOn<T extends { happenedOn: Date }>(rows: readonly T[]): T[] {
+  return rows.filter((row) => isValidDateValue(row.happenedOn));
 }
 
 function getMonthRange(month: string): { end: string; start: string } {
@@ -103,7 +138,7 @@ function getMonthRange(month: string): { end: string; start: string } {
   const monthEnd = new Date(Date.UTC(year, monthNumber, 0));
 
   return {
-    end: formatIsoDate(monthEnd),
+    end: formatUtcIsoDate(monthEnd),
     start: `${month}-01`
   };
 }
@@ -112,14 +147,19 @@ function getCycleLengths(rows: readonly CycleRow[]): number[] {
   return rows.slice(0, -1).map((row, index) => {
     const previousCycle = rows[index + 1];
 
-    return differenceInDays(formatIsoDate(previousCycle.startedOn), formatIsoDate(row.startedOn));
+    return differenceInDays(
+      formatStoredDate(previousCycle.startedOn),
+      formatStoredDate(row.startedOn)
+    );
   });
 }
 
 function getPeriodLengths(rows: readonly CycleRow[]): number[] {
   return rows
     .filter((row): row is { endedOn: Date; id: string; startedOn: Date } => row.endedOn !== null)
-    .map((row) => differenceInDays(formatIsoDate(row.startedOn), formatIsoDate(row.endedOn)) + 1);
+    .map(
+      (row) => differenceInDays(formatStoredDate(row.startedOn), formatStoredDate(row.endedOn)) + 1
+    );
 }
 
 function sortDatesAscending(dates: Iterable<string>): string[] {
@@ -135,7 +175,7 @@ function minIsoDate(left: string, right: string): string {
 }
 
 function buildPeriodDateSet(rows: readonly PeriodLogRow[]): Set<string> {
-  return new Set(rows.map((row) => formatIsoDate(row.happenedOn)));
+  return new Set(rows.map((row) => formatStoredDate(row.happenedOn)));
 }
 
 function inferPeriodEndDate(input: {
@@ -208,7 +248,9 @@ function createHistoryDay(
         ? null
         : periodLogEntrySchema.parse({
             cycleEnded: cycleRows.some((cycleRow) => toIsoDate(cycleRow.endedOn) === date),
-            cycleStarted: cycleRows.some((cycleRow) => formatIsoDate(cycleRow.startedOn) === date),
+            cycleStarted: cycleRows.some(
+              (cycleRow) => formatStoredDate(cycleRow.startedOn) === date
+            ),
             date,
             flowIntensity: levelToFlowIntensity(periodRow.flowLevel),
             note: periodRow.notes
@@ -338,7 +380,7 @@ function assertCanStartCycle(latestCycle: CycleRow | null, nextStartedOn: string
     return;
   }
 
-  const latestStartedOn = formatIsoDate(latestCycle.startedOn);
+  const latestStartedOn = formatStoredDate(latestCycle.startedOn);
   const latestEndedOn = toIsoDate(latestCycle.endedOn);
 
   if (nextStartedOn === latestStartedOn) {
@@ -368,7 +410,7 @@ function assertCanStartCycle(latestCycle: CycleRow | null, nextStartedOn: string
 }
 
 async function loadCycleRows(db: Database, userId: string): Promise<CycleRow[]> {
-  return db
+  const rows = await db
     .select({
       endedOn: cycles.endedOn,
       id: cycles.id,
@@ -377,10 +419,12 @@ async function loadCycleRows(db: Database, userId: string): Promise<CycleRow[]> 
     .from(cycles)
     .where(and(eq(cycles.userId, userId), eq(cycles.predicted, false)))
     .orderBy(desc(cycles.startedOn));
+
+  return rows.map((row) => sanitizeCycleRow(row)).filter((row): row is CycleRow => row !== null);
 }
 
 async function loadPeriodRows(db: Database, userId: string): Promise<PeriodLogRow[]> {
-  return db
+  const rows = await db
     .select({
       flowLevel: periodLogs.flowLevel,
       happenedOn: periodLogs.happenedOn,
@@ -389,6 +433,8 @@ async function loadPeriodRows(db: Database, userId: string): Promise<PeriodLogRo
     .from(periodLogs)
     .where(eq(periodLogs.userId, userId))
     .orderBy(asc(periodLogs.happenedOn));
+
+  return filterRowsWithValidHappenedOn(rows);
 }
 
 async function loadSummaryData(
@@ -398,17 +444,25 @@ async function loadSummaryData(
     cycleLengthDays: number;
     onboardingCompleted: boolean;
     periodLengthDays: number;
+    timezone: string;
   }
 ) {
-  const [cycleRows, periodRows] = await Promise.all([
+  const [initialCycleRows, periodRows] = await Promise.all([
     loadCycleRows(db, userId),
     loadPeriodRows(db, userId)
   ]);
+  let cycleRows = initialCycleRows;
+
+  if (cycleRows.length === 0 && periodRows.length > 0) {
+    await syncCyclesFromPeriodLogs(db, userId, settings.periodLengthDays, periodRows);
+    cycleRows = await loadCycleRows(db, userId);
+  }
+
   const latestCycle = cycleRows[0] ?? null;
   const cycleLengths = getCycleLengths(cycleRows);
   const periodLengths = getPeriodLengths(cycleRows);
-  const today = getTodayIsoDate();
-  const latestPeriodStart = latestCycle ? formatIsoDate(latestCycle.startedOn) : null;
+  const today = getTodayIsoDate(settings.timezone);
+  const latestPeriodStart = latestCycle ? formatStoredDate(latestCycle.startedOn) : null;
   const latestPeriodEnd =
     latestCycle && latestPeriodStart
       ? inferPeriodEndDate({
@@ -455,7 +509,7 @@ async function loadSummaryData(
           latestPeriodEnd !== null &&
           differenceInDays(latestPeriodStart, today) >= 0 &&
           differenceInDays(today, latestPeriodEnd) >= 0) ||
-        periodRows.some((row) => formatIsoDate(row.happenedOn) === today),
+        periodRows.some((row) => formatStoredDate(row.happenedOn) === today),
       averageCycleLengthDays,
       averagePeriodLengthDays,
       currentCycleDay,
@@ -584,9 +638,11 @@ async function syncLoggedPeriodCycle(
 async function syncCyclesFromPeriodLogs(
   db: Database,
   userId: string,
-  fallbackPeriodLengthDays: number
+  fallbackPeriodLengthDays: number,
+  periodRowsInput?: readonly PeriodLogRow[]
 ): Promise<void> {
-  const periodDates = sortDatesAscending(buildPeriodDateSet(await loadPeriodRows(db, userId)));
+  const periodRows = periodRowsInput ? [...periodRowsInput] : await loadPeriodRows(db, userId);
+  const periodDates = sortDatesAscending(buildPeriodDateSet(periodRows));
   const cycleWindows = buildCyclePeriodWindows(periodDates, fallbackPeriodLengthDays);
 
   await db.delete(cycles).where(and(eq(cycles.userId, userId), eq(cycles.predicted, false)));
@@ -612,7 +668,7 @@ async function buildPeriodEntry(
   date: string
 ) {
   const periodLog = await loadPeriodLogRow(db, userId, date);
-  const cycleStarted = cycleRows.some((row) => formatIsoDate(row.startedOn) === date);
+  const cycleStarted = cycleRows.some((row) => formatStoredDate(row.startedOn) === date);
   const cycleEnded = cycleRows.some((row) => toIsoDate(row.endedOn) === date);
 
   return periodLogResponseSchema.shape.entry.parse({
@@ -701,6 +757,8 @@ export async function registerCycleRoutes(
           )
           .orderBy(asc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey))
       ]);
+      const validPeriodRows = filterRowsWithValidHappenedOn(periodRows);
+      const validSymptomRows = filterRowsWithValidHappenedOn(symptomRows);
 
       const markerMap = new Map<
         string,
@@ -711,8 +769,8 @@ export async function registerCycleRoutes(
         }
       >();
 
-      for (const row of periodRows) {
-        const date = formatIsoDate(row.happenedOn);
+      for (const row of validPeriodRows) {
+        const date = formatStoredDate(row.happenedOn);
 
         markerMap.set(date, {
           flowIntensity: levelToFlowIntensity(row.flowLevel),
@@ -721,8 +779,8 @@ export async function registerCycleRoutes(
         });
       }
 
-      for (const row of symptomRows) {
-        const date = formatIsoDate(row.happenedOn);
+      for (const row of validSymptomRows) {
+        const date = formatStoredDate(row.happenedOn);
         const existing = markerMap.get(date) ?? {
           flowIntensity: null,
           isPeriodDay: false,
@@ -778,7 +836,7 @@ export async function registerCycleRoutes(
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
       const limit = parsedQuery.data.limit ?? 6;
-      const [checkinRows, periodRows, symptomRows, cycleRows] = await Promise.all([
+      const [checkinRows, periodRows, symptomRows, initialCycleRows] = await Promise.all([
         deps.db
           .select({
             discharge: dailyCheckins.discharge,
@@ -803,23 +861,37 @@ export async function registerCycleRoutes(
           .orderBy(asc(symptomLogs.happenedOn), asc(symptomLogs.symptomKey)),
         loadCycleRows(deps.db, authenticatedUser.user.id)
       ]);
+      let cycleRows = initialCycleRows;
 
-      const today = getTodayIsoDate();
+      if (cycleRows.length === 0 && periodRows.length > 0) {
+        await syncCyclesFromPeriodLogs(
+          deps.db,
+          authenticatedUser.user.id,
+          authenticatedUser.settings.periodLengthDays,
+          periodRows
+        );
+        cycleRows = await loadCycleRows(deps.db, authenticatedUser.user.id);
+      }
+
+      const validCheckinRows = filterRowsWithValidHappenedOn(checkinRows);
+      const validSymptomRows = filterRowsWithValidHappenedOn(symptomRows);
+
+      const today = getTodayIsoDate(authenticatedUser.settings.timezone);
       const periodLengths = getPeriodLengths(cycleRows);
       const averagePeriodLengthDays = calculateAveragePeriodLength(
         periodLengths,
         authenticatedUser.settings.periodLengthDays
       );
       const periodRowsByDate = new Map(
-        periodRows.map((row) => [formatIsoDate(row.happenedOn), row])
+        periodRows.map((row) => [formatStoredDate(row.happenedOn), row])
       );
       const checkinRowsByDate = new Map(
-        checkinRows.map((row) => [formatIsoDate(row.happenedOn), row])
+        validCheckinRows.map((row) => [formatStoredDate(row.happenedOn), row])
       );
       const symptomKeysByDate = new Map<string, SymptomKey[]>();
 
-      for (const row of symptomRows) {
-        const date = formatIsoDate(row.happenedOn);
+      for (const row of validSymptomRows) {
+        const date = formatStoredDate(row.happenedOn);
         const existing = symptomKeysByDate.get(date) ?? [];
 
         symptomKeysByDate.set(date, [...existing, row.symptomKey as SymptomKey]);
@@ -833,8 +905,8 @@ export async function registerCycleRoutes(
       const historyCycles = recentCycles
         .map((cycleRow, index) => {
           const nextCycle = recentCycles[index + 1] ?? null;
-          const startedOn = formatIsoDate(cycleRow.startedOn);
-          const nextCycleStart = nextCycle ? formatIsoDate(nextCycle.startedOn) : null;
+          const startedOn = formatStoredDate(cycleRow.startedOn);
+          const nextCycleStart = nextCycle ? formatStoredDate(nextCycle.startedOn) : null;
           const observedCycleLengthDays = nextCycleStart
             ? differenceInDays(startedOn, nextCycleStart)
             : differenceInDays(startedOn, today) + 1;
@@ -991,9 +1063,23 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const today = getTodayIsoDate(authenticatedUser.settings.timezone);
+
+      if (isFutureIsoDate(parsedParams.data.date, today)) {
+        return reply.code(400).send({
+          error: "Check-ins cannot be saved for future dates."
+        });
+      }
       const happenedOn = parseIsoDate(parsedParams.data.date);
 
       const entry = await deps.db.transaction(async (transaction) => {
+        const hasDischarge = hasOwnField(parsedBody.data, "discharge");
+        const hasEnergy = hasOwnField(parsedBody.data, "energy");
+        const hasMood = hasOwnField(parsedBody.data, "mood");
+        const hasNote = hasOwnField(parsedBody.data, "note");
+        const hasPainLevel = hasOwnField(parsedBody.data, "painLevel");
+        const hasSleepQuality = hasOwnField(parsedBody.data, "sleepQuality");
+        const noteValue = parsedBody.data.note ?? null;
         const existingRow = await transaction
           .select({
             discharge: dailyCheckins.discharge,
@@ -1014,18 +1100,52 @@ export async function registerCycleRoutes(
           .then((rows) => rows[0] ?? null);
 
         const nextValues = {
-          discharge: parsedBody.data.discharge ?? existingRow?.discharge ?? null,
-          energy: parsedBody.data.energy ?? existingRow?.energy ?? null,
-          mood: parsedBody.data.mood ?? existingRow?.mood ?? null,
-          note:
-            parsedBody.data.note !== undefined
-              ? parsedBody.data.note.trim().length > 0
-                ? parsedBody.data.note
-                : null
-              : (existingRow?.note ?? null),
-          painLevel: parsedBody.data.painLevel ?? existingRow?.painLevel ?? null,
-          sleepQuality: parsedBody.data.sleepQuality ?? existingRow?.sleepQuality ?? null
+          discharge: hasDischarge
+            ? (parsedBody.data.discharge ?? null)
+            : (existingRow?.discharge ?? null),
+          energy: hasEnergy ? (parsedBody.data.energy ?? null) : (existingRow?.energy ?? null),
+          mood: hasMood ? (parsedBody.data.mood ?? null) : (existingRow?.mood ?? null),
+          note: hasNote
+            ? noteValue !== null && noteValue.trim().length > 0
+              ? noteValue
+              : null
+            : (existingRow?.note ?? null),
+          painLevel: hasPainLevel
+            ? (parsedBody.data.painLevel ?? null)
+            : (existingRow?.painLevel ?? null),
+          sleepQuality: hasSleepQuality
+            ? (parsedBody.data.sleepQuality ?? null)
+            : (existingRow?.sleepQuality ?? null)
         };
+
+        const hasAnyCheckinValue =
+          nextValues.discharge !== null ||
+          nextValues.energy !== null ||
+          nextValues.mood !== null ||
+          nextValues.note !== null ||
+          nextValues.painLevel !== null ||
+          nextValues.sleepQuality !== null ||
+          parsedBody.data.symptomKeys.length > 0;
+
+        if (!hasAnyCheckinValue) {
+          await transaction
+            .delete(dailyCheckins)
+            .where(
+              and(
+                eq(dailyCheckins.userId, authenticatedUser.user.id),
+                eq(dailyCheckins.happenedOn, happenedOn)
+              )
+            );
+
+          await syncSymptomKeys(
+            transaction,
+            authenticatedUser.user.id,
+            parsedParams.data.date,
+            parsedBody.data.symptomKeys
+          );
+
+          return null;
+        }
 
         const [checkinRow] = await transaction
           .insert(dailyCheckins)
@@ -1096,6 +1216,13 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const today = getTodayIsoDate(authenticatedUser.settings.timezone);
+
+      if (isFutureIsoDate(parsedBody.data.date, today)) {
+        return reply.code(400).send({
+          error: "Period days cannot be logged for future dates."
+        });
+      }
 
       await deps.db.transaction(async (transaction) => {
         await upsertPeriodLog(transaction, authenticatedUser.user.id, parsedBody.data.date, {
@@ -1141,6 +1268,13 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const today = getTodayIsoDate(authenticatedUser.settings.timezone);
+
+      if (isFutureIsoDate(parsedParams.data.date, today)) {
+        return reply.code(400).send({
+          error: "Future period days cannot be deleted."
+        });
+      }
 
       await deps.db.transaction(async (transaction) => {
         await transaction
@@ -1182,6 +1316,13 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const today = getTodayIsoDate(authenticatedUser.settings.timezone);
+
+      if (isFutureIsoDate(parsedBody.data.date, today)) {
+        return reply.code(400).send({
+          error: "Periods cannot be started in the future."
+        });
+      }
 
       await deps.db.transaction(async (transaction) => {
         const [latestCycle] = await transaction
@@ -1252,6 +1393,13 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const today = getTodayIsoDate(authenticatedUser.settings.timezone);
+
+      if (isFutureIsoDate(parsedBody.data.date, today)) {
+        return reply.code(400).send({
+          error: "Periods cannot be ended in the future."
+        });
+      }
 
       await deps.db.transaction(async (transaction) => {
         const [latestCycle] = await transaction

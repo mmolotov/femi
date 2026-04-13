@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { HistoryCycle, HistoryPhase, HistoryResponse, SymptomKey } from "@femi/shared";
 
 import { Panel } from "../components/Panel";
@@ -113,6 +113,13 @@ export function HistoryRoute() {
   const { messages } = useI18n();
   const [history, setHistory] = useState<HistoryResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const copyRef = useRef({
+    loadError: messages.history.loadError
+  });
+
+  copyRef.current = {
+    loadError: messages.history.loadError
+  };
 
   useEffect(() => {
     let active = true;
@@ -134,14 +141,14 @@ export function HistoryRoute() {
       .catch((error) => {
         if (active) {
           setHistory(null);
-          setLoadError(error instanceof Error ? error.message : messages.history.loadError);
+          setLoadError(error instanceof Error ? error.message : copyRef.current.loadError);
         }
       });
 
     return () => {
       active = false;
     };
-  }, [api, messages.history.loadError, status]);
+  }, [api, status]);
 
   return (
     <Panel description={messages.history.description} title={messages.history.title}>

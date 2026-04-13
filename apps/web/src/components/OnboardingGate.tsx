@@ -2,8 +2,10 @@ import {
   addDaysToIsoDate,
   buildCalendarMonthDays,
   buildPeriodForecast,
-  formatIsoDate
+  cycleLengthRange,
+  getIsoDateInTimeZone
 } from "@femi/shared";
+import { periodLengthRange } from "@femi/shared";
 import { useMemo, useState } from "react";
 
 import { useAppData } from "../data/AppDataProvider";
@@ -13,6 +15,7 @@ import {
   getCalendarLeadingEmptyDays,
   getCalendarWeekdayLabels
 } from "../lib/date";
+import { isNumberInRange, parseIntegerInput } from "../lib/numberInput";
 
 function formatMonth(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -55,44 +58,68 @@ function buildLoggedPeriodDates(
 export function OnboardingGate() {
   const { completeOnboarding, me } = useAppData();
   const { language, messages } = useI18n();
-  const [cycleLengthDays, setCycleLengthDays] = useState(me?.settings.cycleLengthDays ?? 28);
-  const [latestPeriodStart, setLatestPeriodStart] = useState(formatIsoDate(new Date()));
-  const [previewMonth, setPreviewMonth] = useState(formatIsoDate(new Date()).slice(0, 7));
-  const [periodLengthDays, setPeriodLengthDays] = useState(me?.settings.periodLengthDays ?? 5);
+  const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [cycleLengthInput, setCycleLengthInput] = useState(
+    String(me?.settings.cycleLengthDays ?? 28)
+  );
+  const [latestPeriodStart, setLatestPeriodStart] = useState(
+    getIsoDateInTimeZone(new Date(), browserTimeZone)
+  );
+  const [previewMonth, setPreviewMonth] = useState(
+    getIsoDateInTimeZone(new Date(), browserTimeZone).slice(0, 7)
+  );
+  const [periodLengthInput, setPeriodLengthInput] = useState(
+    String(me?.settings.periodLengthDays ?? 5)
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const today = formatIsoDate(new Date());
+  const today = getIsoDateInTimeZone(new Date(), browserTimeZone);
   const minDate = "2020-01-01";
   const minMonth = "2020-01";
   const maxMonth = addMonths(today.slice(0, 7), 24);
+  const parsedCycleLengthDays = parseIntegerInput(cycleLengthInput);
+  const parsedPeriodLengthDays = parseIntegerInput(periodLengthInput);
+  const hasValidCycleLength = isNumberInRange(parsedCycleLengthDays, cycleLengthRange);
+  const hasValidPeriodLength = isNumberInRange(parsedPeriodLengthDays, periodLengthRange);
+  const previewCycleLengthDays = hasValidCycleLength
+    ? parsedCycleLengthDays
+    : (me?.settings.cycleLengthDays ?? 28);
+  const previewPeriodLengthDays = hasValidPeriodLength
+    ? parsedPeriodLengthDays
+    : (me?.settings.periodLengthDays ?? 5);
+  const canSubmit =
+    hasValidCycleLength &&
+    hasValidPeriodLength &&
+    latestPeriodStart >= minDate &&
+    latestPeriodStart <= today;
 
   const previewForecast = useMemo(
     () =>
       buildPeriodForecast({
-        averageCycleLengthDays: cycleLengthDays,
-        averagePeriodLengthDays: periodLengthDays,
+        averageCycleLengthDays: previewCycleLengthDays,
+        averagePeriodLengthDays: previewPeriodLengthDays,
         fromDate: latestPeriodStart,
         latestCycleStart: latestPeriodStart
       }),
-    [cycleLengthDays, latestPeriodStart, periodLengthDays]
+    [latestPeriodStart, previewCycleLengthDays, previewPeriodLengthDays]
   );
   const previewCalendar = useMemo(
     () =>
       buildCalendarMonthDays({
         currentCycleStart: latestPeriodStart,
-        currentPeriodEnd: addDaysToIsoDate(latestPeriodStart, periodLengthDays - 1),
-        month: previewMonth,
-        periodDays: buildLoggedPeriodDates(latestPeriodStart, periodLengthDays, today).map(
+        currentPeriodEnd: addDaysToIsoDate(latestPeriodStart, previewPeriodLengthDays - 1),
+        month: previewMonth || today.slice(0, 7),
+        periodDays: buildLoggedPeriodDates(latestPeriodStart, previewPeriodLengthDays, today).map(
           (date) => ({
             date
           })
         ),
         predictedNextPeriodStart: previewForecast[0]?.periodStart ?? null,
-        predictedPeriodLengthDays: periodLengthDays,
+        predictedPeriodLengthDays: previewPeriodLengthDays,
         predictedPeriods: previewForecast,
         today
       }),
-    [latestPeriodStart, periodLengthDays, previewForecast, previewMonth, today]
+    [latestPeriodStart, previewForecast, previewMonth, previewPeriodLengthDays, today]
   );
   const weekdayLabels = useMemo(() => getCalendarWeekdayLabels(language), [language]);
   const leadingEmptyDays = useMemo(() => getCalendarLeadingEmptyDays(previewMonth), [previewMonth]);
@@ -110,14 +137,18 @@ export function OnboardingGate() {
         className="stack-form"
         onSubmit={(event) => {
           event.preventDefault();
+          if (!canSubmit) {
+            return;
+          }
+
           setIsSaving(true);
           setError(null);
 
           void completeOnboarding({
-            cycleLengthDays,
+            cycleLengthDays: parsedCycleLengthDays,
             latestPeriodStart,
-            periodLengthDays,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            periodLengthDays: parsedPeriodLengthDays,
+            timezone: browserTimeZone
           })
             .catch((nextError) => {
               setError(
@@ -135,11 +166,11 @@ export function OnboardingGate() {
             max={45}
             min={20}
             onChange={(event) => {
-              setCycleLengthDays(Number(event.target.value));
+              setCycleLengthInput(event.target.value);
             }}
             required
             type="number"
-            value={cycleLengthDays}
+            value={cycleLengthInput}
           />
           <small>{messages.onboarding.cycleLengthHint}</small>
         </label>
@@ -150,11 +181,11 @@ export function OnboardingGate() {
             max={10}
             min={2}
             onChange={(event) => {
-              setPeriodLengthDays(Number(event.target.value));
+              setPeriodLengthInput(event.target.value);
             }}
             required
             type="number"
-            value={periodLengthDays}
+            value={periodLengthInput}
           />
           <small>{messages.onboarding.periodLengthHint}</small>
         </label>
@@ -186,7 +217,7 @@ export function OnboardingGate() {
           <div className="calendar-toolbar">
             <button
               className="secondary-button"
-              disabled={previewMonth <= minMonth}
+              disabled={!previewMonth || previewMonth <= minMonth}
               onClick={() => {
                 setPreviewMonth((current) => shiftMonth(current, -1));
               }}
@@ -197,7 +228,7 @@ export function OnboardingGate() {
             <strong>{formatIsoMonthForDisplay(previewMonth, language)}</strong>
             <button
               className="secondary-button"
-              disabled={previewMonth >= maxMonth}
+              disabled={!previewMonth || previewMonth >= maxMonth}
               onClick={() => {
                 setPreviewMonth((current) => shiftMonth(current, 1));
               }}
@@ -259,7 +290,7 @@ export function OnboardingGate() {
 
         {error ? <p className="inline-error">{error}</p> : null}
 
-        <button className="primary-button" disabled={isSaving} type="submit">
+        <button className="primary-button" disabled={isSaving || !canSubmit} type="submit">
           {isSaving ? messages.onboarding.submitPending : messages.onboarding.submitIdle}
         </button>
       </form>

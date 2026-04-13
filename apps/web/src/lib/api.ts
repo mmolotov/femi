@@ -19,6 +19,8 @@ import {
   type UpdateUserSettingsResponse
 } from "@femi/shared";
 
+import { readErrorMessage } from "./httpError";
+
 const telegramInitDataHeader = "x-telegram-init-data";
 
 type ApiClient = {
@@ -55,9 +57,9 @@ async function requestJson<T>(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-
-    throw new Error(errorText || `Request failed with status ${response.status}.`);
+    throw new Error(
+      await readErrorMessage(response, `Request failed with status ${response.status}.`)
+    );
   }
 
   return parse(await response.json());
@@ -88,9 +90,9 @@ export function createApiClient(initDataRaw: string): ApiClient {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-
-        throw new Error(errorText || `Request failed with status ${response.status}.`);
+        throw new Error(
+          await readErrorMessage(response, `Request failed with status ${response.status}.`)
+        );
       }
     },
     async endPeriod(date) {

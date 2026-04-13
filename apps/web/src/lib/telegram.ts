@@ -19,6 +19,8 @@ import {
 
 export type TelegramEnvironment = "telegram" | "browser";
 
+const viewportMountTimeoutMs = 1500;
+
 type TelegramBootstrapResult = {
   cleanup: VoidFunction;
   environment: TelegramEnvironment;
@@ -27,19 +29,57 @@ type TelegramBootstrapResult = {
 
 type TelegramWindow = Window & {
   Telegram?: {
-    WebApp?: unknown;
+    WebApp?: {
+      initData?: string;
+      initDataUnsafe?: {
+        user?: unknown;
+      };
+    };
   };
 };
 
-function hasTelegramRuntime(): boolean {
+function readTelegramWindow(): TelegramWindow | null {
   if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window as TelegramWindow;
+}
+
+function hasTelegramRuntime(): boolean {
+  const telegramWindow = readTelegramWindow();
+
+  if (!telegramWindow) {
     return false;
   }
 
-  const search = window.location.search;
-  const telegramWindow = window as TelegramWindow;
+  const search = telegramWindow.location.search;
+  const webApp = telegramWindow.Telegram?.WebApp;
+  const hasInitData = typeof webApp?.initData === "string" && webApp.initData.trim().length > 0;
+  const hasInitUser = Boolean(webApp?.initDataUnsafe?.user);
 
-  return search.includes("tgWebAppPlatform=") || Boolean(telegramWindow.Telegram?.WebApp);
+  return search.includes("tgWebAppPlatform=") || hasInitData || hasInitUser;
+}
+
+async function waitForViewportMount(): Promise<boolean> {
+  if (isViewportMounted()) {
+    return true;
+  }
+
+  if (!mountViewport.isAvailable()) {
+    return false;
+  }
+
+  return Promise.race([
+    mountViewport()
+      .then(() => true)
+      .catch(() => false),
+    new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        resolve(isViewportMounted());
+      }, viewportMountTimeoutMs);
+    })
+  ]);
 }
 
 export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResult> {
@@ -72,15 +112,13 @@ export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResu
       cleanupCallbacks.push(bindMiniAppCssVars());
     }
 
-    if (mountViewport.isAvailable() && !isViewportMounted()) {
-      await mountViewport();
-    }
+    const viewportMounted = await waitForViewportMount();
 
-    if (bindViewportCssVars.isAvailable() && !isViewportCssVarsBound()) {
+    if (viewportMounted && bindViewportCssVars.isAvailable() && !isViewportCssVarsBound()) {
       cleanupCallbacks.push(bindViewportCssVars());
     }
 
-    if (expandViewport.isAvailable()) {
+    if (viewportMounted && expandViewport.isAvailable()) {
       expandViewport();
     }
 
@@ -97,7 +135,7 @@ export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResu
         }
         cleanupSdk();
       },
-      environment: initDataRaw ? "telegram" : "browser",
+      environment: "telegram",
       initDataRaw
     };
   } catch {
@@ -108,7 +146,7 @@ export async function initializeTelegramRuntime(): Promise<TelegramBootstrapResu
         }
         cleanupSdk();
       },
-      environment: "browser"
+      environment: "telegram"
     };
   }
 }

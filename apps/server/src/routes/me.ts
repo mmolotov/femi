@@ -1,6 +1,7 @@
 import type { Database } from "@femi/db";
 import { cycles, periodLogs, userSettings } from "@femi/db";
 import {
+  getIsoDateInTimeZone,
   meResponseSchema,
   updateUserSettingsRequestSchema,
   updateUserSettingsResponseSchema
@@ -57,6 +58,10 @@ function buildLoggedPeriodDates(
   return dates;
 }
 
+function isFutureIsoDate(date: string, today: string): boolean {
+  return date > today;
+}
+
 function toSettingsResponse(settings: {
   cycleLengthDays: number;
   onboardingCompleted: boolean;
@@ -106,6 +111,26 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const effectiveTimezone = parsedBody.data.timezone ?? authenticatedUser.settings.timezone;
+      const today = getIsoDateInTimeZone(new Date(), effectiveTimezone);
+
+      if (
+        parsedBody.data.latestPeriodStart !== undefined &&
+        authenticatedUser.settings.onboardingCompleted
+      ) {
+        return reply.code(400).send({
+          error: "Latest period start can only be updated during onboarding."
+        });
+      }
+
+      if (
+        parsedBody.data.latestPeriodStart !== undefined &&
+        isFutureIsoDate(parsedBody.data.latestPeriodStart, today)
+      ) {
+        return reply.code(400).send({
+          error: "Latest period start cannot be in the future."
+        });
+      }
       const nextSettings = {
         cycleLengthDays:
           parsedBody.data.cycleLengthDays ?? authenticatedUser.settings.cycleLengthDays,
@@ -118,7 +143,7 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
           parsedBody.data.periodLengthDays ?? authenticatedUser.settings.periodLengthDays,
         remindersEnabled:
           parsedBody.data.remindersEnabled ?? authenticatedUser.settings.remindersEnabled,
-        timezone: parsedBody.data.timezone ?? authenticatedUser.settings.timezone,
+        timezone: effectiveTimezone,
         updatedAt: new Date()
       };
 
@@ -144,7 +169,7 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
           const loggedPeriodDates = buildLoggedPeriodDates(
             parsedBody.data.latestPeriodStart,
             settings.periodLengthDays,
-            formatIsoDate(new Date())
+            today
           );
 
           await transaction

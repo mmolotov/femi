@@ -9,6 +9,7 @@ import {
   calculateAveragePeriodLength,
   calculateCurrentCycleDay,
   differenceInDays,
+  getIsoDateInTimeZone,
   isPeriodActive,
   predictNextPeriodStart,
   resolveCyclePhase,
@@ -22,6 +23,12 @@ describe("cycle utilities", () => {
 
   it("calculates difference in calendar days", () => {
     expect(differenceInDays("2026-03-01", "2026-03-05")).toBe(4);
+  });
+
+  it("derives the calendar date in a requested timezone", () => {
+    expect(getIsoDateInTimeZone(new Date("2026-03-02T00:30:00.000Z"), "America/Los_Angeles")).toBe(
+      "2026-03-01"
+    );
   });
 
   it("calculates the current cycle day", () => {
@@ -57,6 +64,17 @@ describe("cycle utilities", () => {
       periodEnd: "2026-04-02",
       periodStart: "2026-03-29"
     });
+  });
+
+  it("returns an empty forecast for invalid non-positive lengths", () => {
+    expect(
+      buildPeriodForecast({
+        averageCycleLengthDays: 0,
+        averagePeriodLengthDays: 5,
+        fromDate: "2026-03-01",
+        latestCycleStart: "2026-02-01"
+      })
+    ).toEqual([]);
   });
 
   it("resolves the current cycle phase", () => {

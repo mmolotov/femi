@@ -27,6 +27,30 @@ vi.mock("../lib/auth-context.js", () => ({
 import { API_RATE_LIMIT_MAX, API_RATE_LIMIT_WINDOW_MS } from "../lib/rate-limit.js";
 import { registerMeRoutes } from "./me.js";
 
+const RealDate = Date;
+
+function setMockSystemTime(isoTimestamp: string): void {
+  const fixedDate = new RealDate(isoTimestamp);
+
+  global.Date = class extends RealDate {
+    constructor(value?: string | number | Date) {
+      if (arguments.length === 0) {
+        super(fixedDate.toISOString());
+        return;
+      }
+
+      super(value as string | number);
+    }
+
+    static now(): number {
+      return fixedDate.getTime();
+    }
+
+    static parse = RealDate.parse;
+    static UTC = RealDate.UTC;
+  } as DateConstructor;
+}
+
 async function createTestApp(): Promise<FastifyInstance> {
   const app = Fastify();
 
@@ -48,6 +72,8 @@ describe("me routes", () => {
   });
 
   afterEach(async () => {
+    global.Date = RealDate;
+
     if (app) {
       await app.close();
     }
@@ -295,6 +321,109 @@ describe("me routes", () => {
 
     expect(response.statusCode).toBe(400);
     expect(resolveAuthenticatedUserMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an impossible latest period start before auth lookup", async () => {
+    app = await createTestApp();
+
+    await registerMeRoutes(app, {
+      db: {} as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      body: {
+        latestPeriodStart: "2026-02-31"
+      },
+      method: "PATCH",
+      url: "/api/me/settings"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(resolveAuthenticatedUserMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a future latest period start using the effective timezone", async () => {
+    app = await createTestApp();
+    setMockSystemTime("2026-03-02T00:30:00.000Z");
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: false,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "America/Los_Angeles"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {} as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      body: {
+        latestPeriodStart: "2026-03-02"
+      },
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "PATCH",
+      url: "/api/me/settings"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(resolveAuthenticatedUserMock).toHaveBeenCalled();
+  });
+
+  it("rejects latestPeriodStart updates after onboarding is already complete", async () => {
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {} as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      body: {
+        latestPeriodStart: "2026-03-01"
+      },
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "PATCH",
+      url: "/api/me/settings"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: "Latest period start can only be updated during onboarding."
+    });
   });
 
   it("rate limits repeated access to authenticated endpoints", async () => {

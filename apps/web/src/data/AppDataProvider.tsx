@@ -1,19 +1,26 @@
 import {
+  addDaysToIsoDate,
+  buildPeriodForecast,
+  calculateCurrentCycleDay,
+  differenceInDays,
+  getIsoDateInTimeZone,
+  resolveCyclePhase,
+  type CycleSummary,
+  type MeResponse,
+  type OnboardingSetupRequest,
+  type UpdateUserSettingsRequest
+} from "@femi/shared";
+import {
   createContext,
   type PropsWithChildren,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState
 } from "react";
-import type {
-  CycleSummary,
-  MeResponse,
-  OnboardingSetupRequest,
-  UpdateUserSettingsRequest
-} from "@femi/shared";
 
-import { createDemoApiClient, isDemoAppMode } from "../demo/mockApp";
+import { createDemoApiClient } from "../demo/mockApp";
 import { useI18n } from "../i18n/I18nProvider";
 import { createApiClient, type ApiClient } from "../lib/api";
 import { useSession } from "../session/SessionProvider";
@@ -33,10 +40,42 @@ type AppDataContextValue = {
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
+function buildOnboardingSummaryFallback(input: OnboardingSetupRequest): CycleSummary {
+  const effectiveTimezone = input.timezone ?? "UTC";
+  const today = getIsoDateInTimeZone(new Date(), effectiveTimezone);
+  const forecast = buildPeriodForecast({
+    averageCycleLengthDays: input.cycleLengthDays,
+    averagePeriodLengthDays: input.periodLengthDays,
+    fromDate: today,
+    latestCycleStart: input.latestPeriodStart
+  });
+  const currentCycleDay = calculateCurrentCycleDay(input.latestPeriodStart, today);
+  const currentPeriodEnd = addDaysToIsoDate(input.latestPeriodStart, input.periodLengthDays - 1);
+
+  return {
+    activePeriod:
+      differenceInDays(input.latestPeriodStart, today) >= 0 &&
+      differenceInDays(today, currentPeriodEnd) >= 0,
+    averageCycleLengthDays: input.cycleLengthDays,
+    averagePeriodLengthDays: input.periodLengthDays,
+    currentCycleDay,
+    currentPhase: resolveCyclePhase(currentCycleDay, input.cycleLengthDays, input.periodLengthDays),
+    forecast,
+    latestPeriodStart: input.latestPeriodStart,
+    onboardingCompleted: true,
+    predictedNextPeriodStart: forecast[0]?.periodStart ?? null,
+    today
+  };
+}
+
 export function AppDataProvider({ children }: PropsWithChildren) {
   const { messages } = useI18n();
   const session = useSession();
-  const demoMode = session.status === "preview" || isDemoAppMode();
+  const bootstrapCopyRef = useRef({
+    dataLoadError: messages.app.dataLoadError,
+    telegramAuthFailed: messages.app.telegramAuthFailed
+  });
+  const demoMode = session.status === "preview";
   const api = useMemo(
     () =>
       demoMode
@@ -58,36 +97,41 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     summary: null
   });
 
+  bootstrapCopyRef.current = {
+    dataLoadError: messages.app.dataLoadError,
+    telegramAuthFailed: messages.app.telegramAuthFailed
+  };
+
   useEffect(() => {
     let active = true;
 
     const bootstrap = async () => {
       if (demoMode && api) {
-        const [meResponse, summaryResponse] = await Promise.all([
-          api.getMe(),
-          api.getCycleSummary()
-        ]);
+        try {
+          const [meResponse, summaryResponse] = await Promise.all([
+            api.getMe(),
+            api.getCycleSummary()
+          ]);
 
-        if (!active) {
-          return;
-        }
+          if (!active) {
+            return;
+          }
 
-        setState({
-          error: null,
-          me: meResponse,
-          status: "ready",
-          summary: summaryResponse.summary
-        });
-
-        return;
-      }
-
-      if (session.status === "preview" || api === null) {
-        if (active) {
           setState({
             error: null,
+            me: meResponse,
+            status: "ready",
+            summary: summaryResponse.summary
+          });
+        } catch (error) {
+          if (!active) {
+            return;
+          }
+
+          setState({
+            error: error instanceof Error ? error.message : bootstrapCopyRef.current.dataLoadError,
             me: null,
-            status: "preview",
+            status: "error",
             summary: null
           });
         }
@@ -98,9 +142,22 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       if (session.status === "error") {
         if (active) {
           setState({
-            error: session.error ?? messages.app.telegramAuthFailed,
+            error: session.error ?? bootstrapCopyRef.current.telegramAuthFailed,
             me: null,
             status: "error",
+            summary: null
+          });
+        }
+
+        return;
+      }
+
+      if (session.status === "preview" || api === null) {
+        if (active) {
+          setState({
+            error: null,
+            me: null,
+            status: "preview",
             summary: null
           });
         }
@@ -150,7 +207,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         }
 
         setState({
-          error: error instanceof Error ? error.message : messages.app.dataLoadError,
+          error: error instanceof Error ? error.message : bootstrapCopyRef.current.dataLoadError,
           me: null,
           status: "error",
           summary: null
@@ -163,14 +220,7 @@ export function AppDataProvider({ children }: PropsWithChildren) {
     return () => {
       active = false;
     };
-  }, [
-    api,
-    demoMode,
-    messages.app.dataLoadError,
-    messages.app.telegramAuthFailed,
-    session.error,
-    session.status
-  ]);
+  }, [api, demoMode, session.error, session.status]);
 
   const value: AppDataContextValue = {
     api,
@@ -188,18 +238,35 @@ export function AppDataProvider({ children }: PropsWithChildren) {
       }));
 
       try {
-        await api.completeOnboarding(input);
-        const [meResponse, summaryResponse] = await Promise.all([
-          api.getMe(),
-          api.getCycleSummary()
-        ]);
+        const onboardingResponse = await api.completeOnboarding(input);
+        const fallbackMe =
+          previousState.me === null
+            ? null
+            : {
+                ...previousState.me,
+                settings: onboardingResponse.settings
+              };
 
-        setState({
-          error: null,
-          me: meResponse,
-          status: "ready",
-          summary: summaryResponse.summary
-        });
+        try {
+          const [meResponse, summaryResponse] = await Promise.all([
+            api.getMe(),
+            api.getCycleSummary()
+          ]);
+
+          setState({
+            error: null,
+            me: meResponse,
+            status: "ready",
+            summary: summaryResponse.summary
+          });
+        } catch {
+          setState({
+            error: null,
+            me: fallbackMe,
+            status: "ready",
+            summary: buildOnboardingSummaryFallback(input)
+          });
+        }
       } catch (error) {
         setState({
           ...previousState,

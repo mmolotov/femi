@@ -33,7 +33,7 @@ export async function createAppContext(): Promise<AppContext> {
   await app.register(cors, {
     origin: true
   });
-  await registerRateLimit(app);
+  await registerRateLimit(app, env);
 
   await registerHealthRoutes(app);
   await registerAuthRoutes(app, {

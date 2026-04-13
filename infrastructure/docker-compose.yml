@@ -1,20 +1,4 @@
 services:
-  caddy:
-    image: caddy:2
-    depends_on:
-      - web
-      - server
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:-localhost}
-      CADDY_EMAIL: ${CADDY_EMAIL:-ops@example.com}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-
   web:
     build:
       context: ..
@@ -22,6 +6,10 @@ services:
     depends_on:
       server:
         condition: service_started
+    env_file:
+      - ../.env
+    environment:
+      WEB_APP_URL: ${WEB_APP_URL}
 
   server:
     build:
@@ -113,6 +101,4 @@ services:
       BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
 
 volumes:
-  caddy_data:
-  caddy_config:
   postgres_data:

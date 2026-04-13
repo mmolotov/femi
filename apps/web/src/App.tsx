@@ -100,7 +100,6 @@ function AppShell() {
           <span>{error ?? messages.app.syncErrorBody}</span>
         </section>
       ) : null}
-
       <nav className="tab-bar" aria-label={messages.app.primaryNavLabel}>
         {tabs.map((tab) => (
           <NavLink

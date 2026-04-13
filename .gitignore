@@ -19,6 +19,8 @@ test-results/
 
 .DS_Store
 
+certs/
+
 .env
 .env.local
 .env.*
@@ -27,5 +29,6 @@ test-results/
 .idea/
 .vscode/
 .mcp.json
+backlog/
 
 *.log

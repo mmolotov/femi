@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { useAppDataMock, useSessionMock } = vi.hoisted(() => ({
   useAppDataMock: vi.fn(),
@@ -20,6 +20,10 @@ import { I18nProvider } from "../i18n/I18nProvider";
 import { SettingsRoute } from "./SettingsRoute";
 
 describe("SettingsRoute", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("saves updated tracking preferences", async () => {
     const updateSettings = vi.fn().mockResolvedValue(undefined);
 
@@ -71,5 +75,49 @@ describe("SettingsRoute", () => {
     });
 
     expect(await screen.findByText(/settings saved/i)).toBeInTheDocument();
+  });
+
+  it("allows clearing numeric fields without submitting invalid settings", () => {
+    const updateSettings = vi.fn().mockResolvedValue(undefined);
+
+    useAppDataMock.mockReturnValue({
+      me: {
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: true,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        }
+      },
+      updateSettings
+    });
+    useSessionMock.mockReturnValue({
+      environment: "telegram",
+      error: null,
+      status: "authenticated",
+      user: {
+        firstName: "Ada",
+        languageCode: "en",
+        lastName: null,
+        username: "ada"
+      }
+    });
+
+    const { getByLabelText, getByRole } = render(
+      <I18nProvider>
+        <SettingsRoute />
+      </I18nProvider>
+    );
+
+    const cycleLengthInput = getByLabelText(/cycle length/i);
+
+    fireEvent.change(cycleLengthInput, {
+      target: { value: "" }
+    });
+
+    expect(cycleLengthInput).toHaveValue(null);
+    expect(getByRole("button", { name: /save settings/i })).toBeDisabled();
+    expect(updateSettings).not.toHaveBeenCalled();
   });
 });

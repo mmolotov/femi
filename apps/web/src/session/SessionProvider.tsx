@@ -1,6 +1,14 @@
-import { createContext, type PropsWithChildren, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 
 import { useI18n } from "../i18n/I18nProvider";
+import { readErrorMessage } from "../lib/httpError";
 import { initializeTelegramRuntime, type TelegramEnvironment } from "../lib/telegram";
 
 type SessionUser = {
@@ -43,6 +51,10 @@ function isSessionUser(value: unknown): value is SessionUser {
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const { messages } = useI18n();
+  const authCopyRef = useRef({
+    invalidResponse: messages.app.telegramAuthInvalidResponse,
+    telegramAuthFailed: messages.app.telegramAuthFailed
+  });
   const [state, setState] = useState<SessionContextValue>({
     environment: "browser",
     error: null,
@@ -50,6 +62,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
     status: "authenticating",
     user: null
   });
+
+  authCopyRef.current = {
+    invalidResponse: messages.app.telegramAuthInvalidResponse,
+    telegramAuthFailed: messages.app.telegramAuthFailed
+  };
 
   useEffect(() => {
     let active = true;
@@ -65,11 +82,13 @@ export function SessionProvider({ children }: PropsWithChildren) {
       }
 
       if (!runtime.initDataRaw) {
+        const isTelegramBootstrapFailure = runtime.environment === "telegram";
+
         setState({
           environment: runtime.environment,
-          error: null,
+          error: isTelegramBootstrapFailure ? authCopyRef.current.telegramAuthFailed : null,
           initDataRaw: null,
-          status: "preview",
+          status: isTelegramBootstrapFailure ? "error" : "preview",
           user: null
         });
         return;
@@ -87,7 +106,12 @@ export function SessionProvider({ children }: PropsWithChildren) {
         });
 
         if (!response.ok) {
-          throw new Error(`${messages.app.telegramAuthFailed} (${response.status})`);
+          throw new Error(
+            await readErrorMessage(
+              response,
+              `${authCopyRef.current.telegramAuthFailed} (${response.status})`
+            )
+          );
         }
 
         const payload = (await response.json()) as {
@@ -95,7 +119,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         };
 
         if (!isSessionUser(payload.user)) {
-          throw new Error(messages.app.telegramAuthInvalidResponse);
+          throw new Error(authCopyRef.current.invalidResponse);
         }
 
         if (!active) {
@@ -116,7 +140,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
 
         setState({
           environment: runtime.environment,
-          error: error instanceof Error ? error.message : messages.app.telegramAuthFailed,
+          error: error instanceof Error ? error.message : authCopyRef.current.telegramAuthFailed,
           initDataRaw: runtime.initDataRaw ?? null,
           status: "error",
           user: null
@@ -130,7 +154,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       active = false;
       cleanup();
     };
-  }, [messages.app.telegramAuthFailed, messages.app.telegramAuthInvalidResponse]);
+  }, []);
 
   return <SessionContext.Provider value={state}>{children}</SessionContext.Provider>;
 }

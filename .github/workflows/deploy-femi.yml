@@ -1,0 +1,114 @@
+name: Deploy Femi
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy from this repository
+        required: false
+        default: main
+        type: string
+
+concurrency:
+  group: deploy-femi-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate package manager
+        run: corepack install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate repository
+        run: pnpm validate
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+    timeout-minutes: 20
+    environment:
+      name: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_PATH: /opt/femi
+      DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+      DEPLOY_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.sha }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+
+    steps:
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Configure known_hosts
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy /opt/femi
+        run: |
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" -- "${DEPLOY_REF}" "${DEPLOY_PATH}" <<'EOF'
+          set -euo pipefail
+
+          deploy_ref="$1"
+          deploy_path="$2"
+
+          cd "${deploy_path}"
+
+          if [ -n "$(git status --short)" ]; then
+            echo "Refusing to deploy from a dirty checkout in ${deploy_path}." >&2
+            git status --short >&2
+            exit 1
+          fi
+
+          git fetch --tags --prune origin
+          git checkout --detach "${deploy_ref}"
+
+          docker compose \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            up -d --build
+
+          set -a
+          . ./.env
+          set +a
+
+          curl --fail --silent --show-error \
+            --retry 5 \
+            --retry-delay 5 \
+            "https://${APP_DOMAIN}/api/health" > /dev/null
+
+          docker compose \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            ps
+          EOF

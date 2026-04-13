@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { useAppDataMock } = vi.hoisted(() => ({
   useAppDataMock: vi.fn()
@@ -15,6 +15,10 @@ import { I18nProvider } from "../i18n/I18nProvider";
 import { OnboardingGate } from "./OnboardingGate";
 
 describe("OnboardingGate", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("submits onboarding values through the app data layer", async () => {
     const completeOnboarding = vi.fn().mockResolvedValue(undefined);
     useAppDataMock.mockReturnValue({
@@ -72,5 +76,45 @@ describe("OnboardingGate", () => {
         })
       );
     });
+  });
+
+  it("allows clearing numeric fields without submitting invalid onboarding data", () => {
+    const completeOnboarding = vi.fn().mockResolvedValue(undefined);
+    useAppDataMock.mockReturnValue({
+      completeOnboarding,
+      me: {
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: false,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        },
+        user: {
+          firstName: "Ada",
+          id: "user-1",
+          languageCode: "en",
+          lastName: null,
+          telegramUserId: "10001",
+          username: "ada"
+        }
+      }
+    });
+
+    const { getByLabelText, getByRole } = render(
+      <I18nProvider>
+        <OnboardingGate />
+      </I18nProvider>
+    );
+
+    const cycleLengthInput = getByLabelText(/usual cycle length/i);
+
+    fireEvent.change(cycleLengthInput, {
+      target: { value: "" }
+    });
+
+    expect(cycleLengthInput).toHaveValue(null);
+    expect(getByRole("button", { name: /save setup/i })).toBeDisabled();
+    expect(completeOnboarding).not.toHaveBeenCalled();
   });
 });

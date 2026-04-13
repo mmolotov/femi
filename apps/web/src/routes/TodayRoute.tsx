@@ -1,15 +1,16 @@
 import {
   differenceInDays,
   flowIntensityValues,
-  formatIsoDate,
   type CalendarResponse,
+  type DailyCheckinEntry,
   type CyclePhase,
   type DailyCheckinRequest,
   type FlowIntensity,
+  getIsoDateInTimeZone,
   type SymptomKey,
   symptomKeys
 } from "@femi/shared";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Panel } from "../components/Panel";
 import { useAppData } from "../data/AppDataProvider";
@@ -22,14 +23,16 @@ import {
 } from "../lib/date";
 
 type CheckinFormState = {
-  discharge: DailyCheckinRequest["discharge"] | "";
-  energy: DailyCheckinRequest["energy"] | "";
-  mood: DailyCheckinRequest["mood"] | "";
+  discharge: NonNullable<DailyCheckinEntry["discharge"]> | "";
+  energy: NonNullable<DailyCheckinEntry["energy"]> | "";
+  mood: NonNullable<DailyCheckinEntry["mood"]> | "";
   note: string;
-  painLevel: DailyCheckinRequest["painLevel"] | "";
-  sleepQuality: DailyCheckinRequest["sleepQuality"] | "";
+  painLevel: NonNullable<DailyCheckinEntry["painLevel"]> | "";
+  sleepQuality: NonNullable<DailyCheckinEntry["sleepQuality"]> | "";
   symptomKeys: DailyCheckinRequest["symptomKeys"];
 };
+
+type CalendarDay = CalendarResponse["days"][number];
 
 const emptyCheckinState: CheckinFormState = {
   discharge: "",
@@ -116,23 +119,134 @@ function getSelectedCycleDay(
   return normalizedOffset + 1;
 }
 
+function buildCheckinPayload(input: {
+  formState: CheckinFormState;
+  isMenstrualPhase: boolean;
+  persistedEntry: DailyCheckinEntry | null;
+}): DailyCheckinRequest {
+  const { formState, isMenstrualPhase, persistedEntry } = input;
+
+  const payload: DailyCheckinRequest = {
+    symptomKeys: formState.symptomKeys
+  };
+
+  if (formState.mood !== "") {
+    payload.mood = formState.mood;
+  } else if (persistedEntry?.mood !== null && persistedEntry?.mood !== undefined) {
+    payload.mood = null;
+  }
+
+  if (formState.energy !== "") {
+    payload.energy = formState.energy;
+  } else if (persistedEntry?.energy !== null && persistedEntry?.energy !== undefined) {
+    payload.energy = null;
+  }
+
+  if (formState.painLevel !== "") {
+    payload.painLevel = formState.painLevel;
+  } else if (persistedEntry?.painLevel !== null && persistedEntry?.painLevel !== undefined) {
+    payload.painLevel = null;
+  }
+
+  if (!isMenstrualPhase && formState.discharge !== "") {
+    payload.discharge = formState.discharge;
+  } else if (
+    persistedEntry?.discharge !== null &&
+    persistedEntry?.discharge !== undefined &&
+    (isMenstrualPhase || formState.discharge === "")
+  ) {
+    payload.discharge = null;
+  }
+
+  if (formState.sleepQuality !== "") {
+    payload.sleepQuality = formState.sleepQuality;
+  } else if (persistedEntry?.sleepQuality !== null && persistedEntry?.sleepQuality !== undefined) {
+    payload.sleepQuality = null;
+  }
+
+  if (formState.note.trim().length > 0) {
+    payload.note = formState.note;
+  } else if (persistedEntry?.note !== null && persistedEntry?.note !== undefined) {
+    payload.note = null;
+  }
+
+  return payload;
+}
+
+function toFormState(entry: DailyCheckinEntry): CheckinFormState {
+  return {
+    discharge: entry.discharge ?? "",
+    energy: entry.energy ?? "",
+    mood: entry.mood ?? "",
+    note: entry.note ?? "",
+    painLevel: entry.painLevel ?? "",
+    sleepQuality: entry.sleepQuality ?? "",
+    symptomKeys: entry.symptomKeys
+  };
+}
+
+function patchCalendarDay(
+  calendar: CalendarResponse | null,
+  date: string,
+  update: (day: CalendarDay) => CalendarDay
+): CalendarResponse | null {
+  if (!calendar) {
+    return calendar;
+  }
+
+  let changed = false;
+  const nextDays = calendar.days.map((day) => {
+    if (day.date !== date) {
+      return day;
+    }
+
+    changed = true;
+    return update(day);
+  });
+
+  return changed
+    ? {
+        ...calendar,
+        days: nextDays
+      }
+    : calendar;
+}
+
 export function TodayRoute() {
   const { api, refresh, status, summary } = useAppData();
   const { language, messages } = useI18n();
   const [formState, setFormState] = useState<CheckinFormState>(emptyCheckinState);
+  const [persistedEntry, setPersistedEntry] = useState<DailyCheckinEntry | null>(null);
   const [calendar, setCalendar] = useState<CalendarResponse | null>(null);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [checkinError, setCheckinError] = useState<string | null>(null);
+  const [checkinLoadError, setCheckinLoadError] = useState<string | null>(null);
   const [periodError, setPeriodError] = useState<string | null>(null);
+  const [isLoadingCheckin, setIsLoadingCheckin] = useState(false);
   const [isSavingCheckin, setIsSavingCheckin] = useState(false);
   const [isSavingPeriod, setIsSavingPeriod] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [periodSuccess, setPeriodSuccess] = useState<string | null>(null);
   const [selectedFlowIntensity, setSelectedFlowIntensity] = useState<FlowIntensity | "">("");
-  const [month, setMonth] = useState(summary ? summary.today.slice(0, 7) : formatMonth(new Date()));
-  const [selectedDate, setSelectedDate] = useState(
-    summary ? summary.today : formatIsoDate(new Date())
+  const copyRef = useRef({
+    calendarLoadError: messages.calendar.loadError,
+    checkinLoadError: messages.app.dataLoadError
+  });
+  const browserToday = getIsoDateInTimeZone(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone
   );
+  const [month, setMonth] = useState(
+    summary ? summary.today.slice(0, 7) : browserToday.slice(0, 7)
+  );
+  const [monthSource, setMonthSource] = useState<"bootstrap" | "user">("bootstrap");
+  const [selectedDate, setSelectedDate] = useState(summary ? summary.today : browserToday);
+  const [selectedDateSource, setSelectedDateSource] = useState<"bootstrap" | "user">("bootstrap");
+
+  copyRef.current = {
+    calendarLoadError: messages.calendar.loadError,
+    checkinLoadError: messages.app.dataLoadError
+  };
 
   const loadCalendar = useCallback(
     async (nextMonth: string) => {
@@ -149,18 +263,31 @@ export function TodayRoute() {
         setCalendarError(null);
       } catch (error) {
         setCalendar(null);
-        setCalendarError(error instanceof Error ? error.message : messages.calendar.loadError);
+        setCalendarError(
+          error instanceof Error ? error.message : copyRef.current.calendarLoadError
+        );
       }
     },
-    [api, messages.calendar.loadError, status]
+    [api, status]
   );
 
   useEffect(() => {
-    if (summary && !selectedDate) {
-      setSelectedDate(summary.today);
-      setMonth(summary.today.slice(0, 7));
+    if (!summary || selectedDateSource === "user") {
+      return;
     }
-  }, [selectedDate, summary]);
+
+    if (selectedDate !== summary.today) {
+      setSelectedDate(summary.today);
+    }
+
+    if (monthSource === "bootstrap") {
+      const summaryMonth = summary.today.slice(0, 7);
+
+      if (month !== summaryMonth) {
+        setMonth(summaryMonth);
+      }
+    }
+  }, [month, monthSource, selectedDate, selectedDateSource, summary]);
 
   useEffect(() => {
     void loadCalendar(month);
@@ -171,8 +298,14 @@ export function TodayRoute() {
 
     if (!api || !selectedDate || status !== "ready") {
       setFormState(emptyCheckinState);
+      setPersistedEntry(null);
+      setCheckinLoadError(null);
+      setIsLoadingCheckin(false);
       return;
     }
+
+    setCheckinLoadError(null);
+    setIsLoadingCheckin(true);
 
     void api
       .getCheckin(selectedDate)
@@ -183,22 +316,25 @@ export function TodayRoute() {
 
         if (!response.entry) {
           setFormState(emptyCheckinState);
+          setPersistedEntry(null);
+          setCheckinLoadError(null);
+          setIsLoadingCheckin(false);
           return;
         }
 
-        setFormState({
-          discharge: response.entry.discharge ?? "",
-          energy: response.entry.energy ?? "",
-          mood: response.entry.mood ?? "",
-          note: response.entry.note ?? "",
-          painLevel: response.entry.painLevel ?? "",
-          sleepQuality: response.entry.sleepQuality ?? "",
-          symptomKeys: response.entry.symptomKeys
-        });
+        setPersistedEntry(response.entry);
+        setFormState(toFormState(response.entry));
+        setCheckinLoadError(null);
+        setIsLoadingCheckin(false);
       })
-      .catch(() => {
+      .catch((error) => {
         if (active) {
           setFormState(emptyCheckinState);
+          setPersistedEntry(null);
+          setCheckinLoadError(
+            error instanceof Error ? error.message : copyRef.current.checkinLoadError
+          );
+          setIsLoadingCheckin(false);
         }
       });
 
@@ -246,10 +382,12 @@ export function TodayRoute() {
   const weekdayLabels = useMemo(() => getCalendarWeekdayLabels(language), [language]);
   const leadingEmptyDays = useMemo(() => getCalendarLeadingEmptyDays(month), [month]);
   const minMonth = "2020-01";
-  const maxMonth = addMonths((summary?.today ?? formatIsoDate(new Date())).slice(0, 7), 24);
+  const maxMonth = addMonths((summary?.today ?? browserToday).slice(0, 7), 24);
   const isFutureSelected = summary ? differenceInDays(summary.today, selectedDate) > 0 : false;
   const isSelectedToday = summary ? selectedDate === summary.today : false;
   const isSelectedDayEditable = !isFutureSelected;
+  const isCheckinEditable = isSelectedDayEditable && !isLoadingCheckin && checkinLoadError === null;
+  const visibleCheckinError = checkinLoadError ?? checkinError;
   const isMenstrualPhase = selectedPhase === "menstrual";
   const selectedDateLabel = formatIsoDateForDisplay(selectedDate, language);
   const canGoToPreviousMonth = month > minMonth;
@@ -261,14 +399,59 @@ export function TodayRoute() {
 
   useEffect(() => {
     setCheckinError(null);
+    setCheckinLoadError(null);
     setPeriodError(null);
     setPeriodSuccess(null);
     setSaveSuccess(false);
   }, [selectedDate]);
 
   async function syncAfterPeriodUpdate(successMessage: string) {
-    await Promise.all([refresh(), loadCalendar(month)]);
+    await loadCalendar(month);
+
+    try {
+      await refresh();
+    } catch {
+      // Keep the confirmed local mutation result even if the summary refresh fails.
+    }
+
     setPeriodSuccess(successMessage);
+  }
+
+  async function syncAfterCheckinSave(): Promise<void> {
+    await loadCalendar(month);
+
+    try {
+      await refresh();
+    } catch {
+      // Keep the confirmed local mutation result even if the summary refresh fails.
+    }
+  }
+
+  function applyPeriodDayPatch(input: {
+    date: string;
+    flowIntensity: FlowIntensity | null;
+    isLoggedPeriodDay: boolean;
+  }): void {
+    setCalendar((current) =>
+      patchCalendarDay(current, input.date, (day) => ({
+        ...day,
+        flowIntensity: input.flowIntensity,
+        isLoggedPeriodDay: input.isLoggedPeriodDay,
+        isPredictedPeriodDay: input.isLoggedPeriodDay ? false : day.isPredictedPeriodDay
+      }))
+    );
+  }
+
+  function applyCheckinCalendarPatch(input: {
+    date: string;
+    symptomKeys: readonly SymptomKey[];
+  }): void {
+    setCalendar((current) =>
+      patchCalendarDay(current, input.date, (day) => ({
+        ...day,
+        symptomKeys: [...input.symptomKeys]
+      }))
+    );
   }
 
   async function markPeriodDay() {
@@ -281,10 +464,15 @@ export function TodayRoute() {
     setPeriodSuccess(null);
 
     try {
-      await api.logPeriod({
+      const response = await api.logPeriod({
         date: selectedDate
       });
       await syncAfterPeriodUpdate(messages.today.markPeriodDaySuccess);
+      applyPeriodDayPatch({
+        date: selectedDate,
+        flowIntensity: response.entry.flowIntensity,
+        isLoggedPeriodDay: true
+      });
     } catch (error) {
       setPeriodError(error instanceof Error ? error.message : messages.today.markPeriodDayError);
     } finally {
@@ -302,11 +490,16 @@ export function TodayRoute() {
     setPeriodSuccess(null);
 
     try {
-      await api.logPeriod({
+      const response = await api.logPeriod({
         date: selectedDate,
         flowIntensity: selectedFlowIntensity || undefined
       });
       await syncAfterPeriodUpdate(messages.calendar.saveSuccess);
+      applyPeriodDayPatch({
+        date: selectedDate,
+        flowIntensity: response.entry.flowIntensity,
+        isLoggedPeriodDay: true
+      });
     } catch (error) {
       setPeriodError(error instanceof Error ? error.message : messages.calendar.saveError);
     } finally {
@@ -326,6 +519,11 @@ export function TodayRoute() {
     try {
       await api.deletePeriodDay(selectedDate);
       await syncAfterPeriodUpdate(messages.calendar.removeSuccess);
+      applyPeriodDayPatch({
+        date: selectedDate,
+        flowIntensity: null,
+        isLoggedPeriodDay: false
+      });
     } catch (error) {
       setPeriodError(error instanceof Error ? error.message : messages.calendar.removeError);
     } finally {
@@ -383,6 +581,7 @@ export function TodayRoute() {
             className="secondary-button"
             disabled={!canGoToPreviousMonth}
             onClick={() => {
+              setMonthSource("user");
               setMonth((current) => shiftMonth(current, -1));
             }}
             type="button"
@@ -394,6 +593,7 @@ export function TodayRoute() {
             className="secondary-button"
             disabled={!canGoToNextMonth}
             onClick={() => {
+              setMonthSource("user");
               setMonth((current) => shiftMonth(current, 1));
             }}
             type="button"
@@ -456,6 +656,7 @@ export function TodayRoute() {
                     .filter(Boolean)
                     .join(" ")}
                   onClick={() => {
+                    setSelectedDateSource("user");
                     setSelectedDate(day.date);
                   }}
                   type="button"
@@ -614,7 +815,7 @@ export function TodayRoute() {
                 onSubmit={(event) => {
                   event.preventDefault();
 
-                  if (!api || !selectedDate || !isSelectedDayEditable) {
+                  if (!api || !selectedDate || !isCheckinEditable) {
                     return;
                   }
 
@@ -623,17 +824,24 @@ export function TodayRoute() {
                   setSaveSuccess(false);
 
                   void api
-                    .saveCheckin(selectedDate, {
-                      discharge: isMenstrualPhase ? undefined : formState.discharge || undefined,
-                      energy: formState.energy || undefined,
-                      mood: formState.mood || undefined,
-                      note: formState.note || undefined,
-                      painLevel: formState.painLevel || undefined,
-                      sleepQuality: formState.sleepQuality || undefined,
-                      symptomKeys: formState.symptomKeys
-                    })
-                    .then(async () => {
-                      await Promise.all([refresh(), loadCalendar(month)]);
+                    .saveCheckin(
+                      selectedDate,
+                      buildCheckinPayload({
+                        formState,
+                        isMenstrualPhase,
+                        persistedEntry
+                      })
+                    )
+                    .then(async (response) => {
+                      setPersistedEntry(response.entry);
+                      setFormState(
+                        response.entry ? toFormState(response.entry) : emptyCheckinState
+                      );
+                      await syncAfterCheckinSave();
+                      applyCheckinCalendarPatch({
+                        date: selectedDate,
+                        symptomKeys: response.entry?.symptomKeys ?? []
+                      });
                       setSaveSuccess(true);
                     })
                     .catch((error) => {
@@ -650,7 +858,7 @@ export function TodayRoute() {
                   <label className="field">
                     <span>{messages.today.mood}</span>
                     <select
-                      disabled={!isSelectedDayEditable}
+                      disabled={!isCheckinEditable}
                       onChange={(event) => {
                         setFormState((current) => ({
                           ...current,
@@ -671,7 +879,7 @@ export function TodayRoute() {
                   <label className="field">
                     <span>{messages.today.energy}</span>
                     <select
-                      disabled={!isSelectedDayEditable}
+                      disabled={!isCheckinEditable}
                       onChange={(event) => {
                         setFormState((current) => ({
                           ...current,
@@ -692,7 +900,7 @@ export function TodayRoute() {
                   <label className="field">
                     <span>{messages.today.pain}</span>
                     <select
-                      disabled={!isSelectedDayEditable}
+                      disabled={!isCheckinEditable}
                       onChange={(event) => {
                         setFormState((current) => ({
                           ...current,
@@ -713,7 +921,7 @@ export function TodayRoute() {
                   <label className="field">
                     <span>{messages.today.sleep}</span>
                     <select
-                      disabled={!isSelectedDayEditable}
+                      disabled={!isCheckinEditable}
                       onChange={(event) => {
                         setFormState((current) => ({
                           ...current,
@@ -735,7 +943,7 @@ export function TodayRoute() {
                     <label className="field">
                       <span>{messages.today.discharge}</span>
                       <select
-                        disabled={!isSelectedDayEditable}
+                        disabled={!isCheckinEditable}
                         onChange={(event) => {
                           setFormState((current) => ({
                             ...current,
@@ -758,7 +966,7 @@ export function TodayRoute() {
                 <label className="field">
                   <span>{messages.today.note}</span>
                   <textarea
-                    disabled={!isSelectedDayEditable}
+                    disabled={!isCheckinEditable}
                     onChange={(event) => {
                       setFormState((current) => ({
                         ...current,
@@ -786,9 +994,9 @@ export function TodayRoute() {
                         <button
                           key={symptomKey}
                           className={isActive ? "pill-button active" : "pill-button"}
-                          disabled={!isSelectedDayEditable}
+                          disabled={!isCheckinEditable}
                           onClick={() => {
-                            if (!isSelectedDayEditable) {
+                            if (!isCheckinEditable) {
                               return;
                             }
 
@@ -811,14 +1019,15 @@ export function TodayRoute() {
                   ) : null}
                 </div>
 
-                {checkinError ? <p className="inline-error">{checkinError}</p> : null}
+                {isLoadingCheckin ? <p className="muted">{messages.app.loading}</p> : null}
+                {visibleCheckinError ? <p className="inline-error">{visibleCheckinError}</p> : null}
                 {saveSuccess ? (
                   <p className="inline-success">{messages.today.saveSuccess}</p>
                 ) : null}
 
                 <button
                   className="primary-button"
-                  disabled={!api || !isSelectedDayEditable || isSavingCheckin}
+                  disabled={!api || !isCheckinEditable || isSavingCheckin}
                   type="submit"
                 >
                   {isSavingCheckin ? messages.today.saveStatePending : messages.today.saveStateIdle}

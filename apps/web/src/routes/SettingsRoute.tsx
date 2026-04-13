@@ -1,8 +1,10 @@
+import { cycleLengthRange, periodLengthRange } from "@femi/shared";
 import { useEffect, useState } from "react";
 
 import { Panel } from "../components/Panel";
 import { useAppData } from "../data/AppDataProvider";
 import { useI18n } from "../i18n/I18nProvider";
+import { isNumberInRange, parseIntegerInput } from "../lib/numberInput";
 import { useSession } from "../session/SessionProvider";
 import { type ThemeChoice, useTheme } from "../theme/ThemeProvider";
 
@@ -16,8 +18,12 @@ export function SettingsRoute() {
     { value: "dark", label: messages.theme.dark },
     { value: "system", label: messages.theme.system }
   ];
-  const [cycleLengthDays, setCycleLengthDays] = useState(me?.settings.cycleLengthDays ?? 28);
-  const [periodLengthDays, setPeriodLengthDays] = useState(me?.settings.periodLengthDays ?? 5);
+  const [cycleLengthInput, setCycleLengthInput] = useState(
+    String(me?.settings.cycleLengthDays ?? 28)
+  );
+  const [periodLengthInput, setPeriodLengthInput] = useState(
+    String(me?.settings.periodLengthDays ?? 5)
+  );
   const [timezone, setTimezone] = useState(
     me?.settings.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
   );
@@ -31,11 +37,17 @@ export function SettingsRoute() {
       return;
     }
 
-    setCycleLengthDays(me.settings.cycleLengthDays);
-    setPeriodLengthDays(me.settings.periodLengthDays);
+    setCycleLengthInput(String(me.settings.cycleLengthDays));
+    setPeriodLengthInput(String(me.settings.periodLengthDays));
     setTimezone(me.settings.timezone);
     setRemindersEnabled(me.settings.remindersEnabled);
   }, [me]);
+  const parsedCycleLengthDays = parseIntegerInput(cycleLengthInput);
+  const parsedPeriodLengthDays = parseIntegerInput(periodLengthInput);
+  const canSave =
+    isNumberInRange(parsedCycleLengthDays, cycleLengthRange) &&
+    isNumberInRange(parsedPeriodLengthDays, periodLengthRange) &&
+    timezone.trim().length > 0;
 
   const sessionStatusLabel =
     session.status === "authenticated"
@@ -61,13 +73,17 @@ export function SettingsRoute() {
           className="stack-form"
           onSubmit={(event) => {
             event.preventDefault();
+            if (!canSave) {
+              return;
+            }
+
             setIsSaving(true);
             setSaveError(null);
             setSaveSuccess(false);
 
             void updateSettings({
-              cycleLengthDays,
-              periodLengthDays,
+              cycleLengthDays: parsedCycleLengthDays,
+              periodLengthDays: parsedPeriodLengthDays,
               remindersEnabled,
               timezone
             })
@@ -89,10 +105,10 @@ export function SettingsRoute() {
                 max={45}
                 min={20}
                 onChange={(event) => {
-                  setCycleLengthDays(Number(event.target.value));
+                  setCycleLengthInput(event.target.value);
                 }}
                 type="number"
-                value={cycleLengthDays}
+                value={cycleLengthInput}
               />
             </label>
 
@@ -102,10 +118,10 @@ export function SettingsRoute() {
                 max={10}
                 min={2}
                 onChange={(event) => {
-                  setPeriodLengthDays(Number(event.target.value));
+                  setPeriodLengthInput(event.target.value);
                 }}
                 type="number"
-                value={periodLengthDays}
+                value={periodLengthInput}
               />
             </label>
           </div>
@@ -135,7 +151,7 @@ export function SettingsRoute() {
           {saveError ? <p className="inline-error">{saveError}</p> : null}
           {saveSuccess ? <p className="inline-success">{messages.settings.saveSuccess}</p> : null}
 
-          <button className="primary-button" disabled={isSaving} type="submit">
+          <button className="primary-button" disabled={isSaving || !canSave} type="submit">
             {isSaving ? messages.settings.savePending : messages.settings.saveIdle}
           </button>
         </form>

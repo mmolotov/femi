@@ -50,6 +50,16 @@ describe("shared schemas", () => {
     expect(parsed.success).toBe(false);
   });
 
+  it("rejects an impossible onboarding date", () => {
+    const parsed = onboardingSetupRequestSchema.safeParse({
+      cycleLengthDays: 29,
+      latestPeriodStart: "2026-02-31",
+      periodLengthDays: 5
+    });
+
+    expect(parsed.success).toBe(false);
+  });
+
   it("accepts a daily check-in with scores, note, and symptoms", () => {
     const payload = dailyCheckinRequestSchema.parse({
       mood: 4,
@@ -62,6 +72,17 @@ describe("shared schemas", () => {
     });
 
     expect(payload.symptomKeys).toEqual(["cramps", "fatigue"]);
+  });
+
+  it("accepts a daily check-in clear request with explicit nulls", () => {
+    const payload = dailyCheckinRequestSchema.parse({
+      mood: null,
+      note: null,
+      symptomKeys: []
+    });
+
+    expect(payload.mood).toBeNull();
+    expect(payload.note).toBeNull();
   });
 
   it("rejects an empty daily check-in payload", () => {
@@ -89,6 +110,14 @@ describe("shared schemas", () => {
   it("rejects an invalid calendar month query", () => {
     const parsed = calendarQuerySchema.safeParse({
       month: "2026-3"
+    });
+
+    expect(parsed.success).toBe(false);
+  });
+
+  it("rejects an impossible calendar month query", () => {
+    const parsed = calendarQuerySchema.safeParse({
+      month: "2026-13"
     });
 
     expect(parsed.success).toBe(false);
