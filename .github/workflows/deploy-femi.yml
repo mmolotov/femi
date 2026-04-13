@@ -100,14 +100,15 @@ jobs:
           git fetch --tags --prune origin
           git checkout --detach "${deploy_ref}"
 
-          docker compose \
-            -f infrastructure/docker-compose.yml \
-            -f infrastructure/docker-compose.prod.yml \
-            up -d --build
-
           set -a
           . ./.env
           set +a
+
+          docker compose \
+            --env-file .env \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            up -d --build
 
           curl --fail --silent --show-error \
             --retry 5 \
@@ -115,6 +116,7 @@ jobs:
             "https://${APP_DOMAIN}/api/health" > /dev/null
 
           docker compose \
+            --env-file .env \
             -f infrastructure/docker-compose.yml \
             -f infrastructure/docker-compose.prod.yml \
             ps
