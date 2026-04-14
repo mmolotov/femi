@@ -88,6 +88,18 @@ jobs:
           deploy_ref="$1"
           deploy_path="$2"
 
+          deploy_script="$(mktemp "${TMPDIR:-/tmp}/femi-deploy.XXXXXX.sh")"
+          cleanup() {
+            rm -f "${deploy_script}"
+          }
+          trap cleanup EXIT
+
+          cat > "${deploy_script}" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          deploy_ref="$1"
+          deploy_path="$2"
+
           cd "${deploy_path}"
 
           if [ -n "$(git status --short)" ]; then
@@ -230,4 +242,8 @@ jobs:
             attempt=$((attempt + 1))
             sleep 3
           done
+          REMOTE_SCRIPT
+
+          chmod 700 "${deploy_script}"
+          bash "${deploy_script}" "${deploy_ref}" "${deploy_path}"
           EOF
