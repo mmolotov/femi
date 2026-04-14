@@ -10,6 +10,6 @@ fi
 INTERVAL="${BACKUP_INTERVAL_SECONDS:-86400}"
 
 while true; do
-  /backup/backup-once.sh scheduled
   sleep "${INTERVAL}"
+  /backup/backup-once.sh scheduled
 done
