@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -euo pipefail
 
 if [ -z "${DATABASE_URL:-}" ]; then
   echo "DATABASE_URL is required for backups" >&2
@@ -44,6 +44,11 @@ trap cleanup EXIT
 echo "Creating backup ${object_key}"
 
 pg_dump "${DATABASE_URL}" | gzip > "${filepath}"
+
+if [ ! -s "${filepath}" ]; then
+  echo "Backup archive was not created or is empty: ${filepath}" >&2
+  exit 1
+fi
 
 aws s3 cp \
   "${filepath}" \
