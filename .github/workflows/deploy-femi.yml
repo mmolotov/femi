@@ -108,6 +108,65 @@ jobs:
               "$@"
           }
 
+          dump_postgres() {
+            compose exec -T postgres /bin/sh -lc \
+              'pg_dump "postgresql://${POSTGRES_USER:-femi}:${POSTGRES_PASSWORD:-femi}@127.0.0.1:5432/${POSTGRES_DB:-femi}"'
+          }
+
+          upload_backup_from_stdin() {
+            local scope="$1"
+
+            compose run --rm --no-deps -T backup /bin/bash -lc '
+              set -euo pipefail
+
+              if [ -z "${S3_BACKUP_BUCKET:-}" ]; then
+                echo "S3_BACKUP_BUCKET is required for backups" >&2
+                exit 1
+              fi
+
+              if [ -z "${S3_BACKUP_ENDPOINT:-}" ]; then
+                echo "S3_BACKUP_ENDPOINT is required for backups" >&2
+                exit 1
+              fi
+
+              export AWS_ACCESS_KEY_ID="${S3_BACKUP_ACCESS_KEY:-}"
+              export AWS_SECRET_ACCESS_KEY="${S3_BACKUP_SECRET_KEY:-}"
+              export AWS_DEFAULT_REGION="${S3_BACKUP_REGION:-us-east-1}"
+
+              scope="$1"
+              sanitized_scope="$(printf "%s" "${scope}" | tr -cs "A-Za-z0-9._/-" "-")"
+              sanitized_scope="${sanitized_scope#/}"
+              sanitized_scope="${sanitized_scope%/}"
+
+              if [ -z "${sanitized_scope}" ]; then
+                sanitized_scope="manual"
+              fi
+
+              timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+              filename="femi-${timestamp}.sql.gz"
+              filepath="/tmp/${filename}"
+              object_key="${sanitized_scope}/${filename}"
+
+              trap "rm -f \"${filepath}\"" EXIT
+
+              cat > "${filepath}"
+
+              if [ ! -s "${filepath}" ]; then
+                echo "Backup archive was not created or is empty: ${filepath}" >&2
+                exit 1
+              fi
+
+              echo "Uploading backup ${object_key}"
+
+              aws s3 cp \
+                "${filepath}" \
+                "s3://${S3_BACKUP_BUCKET}/${object_key}" \
+                --endpoint-url "${S3_BACKUP_ENDPOINT}"
+
+              echo "Uploaded backup ${object_key}"
+            ' bash "${scope}"
+          }
+
           predeploy_backup_skipped=0
 
           git fetch --tags --prune origin
@@ -115,8 +174,7 @@ jobs:
           if compose ps --status running --services postgres | grep -qx "postgres"; then
             echo "Running pre-deploy backup from the current postgres container..."
 
-            git show "${deploy_ref}:infrastructure/backup/backup-once.sh" | compose \
-              run --rm --no-deps -T backup /bin/bash -s -- "predeploy/${deploy_ref}"
+            dump_postgres | gzip | upload_backup_from_stdin "predeploy/${deploy_ref}"
           else
             echo "Skipping pre-deploy backup because postgres is not running in the current stack."
             predeploy_backup_skipped=1
@@ -149,7 +207,7 @@ jobs:
             done
 
             if [ "${postgres_ready}" = "1" ]; then
-              if compose run --rm --no-deps -T backup /backup/backup-once.sh "postdeploy/${deploy_ref}"; then
+              if dump_postgres | gzip | upload_backup_from_stdin "postdeploy/${deploy_ref}"; then
                 echo "Compensating post-deploy backup completed."
               else
                 echo "Compensating post-deploy backup failed; continuing because no pre-deploy database instance was available." >&2
