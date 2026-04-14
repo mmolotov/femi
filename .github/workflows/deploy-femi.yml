@@ -100,33 +100,64 @@ jobs:
           . ./.env
           set +a
 
+          compose() {
+            docker compose \
+              --env-file .env \
+              -f infrastructure/docker-compose.yml \
+              -f infrastructure/docker-compose.prod.yml \
+              "$@"
+          }
+
+          predeploy_backup_skipped=0
+
           git fetch --tags --prune origin
 
-          git show "${deploy_ref}:infrastructure/backup/backup-once.sh" | docker compose \
-            --env-file .env \
-            -f infrastructure/docker-compose.yml \
-            -f infrastructure/docker-compose.prod.yml \
-            run --rm --no-deps -T backup /bin/bash -s -- "predeploy/${deploy_ref}"
+          if compose ps --status running --services postgres | grep -qx "postgres"; then
+            echo "Running pre-deploy backup from the current postgres container..."
+
+            git show "${deploy_ref}:infrastructure/backup/backup-once.sh" | compose \
+              run --rm --no-deps -T backup /bin/bash -s -- "predeploy/${deploy_ref}"
+          else
+            echo "Skipping pre-deploy backup because postgres is not running in the current stack."
+            predeploy_backup_skipped=1
+          fi
 
           git checkout --detach "${deploy_ref}"
 
-          docker compose \
-            --env-file .env \
-            -f infrastructure/docker-compose.yml \
-            -f infrastructure/docker-compose.prod.yml \
-            up -d --build
+          compose up -d --build
 
-          docker compose \
-            --env-file .env \
-            -f infrastructure/docker-compose.yml \
-            -f infrastructure/docker-compose.prod.yml \
-            up -d
+          compose up -d
 
-          docker compose \
-            --env-file .env \
-            -f infrastructure/docker-compose.yml \
-            -f infrastructure/docker-compose.prod.yml \
-            ps
+          compose ps
+
+          if [ "${predeploy_backup_skipped}" = "1" ]; then
+            echo "Attempting immediate compensating backup because the pre-deploy backup was skipped..."
+
+            postgres_ready=0
+            readiness_attempt=1
+            readiness_max_attempts=20
+
+            while [ "${readiness_attempt}" -le "${readiness_max_attempts}" ]; do
+              if compose exec -T postgres pg_isready -U "${POSTGRES_USER:-femi}" -d "${POSTGRES_DB:-femi}" > /dev/null 2>&1; then
+                postgres_ready=1
+                break
+              fi
+
+              echo "Waiting for postgres readiness before compensating backup (${readiness_attempt}/${readiness_max_attempts})..."
+              readiness_attempt=$((readiness_attempt + 1))
+              sleep 3
+            done
+
+            if [ "${postgres_ready}" = "1" ]; then
+              if compose run --rm --no-deps -T backup /backup/backup-once.sh "postdeploy/${deploy_ref}"; then
+                echo "Compensating post-deploy backup completed."
+              else
+                echo "Compensating post-deploy backup failed; continuing because no pre-deploy database instance was available." >&2
+              fi
+            else
+              echo "Skipping compensating post-deploy backup because postgres did not become ready in time." >&2
+            fi
+          fi
 
           attempt=1
           max_attempts=20
