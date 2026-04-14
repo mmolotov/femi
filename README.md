@@ -267,6 +267,7 @@ It is intentionally scoped only to `/opt/femi`:
 
 - runs `pnpm validate` on GitHub-hosted runners
 - connects to the VPS over `SSH`
+- creates a one-shot pre-deploy database backup in object storage
 - updates the checkout in `/opt/femi`
 - runs `docker compose -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.prod.yml up -d --build`
 - checks `https://$APP_DOMAIN/api/health`
@@ -288,6 +289,12 @@ It does not deploy or modify `/opt/infra`.
 - the deploy user can run `git` and `docker compose` in `/opt/femi`
 - `/opt/infra` and the shared `edge` ingress network are already up
 - the `/opt/femi` checkout stays clean between deploys; uncommitted server-side edits will block deployment
+- backup settings in `/opt/femi/.env` are valid enough for a one-shot upload before deploy:
+- `S3_BACKUP_BUCKET`
+- `S3_BACKUP_ENDPOINT`
+- `S3_BACKUP_REGION`
+- `S3_BACKUP_ACCESS_KEY`
+- `S3_BACKUP_SECRET_KEY`
 
 ### Triggers
 
@@ -318,6 +325,10 @@ Restore is intentionally explicit and requires:
 - `S3_BACKUP_SECRET_KEY`
 - `BACKUP_OBJECT_KEY`
 - `CONFIRM_RESTORE=restore-femi`
+
+The backup container also supports a one-shot backup entrypoint at
+`infrastructure/backup/backup-once.sh`. The GitHub deploy workflow uses it to create
+a fresh pre-deploy backup before checking out the target ref and recreating containers.
 
 Example:
 
