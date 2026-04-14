@@ -1,3 +1,5 @@
+name: femi
+
 services:
   web:
     build:
