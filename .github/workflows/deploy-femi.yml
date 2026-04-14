@@ -97,12 +97,19 @@ jobs:
             exit 1
           fi
 
-          git fetch --tags --prune origin
-          git checkout --detach "${deploy_ref}"
-
           set -a
           . ./.env
           set +a
+
+          git fetch --tags --prune origin
+
+          git show "${deploy_ref}:infrastructure/backup/backup-once.sh" | docker compose \
+            --env-file .env \
+            -f infrastructure/docker-compose.yml \
+            -f infrastructure/docker-compose.prod.yml \
+            run --rm --no-deps -T backup /bin/bash -s -- "predeploy/${deploy_ref}"
+
+          git checkout --detach "${deploy_ref}"
 
           docker compose \
             --env-file .env \
