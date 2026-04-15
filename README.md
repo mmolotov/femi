@@ -295,6 +295,7 @@ It does not deploy or modify `/opt/infra`.
 - `S3_BACKUP_REGION`
 - `S3_BACKUP_ACCESS_KEY`
 - `S3_BACKUP_SECRET_KEY`
+- scheduled backup cadence, if enabled in the backup container, is controlled separately by `BACKUP_CRON_SCHEDULE`
 
 ### Triggers
 
@@ -329,6 +330,15 @@ Restore is intentionally explicit and requires:
 The backup container also supports a one-shot backup entrypoint at
 `infrastructure/backup/backup-once.sh`. The GitHub deploy workflow uses it to create
 a fresh pre-deploy backup before checking out the target ref and recreating containers.
+
+Scheduled backups are intentionally separate from deploy-time backups:
+
+- the always-on `backup` service runs a cron scheduler inside the container
+- each scheduled run invokes the same `infrastructure/backup/backup-once.sh` primitive with the `scheduled` scope
+- deploy-time predeploy and compensating postdeploy backups do not wait for cron and do not depend on the scheduler being active
+
+Configure scheduled backup cadence with `BACKUP_CRON_SCHEDULE` in `.env`.
+The default is `"0 3 * * *"`, which runs once per day at `03:00` in the backup container's time zone.
 
 Example:
 
