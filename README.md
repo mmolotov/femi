@@ -360,3 +360,24 @@ Recommended restore flow:
 1. Restore into a separate database, not the live production database.
 2. Verify that core tables such as `users`, `user_settings`, and `cycles` exist.
 3. Only then promote or copy data as part of an explicit recovery procedure.
+
+## Evidence
+
+`femi` is designed to feed an infra-hosted Evidence analytics app rather than
+embedding analytics into the app stack itself.
+
+The first-phase contract is:
+
+- keep Evidence in the shared infra layer
+- keep one Evidence app per product, rather than one shared multi-product Evidence app by default
+- connect the Evidence build/runtime path to `femi` PostgreSQL with a dedicated read-only user
+- query raw tables directly in the first phase using aggregate SQL
+- keep PostgreSQL private and reachable only through a host-local path
+
+See [docs/evidence.md](./docs/evidence.md) for:
+
+- the recommended infra-first architecture for Evidence with `femi`
+- the preferred multi-app layout for `femi`, and future products
+- the repeatable setup script for the Evidence read-only role
+- the raw tables in scope for the first dashboard iteration
+- the first KPI/questions to implement in Evidence
