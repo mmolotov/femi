@@ -361,21 +361,23 @@ Recommended restore flow:
 2. Verify that core tables such as `users`, `user_settings`, and `cycles` exist.
 3. Only then promote or copy data as part of an explicit recovery procedure.
 
-## Metabase
+## Evidence
 
-`femi` is designed to be consumed by an infra-hosted Metabase instance rather
-than embedding Metabase directly into the app stack.
+`femi` is designed to feed an infra-hosted Evidence analytics app rather than
+embedding analytics into the app stack itself.
 
-The integration contract is:
+The first-phase contract is:
 
-- keep Metabase in the shared infra layer
-- connect Metabase to `femi` PostgreSQL with a dedicated read-only user
+- keep Evidence in the shared infra layer
+- keep one Evidence app per product, rather than one shared multi-product Evidence app by default
+- connect the Evidence build/runtime path to `femi` PostgreSQL with a dedicated read-only user
 - query raw tables directly in the first phase using aggregate SQL
 - keep PostgreSQL private and reachable only through a host-local path
 
-See [docs/metabase.md](./docs/metabase.md) for:
+See [docs/evidence.md](./docs/evidence.md) for:
 
-- the recommended production connectivity path from infra to `femi` PostgreSQL
-- the repeatable setup script for the Metabase read-only role
+- the recommended infra-first architecture for Evidence with `femi`
+- the preferred multi-app layout for `femi`, and future products
+- the repeatable setup script for the Evidence read-only role
 - the raw tables in scope for the first dashboard iteration
-- the first KPI/questions to implement in Metabase
+- the first KPI/questions to implement in Evidence
