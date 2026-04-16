@@ -360,3 +360,22 @@ Recommended restore flow:
 1. Restore into a separate database, not the live production database.
 2. Verify that core tables such as `users`, `user_settings`, and `cycles` exist.
 3. Only then promote or copy data as part of an explicit recovery procedure.
+
+## Metabase
+
+`femi` is designed to be consumed by an infra-hosted Metabase instance rather
+than embedding Metabase directly into the app stack.
+
+The integration contract is:
+
+- keep Metabase in the shared infra layer
+- connect Metabase to `femi` PostgreSQL with a dedicated read-only user
+- query raw tables directly in the first phase using aggregate SQL
+- keep PostgreSQL private and reachable only through a host-local path
+
+See [docs/metabase.md](./docs/metabase.md) for:
+
+- the recommended production connectivity path from infra to `femi` PostgreSQL
+- the repeatable setup script for the Metabase read-only role
+- the raw tables in scope for the first dashboard iteration
+- the first KPI/questions to implement in Metabase
