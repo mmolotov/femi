@@ -3,7 +3,17 @@ import path from "node:path";
 
 async function loadDotEnv() {
   const envPath = new URL("../../.env", import.meta.url);
-  const envFile = await readFile(envPath, "utf8");
+  let envFile;
+
+  try {
+    envFile = await readFile(envPath, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return;
+    }
+
+    throw error;
+  }
 
   for (const rawLine of envFile.split(/\r?\n/u)) {
     const line = rawLine.trim();
