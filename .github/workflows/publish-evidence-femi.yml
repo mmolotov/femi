@@ -77,20 +77,20 @@ jobs:
         run: |
           remote_env="$(
             ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" -- "${DEPLOY_PATH}" <<'EOF'
-            set -euo pipefail
+              set -euo pipefail
 
-            deploy_path="$1"
+              deploy_path="$1"
 
-            cd "${deploy_path}"
+              cd "${deploy_path}"
 
-            set -a
-            . ./.env
-            set +a
+              set -a
+              . ./.env
+              set +a
 
-            printf 'postgres_port=%s\n' "${POSTGRES_PORT:-5432}"
-            printf 'postgres_db=%s\n' "${POSTGRES_DB:-femi}"
-            printf 'evidence_db_user=%s\n' "${EVIDENCE_DB_USER:-evidence_femi_readonly}"
-            EOF
+              printf 'postgres_port=%s\n' "${POSTGRES_PORT:-5432}"
+              printf 'postgres_db=%s\n' "${POSTGRES_DB:-femi}"
+              printf 'evidence_db_user=%s\n' "${EVIDENCE_DB_USER:-evidence_femi_readonly}"
+          EOF
           )"
 
           printf '%s\n' "${remote_env}" >> "${GITHUB_OUTPUT}"
@@ -137,25 +137,25 @@ jobs:
             "${EVIDENCE_REMOTE_PATH}" \
             "${remote_release}" \
             "${remote_backup}" <<'EOF'
-          set -euo pipefail
+            set -euo pipefail
 
-          target="$1"
-          release="$2"
-          backup="$3"
+            target="$1"
+            release="$2"
+            backup="$3"
 
-          if [ ! -f "${release}/index.html" ]; then
-            echo "Evidence release is missing index.html: ${release}" >&2
-            exit 1
-          fi
+            if [ ! -f "${release}/index.html" ]; then
+              echo "Evidence release is missing index.html: ${release}" >&2
+              exit 1
+            fi
 
-          rm -rf "${backup}"
+            rm -rf "${backup}"
 
-          if [ -e "${target}" ]; then
-            mv "${target}" "${backup}"
-          fi
+            if [ -e "${target}" ]; then
+              mv "${target}" "${backup}"
+            fi
 
-          mv "${release}" "${target}"
-          rm -rf "${backup}"
+            mv "${release}" "${target}"
+            rm -rf "${backup}"
           EOF
 
       - name: Verify published output exists
