@@ -1,0 +1,10 @@
+.evidence/template
+.evidence/meta
+.svelte-kit
+build
+node_modules
+sources/*/connection.yaml
+static/data
+*.options.yaml
+.env
+.DS_Store

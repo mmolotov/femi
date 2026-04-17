@@ -1,3 +1,4 @@
 packages:
+  - evidence
   - apps/*
   - packages/*
