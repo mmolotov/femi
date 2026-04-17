@@ -49,7 +49,7 @@ else
 fi
 
 psql \
-  "${psql_target[@]}" \
+  ${psql_target[@]+"${psql_target[@]}"} \
   -v ON_ERROR_STOP=1 \
   -v evidence_db_user="${EVIDENCE_DB_USER}" \
   -v evidence_db_password="${EVIDENCE_DB_PASSWORD}" \

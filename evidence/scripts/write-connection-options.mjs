@@ -1,5 +1,43 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+
+async function loadDotEnv() {
+  const envPath = new URL("../../.env", import.meta.url);
+  const envFile = await readFile(envPath, "utf8");
+
+  for (const rawLine of envFile.split(/\r?\n/u)) {
+    const line = rawLine.trim();
+
+    if (line === "" || line.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf("=");
+
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    const name = line.slice(0, separatorIndex).trim();
+
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(name) || process.env[name]) {
+      continue;
+    }
+
+    let value = line.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    process.env[name] = value;
+  }
+}
+
+await loadDotEnv();
 
 const requiredEnv = [
   "EVIDENCE_DB_HOST",
