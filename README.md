@@ -271,8 +271,10 @@ It is intentionally scoped only to `/opt/femi`:
 - updates the checkout in `/opt/femi`
 - runs `docker compose -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.prod.yml up -d --build`
 - checks `https://$APP_DOMAIN/api/health`
+- refreshes the product-specific Evidence static site after a successful app deploy by reusing the dedicated Evidence publish workflow
 
-It does not deploy or modify `/opt/infra`.
+It does not change shared ingress configuration in `/opt/infra`, but it does
+sync the generated Evidence static output into `/opt/infra/site/evidence/femi`.
 
 ### Required GitHub secrets
 
@@ -280,6 +282,7 @@ It does not deploy or modify `/opt/infra`.
 - `DEPLOY_USER` — deploy user with access to `/opt/femi` and Docker
 - `DEPLOY_SSH_KEY` — private SSH key for that user
 - `DEPLOY_KNOWN_HOSTS` — output of `ssh-keyscan` for the VPS
+- `EVIDENCE_DB_PASSWORD` — password for the dedicated read-only Evidence database user
 - optional `DEPLOY_SSH_PORT` — custom SSH port, default is `22`
 
 ### Required server-side preparation
@@ -288,7 +291,9 @@ It does not deploy or modify `/opt/infra`.
 - `/opt/femi/.env` already exists and contains production values
 - the deploy user can run `git` and `docker compose` in `/opt/femi`
 - `/opt/infra` and the shared `edge` ingress network are already up
+- `/opt/infra/site/evidence` exists and is writable by the deploy user
 - the `/opt/femi` checkout stays clean between deploys; uncommitted server-side edits will block deployment
+- `/opt/femi/.env` contains `EVIDENCE_DB_USER` and PostgreSQL settings that the Evidence workflow can read over SSH
 - backup settings in `/opt/femi/.env` are valid enough for a one-shot upload before deploy:
 - `S3_BACKUP_BUCKET`
 - `S3_BACKUP_ENDPOINT`
@@ -363,21 +368,73 @@ Recommended restore flow:
 
 ## Evidence
 
-`femi` is designed to feed an infra-hosted Evidence analytics app rather than
-embedding analytics into the app stack itself.
+`femi` now stores its product-specific Evidence source directly in this
+repository under [`evidence/`](./evidence/). The generated static output is
+published to `/opt/infra/site/evidence/femi`, where the shared infra static host
+serves it behind Cloudflare Tunnel and Cloudflare Access.
 
-The first-phase contract is:
+### Local editing
 
-- keep Evidence in the shared infra layer
-- keep one Evidence app per product, rather than one shared multi-product Evidence app by default
-- connect the Evidence build/runtime path to `femi` PostgreSQL with a dedicated read-only user
-- query raw tables directly in the first phase using aggregate SQL
-- keep PostgreSQL private and reachable only through a host-local path
+1. Export the database connection variables for the read-only Evidence user.
+2. Use `Node.js 24`.
+3. Install dependencies with `pnpm install`.
+4. Refresh source metadata with `pnpm evidence:sources`.
+5. Start the local preview with `pnpm evidence:dev`.
+6. Build the static site with `pnpm evidence:build`.
 
-See [docs/evidence.md](./docs/evidence.md) for:
+Required local environment variables:
 
-- the recommended infra-first architecture for Evidence with `femi`
-- the preferred multi-app layout for `femi`, and future products
-- the repeatable setup script for the Evidence read-only role
-- the raw tables in scope for the first dashboard iteration
-- the first KPI/questions to implement in Evidence
+- `EVIDENCE_DB_HOST`
+- `EVIDENCE_DB_PORT`
+- `EVIDENCE_DB_NAME`
+- `EVIDENCE_DB_USER`
+- `EVIDENCE_DB_PASSWORD`
+- optional `EVIDENCE_DB_SSL`
+
+### What is implemented
+
+The starter Evidence site currently ships with product metrics grouped into:
+
+- overview
+- activity and adoption
+- tracking quality
+
+It reads directly from raw product tables and currently covers:
+
+- total users
+- onboarding completion
+- reminders adoption
+- users with any tracking data
+- new users by day and by week
+- active users in 1/7/30 day windows
+- reach by tracking surface
+- daily activity by tracking type
+- top symptoms in the last 30 days
+- notification job status breakdown
+- tracking mix by user segment
+- daily check-in field completion rates
+
+### Deploy and publish
+
+Evidence publish is intentionally separate from the application stack deploy:
+
+- [`deploy-evidence-femi.yml`](./.github/workflows/deploy-evidence-femi.yml) supports manual `workflow_dispatch` and daily `schedule`
+- [`publish-evidence-femi.yml`](./.github/workflows/publish-evidence-femi.yml) is the reusable workflow that does the real build and publish work
+- the main [`deploy-femi.yml`](./.github/workflows/deploy-femi.yml) workflow calls the same reusable workflow after the app deploy succeeds
+
+The reusable publish flow:
+
+- checks out the requested ref
+- installs dependencies on the GitHub runner
+- opens an SSH tunnel to the VPS-local PostgreSQL port
+- builds the Evidence static site from the source in `evidence/`
+- uploads the result to a temporary release directory on the VPS
+- atomically swaps the release into `/opt/infra/site/evidence/femi`
+
+Expected GitHub secrets for Evidence publish:
+
+- reuses `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, and optional `DEPLOY_SSH_PORT`
+- requires `EVIDENCE_DB_PASSWORD`
+
+See [docs/evidence.md](./docs/evidence.md) for the full layout, env vars,
+workflow behavior, and the read-only role setup script.

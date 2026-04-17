@@ -1,0 +1,164 @@
+name: Publish Femi Evidence (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Git ref to publish. Defaults to the commit that triggered the caller.
+        required: false
+        type: string
+    secrets:
+      DEPLOY_HOST:
+        required: true
+      DEPLOY_USER:
+        required: true
+      DEPLOY_SSH_KEY:
+        required: true
+      DEPLOY_KNOWN_HOSTS:
+        required: true
+      DEPLOY_SSH_PORT:
+        required: false
+      EVIDENCE_DB_PASSWORD:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_PATH: /opt/femi
+      DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      EVIDENCE_DB_HOST: 127.0.0.1
+      EVIDENCE_DB_PASSWORD: ${{ secrets.EVIDENCE_DB_PASSWORD }}
+      EVIDENCE_REMOTE_PATH: /opt/infra/site/evidence/femi
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      LOCAL_EVIDENCE_DB_PORT: "55432"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate package manager
+        run: corepack install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Configure known_hosts
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Resolve remote database settings
+        id: remote-db
+        run: |
+          remote_env="$(
+            ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" -- "${DEPLOY_PATH}" <<'EOF'
+            set -euo pipefail
+
+            deploy_path="$1"
+
+            cd "${deploy_path}"
+
+            set -a
+            . ./.env
+            set +a
+
+            printf 'postgres_port=%s\n' "${POSTGRES_PORT:-5432}"
+            printf 'postgres_db=%s\n' "${POSTGRES_DB:-femi}"
+            printf 'evidence_db_user=%s\n' "${EVIDENCE_DB_USER:-evidence_femi_readonly}"
+            EOF
+          )"
+
+          printf '%s\n' "${remote_env}" >> "${GITHUB_OUTPUT}"
+
+      - name: Open SSH tunnel to postgres
+        run: |
+          ssh \
+            -p "${DEPLOY_PORT:-22}" \
+            -o ExitOnForwardFailure=yes \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=3 \
+            -f -N \
+            -L "${LOCAL_EVIDENCE_DB_PORT}:127.0.0.1:${REMOTE_POSTGRES_PORT}" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}"
+        env:
+          REMOTE_POSTGRES_PORT: ${{ steps.remote-db.outputs.postgres_port }}
+
+      - name: Build Evidence site
+        run: |
+          pnpm evidence:sources
+          pnpm evidence:build
+        env:
+          EVIDENCE_DB_NAME: ${{ steps.remote-db.outputs.postgres_db }}
+          EVIDENCE_DB_PORT: ${{ env.LOCAL_EVIDENCE_DB_PORT }}
+          EVIDENCE_DB_USER: ${{ steps.remote-db.outputs.evidence_db_user }}
+
+      - name: Publish Evidence output atomically
+        run: |
+          remote_dir="$(dirname "${EVIDENCE_REMOTE_PATH}")"
+          remote_release="${remote_dir}/.femi-release-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          remote_backup="${remote_dir}/.femi-previous"
+
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p '${remote_dir}' && rm -rf '${remote_release}' && mkdir -p '${remote_release}'"
+
+          rsync \
+            -az \
+            --delete \
+            -e "ssh -p ${DEPLOY_PORT:-22}" \
+            evidence/build/ \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${remote_release}/"
+
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" -- \
+            "${EVIDENCE_REMOTE_PATH}" \
+            "${remote_release}" \
+            "${remote_backup}" <<'EOF'
+          set -euo pipefail
+
+          target="$1"
+          release="$2"
+          backup="$3"
+
+          if [ ! -f "${release}/index.html" ]; then
+            echo "Evidence release is missing index.html: ${release}" >&2
+            exit 1
+          fi
+
+          rm -rf "${backup}"
+
+          if [ -e "${target}" ]; then
+            mv "${target}" "${backup}"
+          fi
+
+          mv "${release}" "${target}"
+          rm -rf "${backup}"
+          EOF
+
+      - name: Verify published output exists
+        run: |
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "test -f '${EVIDENCE_REMOTE_PATH}/index.html'"

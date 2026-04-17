@@ -247,3 +247,13 @@ jobs:
           chmod 700 "${deploy_script}"
           bash "${deploy_script}" "${deploy_ref}" "${deploy_path}"
           EOF
+
+  publish_evidence:
+    needs:
+      - validate
+      - deploy
+    if: ${{ needs.deploy.result == 'success' }}
+    uses: ./.github/workflows/publish-evidence-femi.yml
+    with:
+      ref: ${{ needs.validate.outputs.resolved_ref }}
+    secrets: inherit

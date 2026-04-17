@@ -1,0 +1,21 @@
+name: Deploy Femi Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to publish (leave empty to publish the commit that started this workflow)
+        required: false
+        type: string
+  schedule:
+    - cron: "30 4 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: ./.github/workflows/publish-evidence-femi.yml
+    with:
+      ref: ${{ inputs.ref != '' && inputs.ref || github.sha }}
+    secrets: inherit

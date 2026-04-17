@@ -11,6 +11,37 @@
       "ignoreDependencies": ["autoprefixer", "postcss", "tailwindcss"],
       "project": ["src/**/*.{ts,tsx}"]
     },
+    "evidence": {
+      "project": ["pages/**/*.md", "scripts/**/*.mjs", "sources/**/*.sql", "evidence.config.yaml"],
+      "ignoreDependencies": [
+        "@duckdb/duckdb-wasm",
+        "@steeze-ui/radix-icons",
+        "@steeze-ui/svelte-icon",
+        "@steeze-ui/tabler-icons",
+        "@tidyjs/tidy",
+        "@uwdata/mosaic-sql",
+        "@evidence-dev/component-utilities",
+        "@evidence-dev/core-components",
+        "@evidence-dev/postgres",
+        "@evidence-dev/preprocess",
+        "@evidence-dev/sdk",
+        "@evidence-dev/tailwind",
+        "@evidence-dev/telemetry",
+        "@evidence-dev/universal-sql",
+        "@sveltejs/adapter-static",
+        "@sveltejs/kit",
+        "apache-arrow",
+        "blueimp-md5",
+        "chroma-js",
+        "downloadjs",
+        "echarts",
+        "echarts-stat",
+        "export-to-csv",
+        "nanoid",
+        "prismjs",
+        "ssf"
+      ]
+    },
     "packages/db": {
       "project": ["src/**/*.ts"]
     },
