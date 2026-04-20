@@ -25,12 +25,9 @@ const messages = {
   theme: {
     dark: "Dark",
     description: "Theme settings",
-    indicatorDark: "Dark mode",
-    indicatorLight: "Light mode",
     light: "Light",
     system: "System",
-    title: "Theme",
-    toggleAriaLabel: "Toggle theme"
+    title: "Theme"
   }
 };
 
@@ -122,14 +119,15 @@ vi.mock("./components/OnboardingGate", () => ({
 }));
 
 describe("App shell", () => {
-  it("renders the compact brand header", async () => {
+  it("renders the primary navigation tabs", async () => {
     render(
       <MemoryRouter>
         <App />
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole("heading", { name: "FEMI" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "Today" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "History" })).toBeInTheDocument();
     expect(await screen.findByRole("link", { name: "Settings" })).toBeInTheDocument();
   });
 
