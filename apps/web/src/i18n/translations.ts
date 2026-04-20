@@ -247,10 +247,7 @@ export const baseMessages = {
     description: "Switch between paper and ink themes, or follow your system preference.",
     light: "Paper",
     dark: "Ink",
-    system: "System",
-    toggleAriaLabel: "Switch theme",
-    indicatorLight: "Paper",
-    indicatorDark: "Ink"
+    system: "System"
   }
 };
 
@@ -511,10 +508,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "Переключайтесь между светлой и тёмной темой или следуйте системным настройкам.",
       light: "Бумага",
       dark: "Чернила",
-      system: "Система",
-      toggleAriaLabel: "Сменить тему",
-      indicatorLight: "Бумага",
-      indicatorDark: "Чернила"
+      system: "Система"
     }
   },
   es: {
@@ -759,10 +753,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "Cambia entre los temas claro y oscuro, o sigue la preferencia del sistema.",
       light: "Papel",
       dark: "Tinta",
-      system: "Sistema",
-      toggleAriaLabel: "Cambiar tema",
-      indicatorLight: "Papel",
-      indicatorDark: "Tinta"
+      system: "Sistema"
     }
   },
   pt: {
@@ -1005,10 +996,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "Alterne entre os temas claro e escuro, ou siga a preferência do sistema.",
       light: "Papel",
       dark: "Tinta",
-      system: "Sistema",
-      toggleAriaLabel: "Trocar tema",
-      indicatorLight: "Papel",
-      indicatorDark: "Tinta"
+      system: "Sistema"
     }
   },
   tr: {
@@ -1247,10 +1235,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "Açık ve koyu temalar arasında geçiş yapın veya sistem tercihinizi kullanın.",
       light: "Kağıt",
       dark: "Mürekkep",
-      system: "Sistem",
-      toggleAriaLabel: "Temayı değiştir",
-      indicatorLight: "Kağıt",
-      indicatorDark: "Mürekkep"
+      system: "Sistem"
     }
   },
   uk: {
@@ -1492,10 +1477,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Перемикайтеся між світлою та темною темами або дотримуйтеся системних налаштувань.",
       light: "Папір",
       dark: "Чорнило",
-      system: "Система",
-      toggleAriaLabel: "Змінити тему",
-      indicatorLight: "Папір",
-      indicatorDark: "Чорнило"
+      system: "Система"
     }
   },
   ar: {
@@ -1730,10 +1712,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       description: "بدّل بين الوضع الفاتح والداكن، أو اتبع تفضيلات النظام.",
       light: "ورق",
       dark: "حبر",
-      system: "النظام",
-      toggleAriaLabel: "تبديل المظهر",
-      indicatorLight: "ورق",
-      indicatorDark: "حبر"
+      system: "النظام"
     }
   }
 };

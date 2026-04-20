@@ -153,6 +153,8 @@
 }
 
 html {
+  /* stylelint-disable-next-line property-no-vendor-prefix -- iOS Safari/WKWebView (used by Telegram iOS) needs the -webkit- form; autoprefixer is not configured. */
+  -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
@@ -257,88 +259,6 @@ select {
   animation-delay: 300ms;
 }
 
-/* Hero / masthead */
-.hero-card {
-  align-items: baseline;
-  border-bottom: 1px solid var(--rule);
-  display: grid;
-  gap: 0.35rem 1.5rem;
-  grid-template-columns: 1fr auto;
-  margin-bottom: 1.75rem;
-  padding: 1rem 0.25rem 1.5rem;
-  position: relative;
-}
-
-.compact-hero-card {
-  padding: 0.5rem 0.25rem 1.5rem;
-}
-
-.hero-card::before {
-  background: var(--ink-primary);
-  content: "";
-  height: 2px;
-  left: 0.25rem;
-  position: absolute;
-  top: 0.25rem;
-  width: 2.5rem;
-}
-
-.hero-card h1 {
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 11vw, 5.5rem);
-  font-variation-settings:
-    "opsz" 144,
-    "wght" 400,
-    "SOFT" 30;
-  font-weight: 400;
-  letter-spacing: -0.035em;
-  line-height: 0.85;
-  margin: 0;
-}
-
-.compact-hero-card h1 {
-  margin: 0;
-}
-
-.brand-mark {
-  display: inline-block;
-  position: relative;
-}
-
-.brand-mark::after {
-  background: var(--accent);
-  border-radius: 999px;
-  bottom: 0.55em;
-  content: "";
-  display: inline-block;
-  height: 0.42em;
-  margin-left: 0.2em;
-  width: 0.42em;
-}
-
-.hero-meta {
-  align-items: center;
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-}
-
-.hero-eyebrow {
-  color: var(--ink-tertiary);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-align: right;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.hero-eyebrow strong {
-  color: var(--ink-secondary);
-  font-weight: 500;
-}
-
 .hero-copy,
 .muted,
 .notice {
@@ -352,57 +272,6 @@ select {
   font-weight: 500;
   letter-spacing: 0.22em;
   margin: 0 0 0.75rem;
-  text-transform: uppercase;
-}
-
-/* =========================================================================
-   Theme toggle — editorial icon button
-   ========================================================================= */
-
-.theme-toggle {
-  align-items: center;
-  background: transparent;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  color: var(--ink-primary);
-  cursor: pointer;
-  display: inline-flex;
-  gap: 0.45rem;
-  height: 2.25rem;
-  padding: 0 0.85rem;
-  position: relative;
-  transition:
-    border-color var(--dur-sm) var(--ease),
-    background-color var(--dur-sm) var(--ease),
-    transform var(--dur-sm) var(--ease);
-}
-
-.theme-toggle:hover {
-  background: var(--bg-elevated);
-  border-color: var(--rule-strong);
-}
-
-.theme-toggle:active {
-  transform: scale(0.97);
-}
-
-.theme-toggle-icon {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-size: 1.05rem;
-  line-height: 1;
-  transition: transform var(--dur-md) var(--ease);
-}
-
-.theme-toggle:hover .theme-toggle-icon {
-  transform: rotate(-18deg);
-}
-
-.theme-toggle-label {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -608,23 +477,6 @@ select {
   transform: translateY(-2px);
 }
 
-.metric-card::after {
-  background: var(--accent);
-  border-radius: 999px;
-  content: "";
-  height: 4px;
-  left: 1.25rem;
-  opacity: 0;
-  position: absolute;
-  top: 1.25rem;
-  transition: opacity var(--dur-md) var(--ease);
-  width: 0.65rem;
-}
-
-.metric-card:hover::after {
-  opacity: 1;
-}
-
 .metric-label {
   color: var(--ink-tertiary);
   display: block;
@@ -770,6 +622,7 @@ select {
   border: 1px solid var(--rule);
   border-radius: 0.75rem;
   color: var(--ink-primary);
+  font-size: 1rem;
   padding: 0.8rem 0.95rem;
   transition:
     border-color var(--dur-sm) var(--ease),
@@ -1686,11 +1539,6 @@ select {
    RTL corrections
    ========================================================================= */
 
-[dir="rtl"] .hero-card::before {
-  left: auto;
-  right: 0.25rem;
-}
-
 [dir="rtl"] .panel::before {
   left: 1.5rem;
   right: auto;
@@ -1739,20 +1587,6 @@ select {
 @media (width <= 720px) {
   .app-shell {
     padding: 1rem 0.9rem 4rem;
-  }
-
-  .hero-card {
-    gap: 0.5rem;
-    grid-template-columns: 1fr;
-    padding-bottom: 1.25rem;
-  }
-
-  .hero-meta {
-    justify-content: flex-start;
-  }
-
-  .hero-eyebrow {
-    text-align: left;
   }
 
   .panel {
