@@ -82,62 +82,62 @@
 }
 
 [data-theme="dark"] {
-  /* Canvas & surface */
-  --bg-canvas: #0e0c0a;
-  --bg-elevated: #16130e;
-  --bg-sunken: #070504;
+  /* Canvas & surface — warm graphite, lifted from near-black for a softer editorial night */
+  --bg-canvas: #1f1a15;
+  --bg-elevated: #2a231c;
+  --bg-sunken: #15110d;
   --bg-contrast: #f1e8d6;
 
   /* Ink / text */
-  --ink-primary: #f1e8d6;
-  --ink-secondary: #b3a692;
-  --ink-tertiary: #756a5a;
-  --ink-quaternary: #42382b;
+  --ink-primary: #f2e8d4;
+  --ink-secondary: #c1b49e;
+  --ink-tertiary: #897d6b;
+  --ink-quaternary: #544a3a;
   --ink-inverse: #15110d;
 
   /* Rules */
-  --rule: rgb(241 232 214 / 14%);
-  --rule-soft: rgb(241 232 214 / 6%);
-  --rule-strong: rgb(241 232 214 / 28%);
+  --rule: rgb(241 232 214 / 16%);
+  --rule-soft: rgb(241 232 214 / 8%);
+  --rule-strong: rgb(241 232 214 / 30%);
 
   /* Accent */
   --accent: #eaa5b0;
   --accent-ink: #15110d;
-  --accent-soft: rgb(234 165 176 / 14%);
-  --accent-ring: rgb(234 165 176 / 40%);
+  --accent-soft: rgb(234 165 176 / 16%);
+  --accent-ring: rgb(234 165 176 / 42%);
 
-  /* Phase palette — calibrated for dark */
-  --flow: #e68b63;
-  --flow-soft: rgb(230 139 99 / 18%);
+  /* Phase palette — calibrated for lifted dark */
+  --flow: #ea9370;
+  --flow-soft: rgb(234 147 112 / 20%);
   --flow-ink: #f8d7c5;
-  --sand: #e6c382;
-  --sand-soft: rgb(230 195 130 / 14%);
+  --sand: #e8c585;
+  --sand-soft: rgb(232 197 133 / 16%);
   --sand-ink: #f6e3b9;
-  --sage: #a2c197;
-  --sage-soft: rgb(162 193 151 / 14%);
+  --sage: #abc9a1;
+  --sage-soft: rgb(171 201 161 / 16%);
   --sage-ink: #dbeacf;
-  --luteal: #c4a3b7;
-  --luteal-soft: rgb(196 163 183 / 16%);
+  --luteal: #c9a9bc;
+  --luteal-soft: rgb(201 169 188 / 18%);
   --luteal-ink: #ecd6e2;
 
   /* Feedback */
-  --danger: #e88a7a;
-  --danger-soft: rgb(232 138 122 / 16%);
-  --success: #8cbf8f;
-  --success-soft: rgb(140 191 143 / 16%);
+  --danger: #ec9484;
+  --danger-soft: rgb(236 148 132 / 18%);
+  --success: #93c495;
+  --success-soft: rgb(147 196 149 / 18%);
 
   /* Atmosphere */
   --atmosphere:
-    radial-gradient(circle at 90% -5%, rgb(234 165 176 / 12%) 0%, transparent 34rem),
-    radial-gradient(circle at 2% 8%, rgb(230 139 99 / 10%) 0%, transparent 32rem),
-    radial-gradient(circle at 50% 120%, rgb(162 193 151 / 6%) 0%, transparent 40rem),
-    linear-gradient(180deg, #14110c 0%, #0e0c0a 60%, #080604 100%);
-  --grain-opacity: 0.08;
+    radial-gradient(circle at 90% -5%, rgb(234 165 176 / 14%) 0%, transparent 34rem),
+    radial-gradient(circle at 2% 8%, rgb(234 147 112 / 12%) 0%, transparent 32rem),
+    radial-gradient(circle at 50% 120%, rgb(171 201 161 / 8%) 0%, transparent 40rem),
+    linear-gradient(180deg, #261f18 0%, #1f1a15 60%, #15110d 100%);
+  --grain-opacity: 0.07;
 
   /* Elevation */
-  --shadow-hairline: inset 0 0 0 1px rgb(241 232 214 / 6%);
-  --shadow-raised: 0 1px 0 rgb(0 0 0 / 40%), 0 24px 60px rgb(0 0 0 / 40%);
-  --shadow-float: 0 36px 80px rgb(0 0 0 / 55%);
+  --shadow-hairline: inset 0 0 0 1px rgb(241 232 214 / 7%);
+  --shadow-raised: 0 1px 0 rgb(0 0 0 / 32%), 0 24px 60px rgb(0 0 0 / 34%);
+  --shadow-float: 0 36px 80px rgb(0 0 0 / 48%);
 
   color-scheme: dark;
 }
@@ -1657,5 +1657,461 @@ select {
     font-size: 0.66rem;
     letter-spacing: 0.12em;
     padding: 0.5rem;
+  }
+}
+
+/* =========================================================================
+   Week strip — editorial single-row calendar
+   ========================================================================= */
+.week-strip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 0.9rem 0.75rem;
+}
+
+.week-strip-header {
+  align-items: center;
+  color: var(--ink-secondary);
+  display: grid;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  gap: 0.5rem;
+  grid-template-columns: auto 1fr auto auto;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.week-strip-nav,
+.week-strip-open-calendar {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.week-strip-nav:hover,
+.week-strip-open-calendar:hover {
+  border-color: var(--rule-strong);
+}
+
+.week-strip-range {
+  color: var(--ink-tertiary);
+  text-align: center;
+}
+
+.week-strip-days {
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  outline: none;
+}
+
+.week-strip-day {
+  align-items: center;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 3.5rem;
+  padding: 0.45rem 0.2rem 0.4rem;
+  position: relative;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease),
+    transform var(--dur-sm) var(--ease);
+}
+
+.week-strip-day:hover {
+  border-color: var(--rule-strong);
+  transform: translateY(-1px);
+}
+
+.week-strip-weekday {
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.week-strip-number {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.week-strip-markers {
+  display: inline-flex;
+  gap: 0.18rem;
+  min-height: 0.35rem;
+}
+
+.week-strip-marker {
+  border-radius: 999px;
+  display: inline-block;
+  height: 0.35rem;
+  width: 0.35rem;
+}
+
+.week-strip-marker.period {
+  background: var(--flow);
+}
+
+.week-strip-marker.predicted {
+  background: transparent;
+  border: 1px dashed var(--flow);
+}
+
+.week-strip-marker.ovulation {
+  background: var(--sage);
+}
+
+.week-strip-day.today {
+  border-color: var(--ink-primary);
+  box-shadow: inset 0 0 0 1px var(--ink-primary);
+}
+
+.week-strip-day.selected {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: 0 8px 18px var(--accent-ring);
+}
+
+.week-strip-day.period {
+  background: var(--flow-soft);
+  border-color: var(--flow);
+}
+
+.week-strip-day.predicted {
+  border-color: var(--flow);
+  border-style: dashed;
+}
+
+.week-strip-day.ovulation {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+}
+
+/* =========================================================================
+   Day summary
+   ========================================================================= */
+.day-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.day-summary-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.day-summary-tile {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.65rem;
+}
+
+.day-summary-label {
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.day-summary-value {
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.day-summary-value.phase-pill {
+  align-self: flex-start;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.6rem;
+}
+
+.probability-pill {
+  align-self: flex-start;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  padding: 0.25rem 0.6rem;
+}
+
+.probability-pill.low {
+  color: var(--ink-secondary);
+}
+
+.probability-pill.moderate {
+  background: var(--sand-soft);
+  border-color: var(--sand);
+  color: var(--sand-ink);
+}
+
+.probability-pill.peak {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+  color: var(--sage-ink);
+}
+
+.day-summary-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* =========================================================================
+   Calendar route — projections + bulk edit
+   ========================================================================= */
+.calendar-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.segmented {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  display: inline-flex;
+  padding: 0.2rem;
+}
+
+.segmented-item {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.9rem;
+  text-transform: uppercase;
+}
+
+.segmented-item.active {
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+}
+
+.calendar-nav {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.6rem;
+}
+
+.calendar-range {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  min-width: 8ch;
+  text-align: center;
+}
+
+.calendar-bulk {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.calendar-grid-head {
+  color: var(--ink-tertiary);
+  display: grid;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  gap: 0.35rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  letter-spacing: 0.12em;
+  margin: 0.4rem 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-cell {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.7rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.35rem 0.45rem;
+  position: relative;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease);
+}
+
+.calendar-cell:hover {
+  border-color: var(--rule-strong);
+}
+
+.calendar-cell.out-of-month {
+  color: var(--ink-quaternary);
+  opacity: 0.55;
+}
+
+.calendar-cell.today {
+  border-color: var(--ink-primary);
+  box-shadow: inset 0 0 0 1px var(--ink-primary);
+}
+
+.calendar-cell.period {
+  background: var(--flow-soft);
+  border-color: var(--flow);
+}
+
+.calendar-cell.predicted {
+  border-color: var(--flow);
+  border-style: dashed;
+}
+
+.calendar-cell.ovulation {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+}
+
+.calendar-cell.future {
+  color: var(--ink-quaternary);
+}
+
+.calendar-cell.bulk-toggled {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 6px 14px var(--accent-ring);
+}
+
+.calendar-cell:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.legend-dot.period {
+  background: var(--flow);
+}
+
+.legend-dot.ovulation {
+  background: var(--sage);
+}
+
+.year-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mini-month {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.55rem 0.55rem;
+}
+
+.mini-month:hover {
+  border-color: var(--rule-strong);
+}
+
+.mini-month-title {
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.mini-month-grid {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.mini-day {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-sunken);
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.mini-day.out-of-month {
+  opacity: 0.3;
+}
+
+.mini-day.today {
+  outline: 1.5px solid var(--ink-primary);
+}
+
+.mini-day.period {
+  background: var(--flow);
+}
+
+.mini-day.predicted {
+  background: var(--flow-soft);
+}
+
+.mini-day.ovulation {
+  background: var(--sage);
+}
+
+@media (width <= 480px) {
+  .year-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .day-summary-tile {
+    padding: 0.55rem 0.5rem;
+  }
+
+  .day-summary-value {
+    font-size: 0.92rem;
   }
 }

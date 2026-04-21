@@ -12,7 +12,9 @@ import {
   getIsoDateInTimeZone,
   isPeriodActive,
   predictNextPeriodStart,
+  resolveConceptionProbability,
   resolveCyclePhase,
+  resolveOvulationDay,
   resolvePeriodEnd
 } from "./index.js";
 
@@ -82,6 +84,46 @@ describe("cycle utilities", () => {
     expect(resolveCyclePhase(8, 28, 5)).toBe("follicular");
     expect(resolveCyclePhase(14, 28, 5)).toBe("ovulatory");
     expect(resolveCyclePhase(23, 28, 5)).toBe("luteal");
+  });
+
+  it("resolves the ovulation day as cycleLength - 14 for valid cycles", () => {
+    expect(resolveOvulationDay(28)).toBe(14);
+    expect(resolveOvulationDay(21)).toBe(7);
+    expect(resolveOvulationDay(35)).toBe(21);
+  });
+
+  it("returns null for invalid cycle lengths when resolving ovulation day", () => {
+    expect(resolveOvulationDay(0)).toBeNull();
+    expect(resolveOvulationDay(10)).toBeNull();
+    expect(resolveOvulationDay(60)).toBeNull();
+    expect(resolveOvulationDay(Number.NaN)).toBeNull();
+    expect(resolveOvulationDay(28.5)).toBeNull();
+  });
+
+  it("classifies conception probability for a typical 28-day cycle", () => {
+    expect(resolveConceptionProbability(3, 28, 5)).toBe("low");
+    expect(resolveConceptionProbability(8, 28, 5)).toBe("low");
+    expect(resolveConceptionProbability(10, 28, 5)).toBe("moderate");
+    expect(resolveConceptionProbability(13, 28, 5)).toBe("peak");
+    expect(resolveConceptionProbability(14, 28, 5)).toBe("peak");
+    expect(resolveConceptionProbability(15, 28, 5)).toBe("moderate");
+    expect(resolveConceptionProbability(20, 28, 5)).toBe("low");
+  });
+
+  it("classifies conception probability for short and long cycles", () => {
+    expect(resolveConceptionProbability(7, 21, 4)).toBe("peak");
+    expect(resolveConceptionProbability(6, 21, 4)).toBe("peak");
+    expect(resolveConceptionProbability(4, 21, 4)).toBe("low");
+    expect(resolveConceptionProbability(21, 35, 5)).toBe("peak");
+    expect(resolveConceptionProbability(17, 35, 5)).toBe("moderate");
+    expect(resolveConceptionProbability(30, 35, 5)).toBe("low");
+  });
+
+  it("returns null conception probability for invalid inputs", () => {
+    expect(resolveConceptionProbability(null, 28, 5)).toBeNull();
+    expect(resolveConceptionProbability(0, 28, 5)).toBeNull();
+    expect(resolveConceptionProbability(10, 10, 5)).toBeNull();
+    expect(resolveConceptionProbability(10, 28, 1)).toBeNull();
   });
 
   it("resolves an open period end using fallback length", () => {

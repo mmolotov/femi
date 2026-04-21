@@ -36,6 +36,16 @@ export const baseMessages = {
       settings: "Settings"
     }
   },
+  week: {
+    stripLabel: "Week",
+    previousWeek: "Previous week",
+    nextWeek: "Next week",
+    openCalendar: "Open full calendar",
+    periodMarker: "period day",
+    predictedMarker: "predicted period",
+    ovulationMarker: "ovulation",
+    todayMarker: "today"
+  },
   onboarding: {
     title: "A short setup before the first entry",
     description:
@@ -85,6 +95,25 @@ export const baseMessages = {
     markPeriodDayPending: "Saving period day…",
     markPeriodDaySuccess: "Period day saved.",
     markPeriodDayError: "Could not save the period day.",
+    removePeriodDay: "Remove period day",
+    removePeriodDayPending: "Removing period day…",
+    removePeriodDaySuccess: "Period day removed.",
+    removePeriodDayError: "Could not remove the period day.",
+    summaryTitle: "Day summary",
+    nextLabel: "Next",
+    nextCountdownPeriod: "{n}d to period",
+    nextCountdownOvulation: "{n}d to ovulation",
+    nextCountdownToday: "Today",
+    nextCountdownTodayPeriod: "Today period",
+    nextCountdownTodayOvulation: "Today ovulation",
+    nextCountdownFallback: "No prediction yet",
+    conceptionProbabilityLabel: "Conception probability",
+    conceptionProbabilityValues: {
+      low: "low",
+      moderate: "moderate",
+      peak: "peak"
+    },
+    conceptionProbabilityFallback: "unknown",
     forecastLabel: "Upcoming forecast",
     saveStateIdle: "Save check-in",
     saveStatePending: "Saving check-in…",
@@ -154,7 +183,21 @@ export const baseMessages = {
     selectedDatePredicted: "This day is still part of the forecast, so it stays read-only for now.",
     futureDateReadOnly: "Future dates are shown as forecast only.",
     tapToMark: "Select a past or current date, then mark it below.",
-    tagsSuffix: "symptoms"
+    tagsSuffix: "symptoms",
+    projectionMonth: "Month",
+    projectionYear: "Year",
+    previousYear: "Previous year",
+    nextYear: "Next year",
+    legendOvulation: "Ovulation",
+    bulkEditEnter: "Edit period days",
+    bulkEditSave: "Save changes",
+    bulkEditSavePending: "Saving changes…",
+    bulkEditCancel: "Cancel",
+    bulkEditHint: "Tap past or today to toggle as a period day.",
+    bulkEditSaveSuccess: "Period days updated.",
+    bulkEditSaveError: "Some changes could not be saved.",
+    bulkEditFutureLocked: "Future dates stay read-only.",
+    backToToday: "Back to Today"
   },
   history: {
     title: "History",
@@ -279,6 +322,16 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         settings: "Настройки"
       }
     },
+    week: {
+      stripLabel: "Неделя",
+      previousWeek: "Предыдущая неделя",
+      nextWeek: "Следующая неделя",
+      openCalendar: "Открыть полный календарь",
+      periodMarker: "день менструации",
+      predictedMarker: "прогноз менструации",
+      ovulationMarker: "овуляция",
+      todayMarker: "сегодня"
+    },
     onboarding: {
       title: "Короткая настройка перед первой записью",
       description:
@@ -329,6 +382,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       markPeriodDayPending: "Сохраняем день менструации…",
       markPeriodDaySuccess: "День менструации сохранен.",
       markPeriodDayError: "Не удалось сохранить день менструации.",
+      removePeriodDay: "Убрать день менструации",
+      removePeriodDayPending: "Удаляем день менструации…",
+      removePeriodDaySuccess: "День менструации удалён.",
+      removePeriodDayError: "Не удалось удалить день менструации.",
+      summaryTitle: "Сводка дня",
+      nextLabel: "Ближайшее",
+      nextCountdownPeriod: "через {n} дн. — менструация",
+      nextCountdownOvulation: "через {n} дн. — овуляция",
+      nextCountdownToday: "Сегодня",
+      nextCountdownTodayPeriod: "Сегодня менструация",
+      nextCountdownTodayOvulation: "Сегодня овуляция",
+      nextCountdownFallback: "Прогноза пока нет",
+      conceptionProbabilityLabel: "Вероятность зачатия",
+      conceptionProbabilityValues: {
+        low: "низкая",
+        moderate: "умеренная",
+        peak: "пиковая"
+      },
+      conceptionProbabilityFallback: "неизвестна",
       forecastLabel: "Ближайший прогноз",
       periodActionsTitle: "Действия по менструации",
       periodActionsDescription:
@@ -414,7 +486,21 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removeError: "Не удалось удалить день менструации.",
       startSuccess: "Начало менструации сохранено.",
       endSuccess: "Конец менструации сохранен.",
-      tagsSuffix: "симптомы"
+      tagsSuffix: "симптомы",
+      projectionMonth: "Месяц",
+      projectionYear: "Год",
+      previousYear: "Предыдущий год",
+      nextYear: "Следующий год",
+      legendOvulation: "Овуляция",
+      bulkEditEnter: "Изменить дни менструации",
+      bulkEditSave: "Сохранить изменения",
+      bulkEditSavePending: "Сохраняем изменения…",
+      bulkEditCancel: "Отменить",
+      bulkEditHint: "Нажмите на прошлый день или сегодня, чтобы переключить день менструации.",
+      bulkEditSaveSuccess: "Дни менструации обновлены.",
+      bulkEditSaveError: "Не удалось сохранить все изменения.",
+      bulkEditFutureLocked: "Будущие даты остаются только для чтения.",
+      backToToday: "К сегодняшнему дню"
     },
     history: {
       title: "История",
