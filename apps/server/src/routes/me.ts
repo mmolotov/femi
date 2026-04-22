@@ -104,12 +104,10 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
   app.delete(
     "/api/me",
     {
-      config: {
-        rateLimit: {
-          max: 10,
-          timeWindow: API_RATE_LIMIT_WINDOW_MS
-        }
-      }
+      preHandler: app.rateLimit({
+        max: 10,
+        timeWindow: API_RATE_LIMIT_WINDOW_MS
+      })
     },
     async (request, reply) => {
       try {
