@@ -2,9 +2,15 @@
 title: Femi Product Overview
 ---
 
+<script>
+  import ReportGeneratedAt from "$lib/ReportGeneratedAt.svelte";
+</script>
+
 This Evidence site reads directly from raw `femi` product tables with a dedicated
 read-only PostgreSQL user. The goal of the first iteration is to answer core
 product questions without inventing an analytics warehouse first.
+
+<ReportGeneratedAt />
 
 ```sql overview_totals
   select *

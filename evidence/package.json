@@ -8,14 +8,15 @@
     "pnpm": ">=10"
   },
   "scripts": {
+    "prepare:build-metadata": "node ./scripts/write-build-metadata.mjs",
     "prepare:connection": "node ./scripts/write-connection-options.mjs",
-    "build": "pnpm prepare:connection && evidence build",
-    "build:strict": "pnpm prepare:connection && evidence build:strict",
-    "dev": "pnpm prepare:connection && evidence dev --open /",
+    "build": "pnpm prepare:connection && pnpm prepare:build-metadata && evidence build",
+    "build:strict": "pnpm prepare:connection && pnpm prepare:build-metadata && evidence build:strict",
+    "dev": "pnpm prepare:connection && pnpm prepare:build-metadata && evidence dev --open /",
     "preview": "evidence preview",
     "sources": "pnpm prepare:connection && evidence sources",
     "sources:strict": "pnpm prepare:connection && evidence sources --strict",
-    "test": "pnpm prepare:connection && evidence build"
+    "test": "pnpm prepare:connection && pnpm prepare:build-metadata && evidence build"
   },
   "dependencies": {
     "@duckdb/duckdb-wasm": "^1.29.0",
