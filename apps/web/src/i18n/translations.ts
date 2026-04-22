@@ -25,6 +25,9 @@ export const baseMessages = {
     syncErrorTitle: "We could not load your data",
     syncErrorBody:
       "Telegram auth completed, but the app could not load profile or cycle data from the backend.",
+    signedOutTitle: "Account deleted",
+    signedOutBody:
+      "Your account and related data were removed. Reopen the app from Telegram to start again.",
     telegramAuthFailed: "Telegram authentication failed.",
     telegramAuthInvalidResponse: "Telegram authentication returned an invalid response.",
     dataLoadError: "Failed to load application data.",
@@ -258,6 +261,18 @@ export const baseMessages = {
     savePending: "Saving settings…",
     saveSuccess: "Settings saved.",
     saveError: "Settings could not be saved.",
+    accountTitle: "Account",
+    accountDescription: "Irreversible account actions live here.",
+    accountWarning:
+      "Deleting the account removes your profile, cycle history, check-ins, and all related data.",
+    deleteAccountIdle: "Delete account and data",
+    deletePending: "Deleting account…",
+    deleteError: "The account could not be deleted.",
+    deleteDialogTitle: "Delete account and all data?",
+    deleteDialogDescription:
+      "This action is permanent. Your account, cycle history, settings, check-ins, and all related data will be deleted and cannot be restored.",
+    deleteDialogCancel: "Cancel",
+    deleteDialogConfirm: "Delete permanently",
     productType: "Product type",
     productTypeValue: "Personal tracking app, not a medical application.",
     coreModel: "Core model",
@@ -274,6 +289,7 @@ export const baseMessages = {
     sessionAuthenticating: "authorizing with Telegram",
     sessionAuthenticated: "authenticated",
     sessionPreview: "preview mode, no Telegram init data",
+    sessionSignedOut: "signed out",
     sessionError: "Telegram auth failed",
     telegramAccount: "Telegram account",
     telegramAccountFallback: "account not available yet",
@@ -315,6 +331,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       syncErrorTitle: "Не удалось загрузить данные",
       syncErrorBody:
         "Аутентификация через Telegram прошла, но приложение не смогло загрузить профиль или данные цикла с backend.",
+      signedOutTitle: "Аккаунт удалён",
+      signedOutBody:
+        "Аккаунт и связанные данные удалены. Чтобы начать заново, снова откройте приложение из Telegram.",
       telegramAuthFailed: "Не удалось пройти аутентификацию через Telegram.",
       telegramAuthInvalidResponse: "Telegram вернул некорректный ответ аутентификации.",
       dataLoadError: "Не удалось загрузить данные приложения.",
@@ -565,6 +584,18 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Сохраняем настройки…",
       saveSuccess: "Настройки сохранены.",
       saveError: "Не удалось сохранить настройки.",
+      accountTitle: "Аккаунт",
+      accountDescription: "Здесь находятся необратимые действия с аккаунтом.",
+      accountWarning:
+        "Удаление аккаунта удалит профиль, историю цикла, чек-ины и все связанные данные.",
+      deleteAccountIdle: "Удалить аккаунт и данные",
+      deletePending: "Удаляем аккаунт…",
+      deleteError: "Не удалось удалить аккаунт.",
+      deleteDialogTitle: "Удалить аккаунт и все данные?",
+      deleteDialogDescription:
+        "Это действие необратимо. Аккаунт, история цикла, настройки, чек-ины и все связанные данные будут удалены без возможности восстановления.",
+      deleteDialogCancel: "Отмена",
+      deleteDialogConfirm: "Удалить навсегда",
       productType: "Тип продукта",
       productTypeValue: "Приложение для личного трекинга, а не медицинское приложение.",
       coreModel: "Базовая модель",
@@ -582,6 +613,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       sessionAuthenticating: "авторизация через Telegram",
       sessionAuthenticated: "аутентификация выполнена",
       sessionPreview: "режим превью, без Telegram init data",
+      sessionSignedOut: "выход из аккаунта выполнен",
       sessionError: "ошибка Telegram auth",
       telegramAccount: "Аккаунт Telegram",
       telegramAccountFallback: "аккаунт пока недоступен",

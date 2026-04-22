@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 
 import { AppDataProvider, useAppData } from "./data/AppDataProvider";
 import { I18nProvider, useI18n } from "./i18n/I18nProvider";
@@ -48,6 +48,21 @@ function AppShell() {
     { to: "/history", label: messages.app.tabs.history },
     { to: "/settings", label: messages.app.tabs.settings }
   ];
+
+  if (session.status === "signed_out" && location.pathname !== "/") {
+    return <Navigate replace to="/" />;
+  }
+
+  if (session.status === "signed_out") {
+    return (
+      <div className="app-shell">
+        <section className="status-banner muted-banner signed-out-banner">
+          <strong>{messages.app.signedOutTitle}</strong>
+          <span>{messages.app.signedOutBody}</span>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">

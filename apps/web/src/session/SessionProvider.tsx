@@ -1,4 +1,5 @@
 import {
+  useCallback,
   createContext,
   type PropsWithChildren,
   useContext,
@@ -20,14 +21,18 @@ type SessionUser = {
   username: string | null;
 };
 
-type SessionStatus = "authenticating" | "authenticated" | "error" | "preview";
+type SessionStatus = "authenticating" | "authenticated" | "error" | "preview" | "signed_out";
 
-type SessionContextValue = {
+type SessionState = {
   environment: TelegramEnvironment;
   error: string | null;
   initDataRaw: string | null;
   status: SessionStatus;
   user: SessionUser | null;
+};
+
+type SessionContextValue = SessionState & {
+  signOut(): void;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -55,7 +60,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     invalidResponse: messages.app.telegramAuthInvalidResponse,
     telegramAuthFailed: messages.app.telegramAuthFailed
   });
-  const [state, setState] = useState<SessionContextValue>({
+  const [state, setState] = useState<SessionState>({
     environment: "browser",
     error: null,
     initDataRaw: null,
@@ -67,6 +72,16 @@ export function SessionProvider({ children }: PropsWithChildren) {
     invalidResponse: messages.app.telegramAuthInvalidResponse,
     telegramAuthFailed: messages.app.telegramAuthFailed
   };
+
+  const signOut = useCallback(() => {
+    setState((current) => ({
+      environment: current.environment,
+      error: null,
+      initDataRaw: null,
+      status: "signed_out",
+      user: null
+    }));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -156,7 +171,9 @@ export function SessionProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  return <SessionContext.Provider value={state}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={{ ...state, signOut }}>{children}</SessionContext.Provider>
+  );
 }
 
 export function useSession(): SessionContextValue {

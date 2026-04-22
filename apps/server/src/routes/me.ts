@@ -1,5 +1,5 @@
 import type { Database } from "@femi/db";
-import { cycles, periodLogs, userSettings } from "@femi/db";
+import { cycles, periodLogs, userSettings, users } from "@femi/db";
 import {
   getIsoDateInTimeZone,
   meResponseSchema,
@@ -11,6 +11,7 @@ import type { FastifyInstance } from "fastify";
 
 import { AuthContextError, resolveAuthenticatedUser } from "../lib/auth-context.js";
 import type { AppEnv } from "../lib/env.js";
+import { API_RATE_LIMIT_WINDOW_MS } from "../lib/rate-limit.js";
 
 type MeRouteDeps = {
   db: Database;
@@ -99,6 +100,41 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
       throw error;
     }
   });
+
+  app.delete(
+    "/api/me",
+    {
+      preHandler: app.rateLimit({
+        max: 10,
+        timeWindow: API_RATE_LIMIT_WINDOW_MS
+      })
+    },
+    async (request, reply) => {
+      try {
+        const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+        const [deletedUser] = await deps.db
+          .delete(users)
+          .where(eq(users.id, authenticatedUser.user.id))
+          .returning({ id: users.id });
+
+        if (!deletedUser) {
+          return reply.code(404).send({
+            error: "User was not found."
+          });
+        }
+
+        return reply.code(204).send();
+      } catch (error) {
+        if (error instanceof AuthContextError) {
+          return reply.code(error.statusCode).send({
+            error: error.message
+          });
+        }
+
+        throw error;
+      }
+    }
+  );
 
   app.patch("/api/me/settings", async (request, reply) => {
     const parsedBody = updateUserSettingsRequestSchema.safeParse(request.body);

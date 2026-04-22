@@ -59,11 +59,21 @@ function AppDataProbe() {
       >
         Complete onboarding
       </button>
+      <button
+        onClick={() => {
+          void appData.deleteAccount();
+        }}
+        type="button"
+      >
+        Delete account
+      </button>
     </>
   );
 }
 
 describe("AppDataProvider", () => {
+  const signOut = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState({}, "", "/");
@@ -71,6 +81,7 @@ describe("AppDataProvider", () => {
       environment: "telegram",
       error: null,
       initDataRaw: "init-data",
+      signOut,
       status: "authenticated",
       user: {
         firstName: "Ada",
@@ -91,6 +102,7 @@ describe("AppDataProvider", () => {
           timezone: "UTC"
         }
       }),
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
       getCycleSummary: vi.fn().mockResolvedValue({
         summary: {
           activePeriod: false,
@@ -124,6 +136,7 @@ describe("AppDataProvider", () => {
       })
     });
     createDemoApiClientMock.mockReturnValue({
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
       getCycleSummary: vi.fn().mockResolvedValue({
         summary: {
           activePeriod: false,
@@ -198,6 +211,7 @@ describe("AppDataProvider", () => {
       environment: "telegram",
       error: "Telegram auth failed",
       initDataRaw: null,
+      signOut,
       status: "error",
       user: null
     });
@@ -243,6 +257,7 @@ describe("AppDataProvider", () => {
       environment: "browser",
       error: null,
       initDataRaw: null,
+      signOut,
       status: "preview",
       user: null
     });
@@ -268,10 +283,12 @@ describe("AppDataProvider", () => {
       environment: "browser",
       error: null,
       initDataRaw: null,
+      signOut,
       status: "preview",
       user: null
     });
     createDemoApiClientMock.mockReturnValue({
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
       getCycleSummary: vi.fn().mockRejectedValue(new Error("Demo data failed to load.")),
       getMe: vi.fn().mockResolvedValue({
         settings: {
@@ -303,6 +320,135 @@ describe("AppDataProvider", () => {
     await waitFor(() => {
       expect(screen.getByText("error")).toBeInTheDocument();
       expect(screen.getByText("Demo data failed to load.")).toBeInTheDocument();
+    });
+  });
+
+  it("signs out after successful account deletion", async () => {
+    render(
+      <I18nProvider>
+        <AppDataProvider>
+          <AppDataProbe />
+        </AppDataProvider>
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("ready")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /delete account/i }));
+
+    await waitFor(() => {
+      expect(signOut).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("signed_out")).toBeInTheDocument();
+    });
+  });
+
+  it("keeps preview mode usable after deleting demo data", async () => {
+    const previewDeleteAccount = vi.fn().mockResolvedValue(undefined);
+    const previewGetMe = vi
+      .fn()
+      .mockResolvedValueOnce({
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: false,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        },
+        user: {
+          firstName: "Demo",
+          id: "demo-user",
+          languageCode: "en",
+          lastName: null,
+          telegramUserId: "0",
+          username: "demo_user"
+        }
+      })
+      .mockResolvedValueOnce({
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: false,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        },
+        user: {
+          firstName: "Demo",
+          id: "demo-user",
+          languageCode: "en",
+          lastName: null,
+          telegramUserId: "0",
+          username: "demo_user"
+        }
+      });
+    const previewGetCycleSummary = vi
+      .fn()
+      .mockResolvedValueOnce({
+        summary: {
+          activePeriod: false,
+          averageCycleLengthDays: 28,
+          averagePeriodLengthDays: 5,
+          currentCycleDay: null,
+          currentPhase: null,
+          forecast: [],
+          latestPeriodStart: "2026-03-01",
+          onboardingCompleted: true,
+          predictedNextPeriodStart: null,
+          today: "2026-03-10"
+        }
+      })
+      .mockResolvedValueOnce({
+        summary: {
+          activePeriod: false,
+          averageCycleLengthDays: 28,
+          averagePeriodLengthDays: 5,
+          currentCycleDay: null,
+          currentPhase: null,
+          forecast: [],
+          latestPeriodStart: null,
+          onboardingCompleted: false,
+          predictedNextPeriodStart: null,
+          today: "2026-03-10"
+        }
+      });
+
+    useSessionMock.mockReturnValue({
+      environment: "browser",
+      error: null,
+      initDataRaw: null,
+      signOut,
+      status: "preview",
+      user: null
+    });
+    createDemoApiClientMock.mockReturnValue({
+      deleteAccount: previewDeleteAccount,
+      getCycleSummary: previewGetCycleSummary,
+      getMe: previewGetMe
+    });
+
+    render(
+      <I18nProvider>
+        <AppDataProvider>
+          <AppDataProbe />
+        </AppDataProvider>
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("ready")).toBeInTheDocument();
+      expect(screen.getByText("pending")).toBeInTheDocument();
+      expect(screen.getByText("2026-03-01")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /delete account/i }));
+
+    await waitFor(() => {
+      expect(previewDeleteAccount).toHaveBeenCalledTimes(1);
+      expect(signOut).not.toHaveBeenCalled();
+      expect(screen.getByText("ready")).toBeInTheDocument();
+      expect(screen.getByText("pending")).toBeInTheDocument();
+      expect(screen.getByText("no-period-start")).toBeInTheDocument();
     });
   });
 

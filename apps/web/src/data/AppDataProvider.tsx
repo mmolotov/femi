@@ -25,11 +25,12 @@ import { useI18n } from "../i18n/I18nProvider";
 import { createApiClient, type ApiClient } from "../lib/api";
 import { useSession } from "../session/SessionProvider";
 
-type AppDataStatus = "error" | "loading" | "preview" | "ready";
+type AppDataStatus = "error" | "loading" | "preview" | "ready" | "signed_out";
 
 type AppDataContextValue = {
   api: ApiClient | null;
   completeOnboarding(input: OnboardingSetupRequest): Promise<void>;
+  deleteAccount(): Promise<void>;
   error: string | null;
   me: MeResponse | null;
   refresh(): Promise<void>;
@@ -93,7 +94,12 @@ export function AppDataProvider({ children }: PropsWithChildren) {
   }>({
     error: null,
     me: null,
-    status: session.status === "preview" ? "preview" : "loading",
+    status:
+      session.status === "preview"
+        ? "preview"
+        : session.status === "signed_out"
+          ? "signed_out"
+          : "loading",
     summary: null
   });
 
@@ -152,6 +158,19 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         return;
       }
 
+      if (session.status === "signed_out") {
+        if (active) {
+          setState({
+            error: null,
+            me: null,
+            status: "signed_out",
+            summary: null
+          });
+        }
+
+        return;
+      }
+
       if (session.status === "preview" || api === null) {
         if (active) {
           setState({
@@ -164,7 +183,6 @@ export function AppDataProvider({ children }: PropsWithChildren) {
 
         return;
       }
-
       if (session.status !== "authenticated") {
         if (active) {
           setState((current) => ({
@@ -271,6 +289,53 @@ export function AppDataProvider({ children }: PropsWithChildren) {
         setState({
           ...previousState,
           error: error instanceof Error ? error.message : messages.onboarding.saveError,
+          status: previousState.status === "preview" ? "preview" : "ready"
+        });
+        throw error;
+      }
+    },
+    async deleteAccount() {
+      if (!api) {
+        throw new Error("API client is not available.");
+      }
+
+      const previousState = state;
+
+      setState((current) => ({
+        ...current,
+        error: null,
+        status: "loading"
+      }));
+
+      try {
+        await api.deleteAccount();
+
+        if (demoMode) {
+          const [meResponse, summaryResponse] = await Promise.all([
+            api.getMe(),
+            api.getCycleSummary()
+          ]);
+
+          setState({
+            error: null,
+            me: meResponse,
+            status: "ready",
+            summary: summaryResponse.summary
+          });
+          return;
+        }
+
+        session.signOut();
+        setState({
+          error: null,
+          me: null,
+          status: "signed_out",
+          summary: null
+        });
+      } catch (error) {
+        setState({
+          ...previousState,
+          error: error instanceof Error ? error.message : messages.settings.deleteError,
           status: previousState.status === "preview" ? "preview" : "ready"
         });
         throw error;
