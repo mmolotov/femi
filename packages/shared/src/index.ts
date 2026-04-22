@@ -91,6 +91,7 @@ export const painLevelSchema = z
 
 export const flowIntensityValues = ["spotting", "light", "medium", "heavy"] as const;
 export const dischargeValues = ["none", "dry", "sticky", "creamy", "watery"] as const;
+export const conceptionProbabilityValues = ["low", "moderate", "peak"] as const;
 export const symptomKeys = [
   "cramps",
   "headache",
@@ -106,6 +107,7 @@ export const flowIntensitySchema = z.enum(flowIntensityValues);
 export const dischargeSchema = z.enum(dischargeValues);
 export const symptomKeySchema = z.enum(symptomKeys);
 export const cyclePhaseSchema = z.enum(cyclePhaseValues);
+export const conceptionProbabilitySchema = z.enum(conceptionProbabilityValues);
 
 const symptomKeysArraySchema = z
   .array(symptomKeySchema)
@@ -286,7 +288,8 @@ export const historyDaySchema = z.object({
 });
 
 export const historyQuerySchema = z.object({
-  limit: z.number().int().min(1).max(12).optional()
+  before: isoDateSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(12).optional()
 });
 
 export const historyPhaseSchema = z.object({
@@ -312,7 +315,9 @@ export const historyCycleSchema = z.object({
 });
 
 export const historyResponseSchema = z.object({
-  cycles: z.array(historyCycleSchema)
+  cycles: z.array(historyCycleSchema),
+  hasMore: z.boolean(),
+  nextBefore: isoDateSchema.nullable()
 });
 
 function parseIsoDateValue(value: string): Date {
@@ -456,6 +461,56 @@ export function resolveCyclePhase(
   }
 
   return "luteal";
+}
+
+export function resolveOvulationDay(cycleLengthDays: number): number | null {
+  if (
+    !Number.isInteger(cycleLengthDays) ||
+    cycleLengthDays < cycleLengthRange.min ||
+    cycleLengthDays > cycleLengthRange.max
+  ) {
+    return null;
+  }
+
+  return cycleLengthDays - 14;
+}
+
+export function resolveConceptionProbability(
+  cycleDay: number | null,
+  cycleLengthDays: number,
+  periodLengthDays: number
+): ConceptionProbability | null {
+  if (cycleDay === null || !Number.isInteger(cycleDay) || cycleDay < 1) {
+    return null;
+  }
+
+  const ovulationDay = resolveOvulationDay(cycleLengthDays);
+
+  if (ovulationDay === null) {
+    return null;
+  }
+
+  if (
+    !Number.isInteger(periodLengthDays) ||
+    periodLengthDays < periodLengthRange.min ||
+    periodLengthDays > periodLengthRange.max
+  ) {
+    return null;
+  }
+
+  if (cycleDay <= periodLengthDays) {
+    return "low";
+  }
+
+  if (cycleDay === ovulationDay || cycleDay === ovulationDay - 1) {
+    return "peak";
+  }
+
+  if (cycleDay >= ovulationDay - 4 && cycleDay <= ovulationDay + 1) {
+    return "moderate";
+  }
+
+  return "low";
 }
 
 export function buildPeriodForecast({
@@ -672,6 +727,7 @@ export function buildCalendarMonthDays({
 
 export type CalendarDay = z.infer<typeof calendarDaySchema>;
 export type CalendarResponse = z.infer<typeof calendarResponseSchema>;
+export type ConceptionProbability = z.infer<typeof conceptionProbabilitySchema>;
 export type CyclePhase = z.infer<typeof cyclePhaseSchema>;
 export type CycleSummary = z.infer<typeof cycleSummarySchema>;
 export type CycleSummaryResponse = z.infer<typeof cycleSummaryResponseSchema>;

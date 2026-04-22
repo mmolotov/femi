@@ -3,6 +3,7 @@
 .svelte-kit
 build
 node_modules
+components/generated
 sources/*/connection.yaml
 static/data
 *.options.yaml

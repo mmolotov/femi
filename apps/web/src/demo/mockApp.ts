@@ -17,6 +17,7 @@ import {
   type DailyCheckinResponse,
   type FlowIntensity,
   type HistoryDay,
+  type HistoryCycle,
   type HistoryResponse,
   type MeResponse,
   type OnboardingSetupRequest,
@@ -56,6 +57,72 @@ const flowIntensityLevel: Record<FlowIntensity, number> = {
 
 function getToday(): string {
   return getIsoDateInTimeZone(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+}
+
+function subtractMonthsFromIsoDate(date: string, months: number): string {
+  const [year, month, day] = date.split("-").map(Number);
+  const absoluteMonthIndex = year * 12 + (month - 1) - months;
+  const targetYear = Math.floor(absoluteMonthIndex / 12);
+  const targetMonthIndex = ((absoluteMonthIndex % 12) + 12) % 12;
+  const lastDayOfTargetMonth = new Date(Date.UTC(targetYear, targetMonthIndex + 1, 0)).getUTCDate();
+  const targetDay = Math.min(day, lastDayOfTargetMonth);
+
+  return `${targetYear}-${String(targetMonthIndex + 1).padStart(2, "0")}-${String(targetDay).padStart(2, "0")}`;
+}
+
+function paginateHistoryCycles(
+  cycles: HistoryCycle[],
+  today: string,
+  before?: string
+): {
+  cycles: HistoryCycle[];
+  hasMore: boolean;
+  nextBefore: string | null;
+} {
+  if (cycles.length === 0) {
+    return {
+      cycles: [],
+      hasMore: false,
+      nextBefore: null
+    };
+  }
+
+  const startIndex = before ? cycles.findIndex((cycle) => cycle.startedOn < before) : 0;
+
+  if (startIndex === -1) {
+    return {
+      cycles: [],
+      hasMore: false,
+      nextBefore: null
+    };
+  }
+
+  const anchorDate = before ? addDaysToIsoDate(before, -1) : today;
+  const cutoffDate = subtractMonthsFromIsoDate(anchorDate, 6);
+  const pageCycles: HistoryCycle[] = [];
+  let nextIndex = startIndex;
+
+  for (; nextIndex < cycles.length; nextIndex += 1) {
+    const cycle = cycles[nextIndex];
+    const cycleVisibleUntil = cycle.endedOn ?? today;
+
+    if (pageCycles.length > 0 && cycleVisibleUntil < cutoffDate) {
+      break;
+    }
+
+    pageCycles.push(cycle);
+  }
+
+  if (pageCycles.length === 0) {
+    pageCycles.push(cycles[startIndex]);
+    nextIndex = startIndex + 1;
+  }
+
+  return {
+    cycles: pageCycles,
+    hasMore: nextIndex < cycles.length,
+    nextBefore: nextIndex < cycles.length ? (pageCycles.at(-1)?.startedOn ?? null) : null
+  };
 }
 
 function buildLoggedPeriodDates(
@@ -421,70 +488,66 @@ function createHistoryDay(date: string, phase: CyclePhase): HistoryDay {
   };
 }
 
-function getHistory(limit = 6): HistoryResponse {
+function getHistory(input?: { before?: string }): HistoryResponse {
   const today = getToday();
   const cyclesAscending = [...demoState.cycles].sort((left, right) =>
     left.startedOn < right.startedOn ? -1 : left.startedOn > right.startedOn ? 1 : 0
   );
-  const recentCycles = cyclesAscending.slice(-limit);
+  const historyCycles = cyclesAscending
+    .map((cycle, index) => {
+      const nextCycle = cyclesAscending[index + 1] ?? null;
+      const nextCycleStart = nextCycle?.startedOn ?? null;
+      const cycleLengthDays = nextCycleStart
+        ? differenceInDays(cycle.startedOn, nextCycleStart)
+        : differenceInDays(cycle.startedOn, today) + 1;
+      const periodEnd = inferCyclePeriodEnd(cycle, nextCycleStart);
+      const periodLengthDays = differenceInDays(cycle.startedOn, periodEnd) + 1;
+      const phases = buildPhaseRanges(cycle.startedOn, cycleLengthDays, periodLengthDays).map(
+        (phaseRange) => {
+          const days = getDateRange(phaseRange.startDate, phaseRange.endDate).map((date) =>
+            createHistoryDay(date, phaseRange.phase)
+          );
+          const flowLevels = days
+            .map((day) => day.period?.flowIntensity)
+            .filter((value): value is FlowIntensity => value !== null && value !== undefined)
+            .map((value) => flowIntensityLevel[value]);
+          const painLevels = days
+            .map((day) => day.checkin?.painLevel)
+            .filter((value): value is number => value !== null && value !== undefined);
+          const moodValues = days
+            .map((day) => day.checkin?.mood)
+            .filter((value): value is number => value !== null && value !== undefined);
+          const energyValues = days
+            .map((day) => day.checkin?.energy)
+            .filter((value): value is number => value !== null && value !== undefined);
 
-  return {
-    cycles: recentCycles
-      .map((cycle, index) => {
-        const nextCycle = recentCycles[index + 1] ?? null;
-        const nextCycleStart = nextCycle?.startedOn ?? null;
-        const cycleLengthDays = nextCycleStart
-          ? differenceInDays(cycle.startedOn, nextCycleStart)
-          : differenceInDays(cycle.startedOn, today) + 1;
-        const periodEnd = inferCyclePeriodEnd(cycle, nextCycleStart);
-        const periodLengthDays = differenceInDays(cycle.startedOn, periodEnd) + 1;
-        const phases = buildPhaseRanges(cycle.startedOn, cycleLengthDays, periodLengthDays).map(
-          (phaseRange) => {
-            const days = getDateRange(phaseRange.startDate, phaseRange.endDate).map((date) =>
-              createHistoryDay(date, phaseRange.phase)
-            );
-            const flowLevels = days
-              .map((day) => day.period?.flowIntensity)
-              .filter((value): value is FlowIntensity => value !== null && value !== undefined)
-              .map((value) => flowIntensityLevel[value]);
-            const painLevels = days
-              .map((day) => day.checkin?.painLevel)
-              .filter((value): value is number => value !== null && value !== undefined);
-            const moodValues = days
-              .map((day) => day.checkin?.mood)
-              .filter((value): value is number => value !== null && value !== undefined);
-            const energyValues = days
-              .map((day) => day.checkin?.energy)
-              .filter((value): value is number => value !== null && value !== undefined);
+          return {
+            averageEnergy: averageNullable(energyValues),
+            averageFlowIntensityLevel: averageNullable(flowLevels),
+            averageMood: averageNullable(moodValues),
+            averagePainLevel: averageNullable(painLevels),
+            commonSymptoms: getCommonSymptoms(days),
+            days,
+            endDate: phaseRange.endDate,
+            phase: phaseRange.phase,
+            startDate: phaseRange.startDate,
+            totalDays: days.length
+          };
+        }
+      );
 
-            return {
-              averageEnergy: averageNullable(energyValues),
-              averageFlowIntensityLevel: averageNullable(flowLevels),
-              averageMood: averageNullable(moodValues),
-              averagePainLevel: averageNullable(painLevels),
-              commonSymptoms: getCommonSymptoms(days),
-              days,
-              endDate: phaseRange.endDate,
-              phase: phaseRange.phase,
-              startDate: phaseRange.startDate,
-              totalDays: days.length
-            };
-          }
-        );
+      return {
+        cycleId: `${cycle.startedOn}-${index}`,
+        cycleLengthDays: nextCycleStart ? differenceInDays(cycle.startedOn, nextCycleStart) : null,
+        endedOn: nextCycleStart ? addDaysToIsoDate(nextCycleStart, -1) : null,
+        periodLengthDays,
+        phases,
+        startedOn: cycle.startedOn
+      };
+    })
+    .reverse();
 
-        return {
-          cycleId: `${cycle.startedOn}-${index}`,
-          cycleLengthDays: nextCycleStart
-            ? differenceInDays(cycle.startedOn, nextCycleStart)
-            : null,
-          endedOn: nextCycleStart ? addDaysToIsoDate(nextCycleStart, -1) : null,
-          periodLengthDays,
-          phases,
-          startedOn: cycle.startedOn
-        };
-      })
-      .reverse()
-  };
+  return paginateHistoryCycles(historyCycles, today, input?.before);
 }
 
 function upsertPeriodLog(
@@ -580,8 +643,8 @@ export function createDemoApiClient(): ApiClient {
     async getCycleSummary(): Promise<CycleSummaryResponse> {
       return getSummary();
     },
-    async getHistory(limit?: number): Promise<HistoryResponse> {
-      return getHistory(limit);
+    async getHistory(input?: { before?: string }): Promise<HistoryResponse> {
+      return getHistory(input);
     },
     async getMe(): Promise<MeResponse> {
       return cloneState(demoState.me);

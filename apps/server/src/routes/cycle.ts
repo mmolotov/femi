@@ -29,6 +29,7 @@ import {
   resolveCyclePhase,
   type FlowIntensity,
   type HistoryDay,
+  type HistoryCycle,
   type CyclePhase,
   type SymptomKey
 } from "@femi/shared";
@@ -96,6 +97,20 @@ function parseIsoDate(date: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function subtractMonthsFromIsoDate(date: string, months: number): string {
+  const parsedDate = parseIsoDate(date);
+  const year = parsedDate.getUTCFullYear();
+  const monthIndex = parsedDate.getUTCMonth();
+  const day = parsedDate.getUTCDate();
+  const absoluteMonthIndex = year * 12 + monthIndex - months;
+  const targetYear = Math.floor(absoluteMonthIndex / 12);
+  const targetMonthIndex = ((absoluteMonthIndex % 12) + 12) % 12;
+  const lastDayOfTargetMonth = new Date(Date.UTC(targetYear, targetMonthIndex + 1, 0)).getUTCDate();
+  const targetDay = Math.min(day, lastDayOfTargetMonth);
+
+  return formatUtcIsoDate(new Date(Date.UTC(targetYear, targetMonthIndex, targetDay)));
+}
+
 function formatStoredDate(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
     date.getUTCDate()
@@ -108,6 +123,74 @@ function toIsoDate(value: Date | null): string | null {
 
 function getTodayIsoDate(timezone: string): string {
   return getIsoDateInTimeZone(new Date(), timezone);
+}
+
+function paginateHistoryCycles(
+  cycles: HistoryCycle[],
+  today: string,
+  before?: string,
+  limit?: number
+): {
+  cycles: HistoryCycle[];
+  hasMore: boolean;
+  nextBefore: string | null;
+} {
+  if (cycles.length === 0) {
+    return {
+      cycles: [],
+      hasMore: false,
+      nextBefore: null
+    };
+  }
+
+  const startIndex = before ? cycles.findIndex((cycle) => cycle.startedOn < before) : 0;
+
+  if (startIndex === -1) {
+    return {
+      cycles: [],
+      hasMore: false,
+      nextBefore: null
+    };
+  }
+
+  const anchorDate = before ? addDaysToIsoDate(before, -1) : today;
+
+  if (limit !== undefined) {
+    const limitedCycles = cycles.slice(startIndex, startIndex + limit);
+
+    return {
+      cycles: limitedCycles,
+      hasMore: startIndex + limit < cycles.length,
+      nextBefore:
+        startIndex + limit < cycles.length ? (limitedCycles.at(-1)?.startedOn ?? null) : null
+    };
+  }
+
+  const cutoffDate = subtractMonthsFromIsoDate(anchorDate, 6);
+  const pageCycles: HistoryCycle[] = [];
+  let nextIndex = startIndex;
+
+  for (; nextIndex < cycles.length; nextIndex += 1) {
+    const cycle = cycles[nextIndex];
+    const cycleVisibleUntil = cycle.endedOn ?? today;
+
+    if (pageCycles.length > 0 && cycleVisibleUntil < cutoffDate) {
+      break;
+    }
+
+    pageCycles.push(cycle);
+  }
+
+  if (pageCycles.length === 0) {
+    pageCycles.push(cycles[startIndex]);
+    nextIndex = startIndex + 1;
+  }
+
+  return {
+    cycles: pageCycles,
+    hasMore: nextIndex < cycles.length,
+    nextBefore: nextIndex < cycles.length ? (pageCycles.at(-1)?.startedOn ?? null) : null
+  };
 }
 
 function isFutureIsoDate(date: string, today: string): boolean {
@@ -835,7 +918,6 @@ export async function registerCycleRoutes(
 
     try {
       const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
-      const limit = parsedQuery.data.limit ?? 6;
       const [checkinRows, periodRows, symptomRows, initialCycleRows] = await Promise.all([
         deps.db
           .select({
@@ -901,10 +983,9 @@ export async function registerCycleRoutes(
       const cycleRowsAscending = [...cycleRows].sort((left, right) =>
         left.startedOn < right.startedOn ? -1 : left.startedOn > right.startedOn ? 1 : 0
       );
-      const recentCycles = cycleRowsAscending.slice(-limit);
-      const historyCycles = recentCycles
+      const historyCycles = cycleRowsAscending
         .map((cycleRow, index) => {
-          const nextCycle = recentCycles[index + 1] ?? null;
+          const nextCycle = cycleRowsAscending[index + 1] ?? null;
           const startedOn = formatStoredDate(cycleRow.startedOn);
           const nextCycleStart = nextCycle ? formatStoredDate(nextCycle.startedOn) : null;
           const observedCycleLengthDays = nextCycleStart
@@ -967,10 +1048,18 @@ export async function registerCycleRoutes(
           };
         })
         .reverse();
+      const paginatedHistory = paginateHistoryCycles(
+        historyCycles,
+        today,
+        parsedQuery.data.before,
+        parsedQuery.data.limit
+      );
 
       return reply.send(
         historyResponseSchema.parse({
-          cycles: historyCycles
+          cycles: paginatedHistory.cycles,
+          hasMore: paginatedHistory.hasMore,
+          nextBefore: paginatedHistory.nextBefore
         })
       );
     } catch (error) {

@@ -539,6 +539,301 @@ describe("cycle routes", () => {
     expect(resolveAuthenticatedUserMock).not.toHaveBeenCalled();
   });
 
+  it("returns the most recent six months of history and exposes an older-page cursor", async () => {
+    app = await createTestApp();
+    setMockSystemTime("2026-04-21T12:00:00.000Z");
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    const cycleRows = [
+      {
+        endedOn: new Date("2025-09-05T00:00:00.000Z"),
+        id: "cycle-1",
+        startedOn: new Date("2025-09-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2025-10-05T00:00:00.000Z"),
+        id: "cycle-2",
+        startedOn: new Date("2025-10-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2025-11-05T00:00:00.000Z"),
+        id: "cycle-3",
+        startedOn: new Date("2025-11-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2025-12-05T00:00:00.000Z"),
+        id: "cycle-4",
+        startedOn: new Date("2025-12-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-01-05T00:00:00.000Z"),
+        id: "cycle-5",
+        startedOn: new Date("2026-01-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-02-05T00:00:00.000Z"),
+        id: "cycle-6",
+        startedOn: new Date("2026-02-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-03-05T00:00:00.000Z"),
+        id: "cycle-7",
+        startedOn: new Date("2026-03-01T00:00:00.000Z")
+      },
+      {
+        endedOn: null,
+        id: "cycle-8",
+        startedOn: new Date("2026-04-01T00:00:00.000Z")
+      }
+    ];
+
+    const selectMock = vi
+      .fn()
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder(cycleRows));
+
+    await registerCycleRoutes(app, {
+      db: {
+        select: selectMock
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "GET",
+      url: "/api/history"
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const payload = response.json();
+
+    expect(payload.hasMore).toBe(true);
+    expect(payload.nextBefore).toBe("2025-10-01");
+    expect(payload.cycles).toHaveLength(7);
+    expect(payload.cycles[0]).toMatchObject({
+      cycleId: "cycle-8",
+      startedOn: "2026-04-01"
+    });
+    expect(payload.cycles.at(-1)).toMatchObject({
+      cycleId: "cycle-2",
+      startedOn: "2025-10-01"
+    });
+  });
+
+  it("returns older history when queried before the oldest loaded cycle", async () => {
+    app = await createTestApp();
+    setMockSystemTime("2026-04-21T12:00:00.000Z");
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    const cycleRows = [
+      {
+        endedOn: new Date("2025-09-05T00:00:00.000Z"),
+        id: "cycle-1",
+        startedOn: new Date("2025-09-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2025-10-05T00:00:00.000Z"),
+        id: "cycle-2",
+        startedOn: new Date("2025-10-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2025-11-05T00:00:00.000Z"),
+        id: "cycle-3",
+        startedOn: new Date("2025-11-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2025-12-05T00:00:00.000Z"),
+        id: "cycle-4",
+        startedOn: new Date("2025-12-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-01-05T00:00:00.000Z"),
+        id: "cycle-5",
+        startedOn: new Date("2026-01-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-02-05T00:00:00.000Z"),
+        id: "cycle-6",
+        startedOn: new Date("2026-02-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-03-05T00:00:00.000Z"),
+        id: "cycle-7",
+        startedOn: new Date("2026-03-01T00:00:00.000Z")
+      },
+      {
+        endedOn: null,
+        id: "cycle-8",
+        startedOn: new Date("2026-04-01T00:00:00.000Z")
+      }
+    ];
+
+    const selectMock = vi
+      .fn()
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder(cycleRows));
+
+    await registerCycleRoutes(app, {
+      db: {
+        select: selectMock
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "GET",
+      url: "/api/history?before=2025-10-01"
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      hasMore: false,
+      nextBefore: null,
+      cycles: [
+        expect.objectContaining({
+          cycleId: "cycle-1",
+          startedOn: "2025-09-01"
+        })
+      ]
+    });
+  });
+
+  it("honors an explicit history limit when provided", async () => {
+    app = await createTestApp();
+    setMockSystemTime("2026-04-21T12:00:00.000Z");
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    const cycleRows = [
+      {
+        endedOn: new Date("2026-01-05T00:00:00.000Z"),
+        id: "cycle-1",
+        startedOn: new Date("2026-01-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-02-05T00:00:00.000Z"),
+        id: "cycle-2",
+        startedOn: new Date("2026-02-01T00:00:00.000Z")
+      },
+      {
+        endedOn: new Date("2026-03-05T00:00:00.000Z"),
+        id: "cycle-3",
+        startedOn: new Date("2026-03-01T00:00:00.000Z")
+      }
+    ];
+
+    const selectMock = vi
+      .fn()
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder(cycleRows));
+
+    await registerCycleRoutes(app, {
+      db: {
+        select: selectMock
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "GET",
+      url: "/api/history?limit=1"
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const payload = response.json();
+
+    expect(payload.cycles).toHaveLength(1);
+    expect(payload.cycles[0]).toMatchObject({
+      cycleId: "cycle-3",
+      startedOn: "2026-03-01"
+    });
+    expect(payload.hasMore).toBe(true);
+    expect(payload.nextBefore).toBe("2026-03-01");
+  });
+
+  it("rejects an invalid history query before auth lookup", async () => {
+    app = await createTestApp();
+
+    await registerCycleRoutes(app, {
+      db: {
+        select: vi.fn()
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/history?limit=abc"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(resolveAuthenticatedUserMock).not.toHaveBeenCalled();
+  });
+
   it("rejects an invalid daily check-in payload before auth lookup", async () => {
     app = await createTestApp();
 
