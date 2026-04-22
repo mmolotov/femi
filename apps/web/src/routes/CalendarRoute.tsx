@@ -205,7 +205,10 @@ export function CalendarRoute() {
 
   function handleDayClick(iso: string, isFuture: boolean) {
     if (!bulkMode) {
-      navigate("/");
+      navigate({
+        pathname: "/",
+        search: `?date=${iso}`
+      });
       return;
     }
     if (isFuture) return;
@@ -275,34 +278,31 @@ export function CalendarRoute() {
   const isLoadingMonth = projection === "month" && !monthData[viewMonth];
 
   return (
-    <Panel
-      aside={
-        <button className="secondary-button" onClick={() => navigate("/")} type="button">
-          {messages.calendar.backToToday}
-        </button>
-      }
-      description={messages.calendar.description}
-      title={messages.calendar.title}
-    >
+    <Panel title={messages.calendar.title}>
       <div className="calendar-controls">
-        <div className="segmented" role="tablist">
-          <button
-            aria-selected={projection === "month"}
-            className={projection === "month" ? "segmented-item active" : "segmented-item"}
-            onClick={() => setProjection("month")}
-            role="tab"
-            type="button"
-          >
-            {messages.calendar.projectionMonth}
-          </button>
-          <button
-            aria-selected={projection === "year"}
-            className={projection === "year" ? "segmented-item active" : "segmented-item"}
-            onClick={() => setProjection("year")}
-            role="tab"
-            type="button"
-          >
-            {messages.calendar.projectionYear}
+        <div className="calendar-controls-top">
+          <div className="segmented" role="tablist">
+            <button
+              aria-selected={projection === "month"}
+              className={projection === "month" ? "segmented-item active" : "segmented-item"}
+              onClick={() => setProjection("month")}
+              role="tab"
+              type="button"
+            >
+              {messages.calendar.projectionMonth}
+            </button>
+            <button
+              aria-selected={projection === "year"}
+              className={projection === "year" ? "segmented-item active" : "segmented-item"}
+              onClick={() => setProjection("year")}
+              role="tab"
+              type="button"
+            >
+              {messages.calendar.projectionYear}
+            </button>
+          </div>
+          <button className="calendar-back-today" onClick={() => navigate("/")} type="button">
+            {messages.calendar.backToToday}
           </button>
         </div>
 
@@ -547,7 +547,11 @@ function YearGrid({
                 ]
                   .filter(Boolean)
                   .join(" ");
-                return <span key={day.iso} className={classes} />;
+                return (
+                  <span key={day.iso} className={classes}>
+                    {day.day}
+                  </span>
+                );
               })}
             </span>
           </button>

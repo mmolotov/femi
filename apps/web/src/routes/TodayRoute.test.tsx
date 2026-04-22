@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 
 const { useAppDataMock } = vi.hoisted(() => ({
   useAppDataMock: vi.fn()
@@ -71,6 +71,44 @@ function renderToday() {
     <I18nProvider>
       <MemoryRouter>
         <TodayRoute />
+      </MemoryRouter>
+    </I18nProvider>
+  );
+}
+
+function renderTodayAt(entry: string) {
+  return render(
+    <I18nProvider>
+      <MemoryRouter initialEntries={[entry]}>
+        <TodayRoute />
+      </MemoryRouter>
+    </I18nProvider>
+  );
+}
+
+function TodayRouteNavigationHarness() {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          navigate("/");
+        }}
+        type="button"
+      >
+        Clear date query
+      </button>
+      <TodayRoute />
+    </>
+  );
+}
+
+function renderTodayWithNavigation(entry: string) {
+  return render(
+    <I18nProvider>
+      <MemoryRouter initialEntries={[entry]}>
+        <TodayRouteNavigationHarness />
       </MemoryRouter>
     </I18nProvider>
   );
@@ -162,7 +200,118 @@ describe("TodayRoute", () => {
 
     renderToday();
 
+    expect(document.querySelectorAll(".day-summary-tile")).toHaveLength(3);
+    expect(screen.getByText("Next")).toBeInTheDocument();
     expect(await screen.findByText("Today ovulation")).toBeInTheDocument();
+  });
+
+  it("opens a requested calendar date from the route query", async () => {
+    const getCheckin = vi.fn().mockResolvedValue({ entry: null });
+
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi.fn().mockResolvedValue({
+          days: [
+            createCalendarDay("2026-03-02", { isLoggedPeriodDay: true }),
+            createCalendarDay("2026-03-03", { isToday: true })
+          ],
+          month: "2026-03"
+        }),
+        getCheckin,
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary("2026-03-03")
+    });
+
+    renderTodayAt("/?date=2026-03-02");
+
+    await waitFor(() => {
+      expect(getCheckin).toHaveBeenCalledWith("2026-03-02");
+    });
+
+    expect(document.querySelectorAll(".day-summary-tile")).toHaveLength(2);
+    expect(screen.queryByText("On selected date")).not.toBeInTheDocument();
+    expect(screen.queryByText("period day")).not.toBeInTheDocument();
+    expect(screen.getByText("3/2/2026")).toBeInTheDocument();
+  });
+
+  it("resets back to today when the date query is cleared", async () => {
+    const getCheckin = vi.fn().mockResolvedValue({ entry: null });
+
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi.fn().mockResolvedValue({
+          days: [
+            createCalendarDay("2026-03-02", { isLoggedPeriodDay: true }),
+            createCalendarDay("2026-03-03", { isToday: true })
+          ],
+          month: "2026-03"
+        }),
+        getCheckin,
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary("2026-03-03")
+    });
+
+    renderTodayWithNavigation("/?date=2026-03-02");
+
+    await waitFor(() => {
+      expect(getCheckin).toHaveBeenCalledWith("2026-03-02");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /clear date query/i }));
+
+    await waitFor(() => {
+      expect(getCheckin).toHaveBeenLastCalledWith("2026-03-03");
+    });
+
+    expect(document.querySelectorAll(".day-summary-tile")).toHaveLength(3);
+    expect(screen.getByText("3/3/2026")).toBeInTheDocument();
+  });
+
+  it("returns to today's date from the week strip when the visible week moved away", async () => {
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi.fn().mockResolvedValue({
+          days: [
+            createCalendarDay("2026-03-02"),
+            createCalendarDay("2026-03-03", { isToday: true })
+          ],
+          month: "2026-03"
+        }),
+        getCheckin: vi.fn().mockResolvedValue({ entry: null }),
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary("2026-03-03")
+    });
+
+    renderToday();
+
+    fireEvent.click(await screen.findByRole("button", { name: /3\/2\/2026/ }));
+    fireEvent.click(screen.getByRole("button", { name: /next week/i }));
+    fireEvent.click(screen.getByRole("button", { name: /back to today/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("3/3/2026")).toBeInTheDocument();
+    });
   });
 
   it("toggles a period day via the summary button", async () => {

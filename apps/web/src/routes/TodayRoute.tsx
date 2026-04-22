@@ -17,7 +17,7 @@ import {
   type SymptomKey
 } from "@femi/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { DaySummary, type DaySummaryCopy } from "../components/DaySummary";
 import { Panel } from "../components/Panel";
@@ -204,18 +204,67 @@ function interpolate(template: string, values: Record<string, string | number>):
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
 }
 
+function pickTodaySummaryValue(
+  nextPeriodText: (days: number) => string,
+  nextOvulationText: (days: number) => string,
+  todayPeriodText: string,
+  todayOvulationText: string,
+  fallbackText: string,
+  daysToPeriod: number | null,
+  daysToOvulation: number | null
+): string {
+  const candidates: Array<{
+    days: number;
+    render: (n: number) => string;
+    renderToday: string;
+  }> = [];
+
+  if (daysToPeriod !== null && daysToPeriod >= 0) {
+    candidates.push({
+      days: daysToPeriod,
+      render: nextPeriodText,
+      renderToday: todayPeriodText
+    });
+  }
+
+  if (daysToOvulation !== null && daysToOvulation >= 0) {
+    candidates.push({
+      days: daysToOvulation,
+      render: nextOvulationText,
+      renderToday: todayOvulationText
+    });
+  }
+
+  if (candidates.length === 0) {
+    return fallbackText;
+  }
+
+  const nearest = candidates.reduce((best, candidate) =>
+    candidate.days < best.days ? candidate : best
+  );
+
+  if (nearest.days === 0) {
+    return nearest.renderToday;
+  }
+
+  return nearest.render(nearest.days);
+}
+
 export function TodayRoute() {
   const { api, refresh, status, summary } = useAppData();
   const { language, messages } = useI18n();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const browserToday = getIsoDateInTimeZone(
     new Date(),
     Intl.DateTimeFormat().resolvedOptions().timeZone
   );
   const today = summary?.today ?? browserToday;
+  const requestedDate = searchParams.get("date");
+  const initialSelectedDate = requestedDate ?? today;
 
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
   const [formState, setFormState] = useState<CheckinFormState>(emptyCheckinState);
   const [persistedEntry, setPersistedEntry] = useState<DailyCheckinEntry | null>(null);
   const [calendar, setCalendar] = useState<CalendarResponse | null>(null);
@@ -241,14 +290,28 @@ export function TodayRoute() {
   const selectedMonth = selectedDate.slice(0, 7);
 
   useEffect(() => {
-    if (!summary || selectedDateSource === "user") {
+    if (!summary || selectedDateSource === "user" || requestedDate) {
       return;
     }
 
     if (selectedDate !== summary.today) {
       setSelectedDate(summary.today);
     }
-  }, [selectedDate, selectedDateSource, summary]);
+  }, [requestedDate, selectedDate, selectedDateSource, summary]);
+
+  useEffect(() => {
+    if (requestedDate) {
+      setSelectedDateSource("user");
+      setSelectedDate(requestedDate);
+      return;
+    }
+
+    setSelectedDateSource("bootstrap");
+
+    if (summary && selectedDate !== summary.today) {
+      setSelectedDate(summary.today);
+    }
+  }, [requestedDate, selectedDate, summary]);
 
   const loadCalendar = useCallback(
     async (nextMonth: string) => {
@@ -401,6 +464,7 @@ export function TodayRoute() {
   const nextOvulationDate = resolveNextOvulationDate(today, markerData.ovulationDays);
   const daysToNextPeriod = nextPeriodDate ? differenceInDays(today, nextPeriodDate) : null;
   const daysToOvulation = nextOvulationDate ? differenceInDays(today, nextOvulationDate) : null;
+  const isTodaySelected = selectedDate === today;
 
   const isFutureSelected = differenceInDays(today, selectedDate) > 0;
   const isSelectedDayEditable = !isFutureSelected;
@@ -410,16 +474,71 @@ export function TodayRoute() {
   const isLoggedPeriodDay = selectedDay?.isLoggedPeriodDay ?? false;
   const selectedDateLabel = formatIsoDateForDisplay(selectedDate, language);
   const weekdayLabels = useMemo(() => getCalendarWeekdayLabels(language), [language]);
+  const primarySummary = useMemo(() => {
+    if (isTodaySelected) {
+      return {
+        label: messages.today.nextLabel,
+        value: pickTodaySummaryValue(
+          (days) => interpolate(messages.today.nextCountdownPeriod, { n: days }),
+          (days) => interpolate(messages.today.nextCountdownOvulation, { n: days }),
+          messages.today.nextCountdownTodayPeriod,
+          messages.today.nextCountdownTodayOvulation,
+          messages.today.nextCountdownFallback,
+          daysToNextPeriod,
+          daysToOvulation
+        )
+      };
+    }
+
+    if (selectedDay?.isLoggedPeriodDay) {
+      return {
+        label: messages.today.selectedDateSummaryLabel,
+        value: messages.week.periodMarker
+      };
+    }
+
+    if (selectedDay?.isPredictedPeriodDay) {
+      return {
+        label: messages.today.selectedDateSummaryLabel,
+        value: messages.week.predictedMarker
+      };
+    }
+
+    if (markerData.ovulationDays.includes(selectedDate)) {
+      return {
+        label: messages.today.selectedDateSummaryLabel,
+        value: messages.week.ovulationMarker
+      };
+    }
+
+    return {
+      label: messages.today.selectedDateSummaryLabel,
+      value: selectedPhase ? messages.today.phaseNames[selectedPhase] : messages.today.phaseFallback
+    };
+  }, [
+    daysToNextPeriod,
+    daysToOvulation,
+    isTodaySelected,
+    markerData.ovulationDays,
+    messages.today.nextCountdownFallback,
+    messages.today.nextCountdownOvulation,
+    messages.today.nextCountdownPeriod,
+    messages.today.nextCountdownTodayOvulation,
+    messages.today.nextCountdownTodayPeriod,
+    messages.today.nextLabel,
+    messages.today.phaseFallback,
+    messages.today.phaseNames,
+    messages.today.selectedDateSummaryLabel,
+    messages.week.ovulationMarker,
+    messages.week.periodMarker,
+    messages.week.predictedMarker,
+    selectedDate,
+    selectedDay,
+    selectedPhase
+  ]);
 
   const weekStripCopy: WeekStripCopy = messages.week;
   const daySummaryCopy: DaySummaryCopy = {
-    countdownFallback: messages.today.nextCountdownFallback,
-    countdownLabel: messages.today.nextLabel,
-    countdownNextPeriod: (days) => interpolate(messages.today.nextCountdownPeriod, { n: days }),
-    countdownOvulation: (days) => interpolate(messages.today.nextCountdownOvulation, { n: days }),
-    countdownToday: messages.today.nextCountdownToday,
-    countdownTodayOvulation: messages.today.nextCountdownTodayOvulation,
-    countdownTodayPeriod: messages.today.nextCountdownTodayPeriod,
     errorFallback: messages.today.markPeriodDayError,
     markPeriodDay: messages.today.markPeriodDay,
     phaseFallback: messages.today.phaseFallback,
@@ -537,6 +656,15 @@ export function TodayRoute() {
         formatRangeLabel={formatRangeLabel}
         onOpenCalendar={() => navigate("/calendar")}
         onSelect={(date) => {
+          const next = new URLSearchParams(searchParams);
+
+          if (date === today) {
+            next.delete("date");
+          } else {
+            next.set("date", date);
+          }
+
+          setSearchParams(next);
           setSelectedDateSource("user");
           setSelectedDate(date);
         }}
@@ -556,8 +684,6 @@ export function TodayRoute() {
           canEdit={isSelectedDayEditable}
           conceptionProbability={conceptionProbability}
           copy={daySummaryCopy}
-          daysToNextPeriod={daysToNextPeriod}
-          daysToOvulation={daysToOvulation}
           error={periodError}
           isPeriodDay={isLoggedPeriodDay}
           isSaving={isTogglingPeriod}
@@ -565,6 +691,8 @@ export function TodayRoute() {
             void togglePeriodDay();
           }}
           phase={selectedPhase}
+          primaryLabel={isTodaySelected ? primarySummary.label : undefined}
+          primaryValue={isTodaySelected ? primarySummary.value : undefined}
         />
       </Panel>
 

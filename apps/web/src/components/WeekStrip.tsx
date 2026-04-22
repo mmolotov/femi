@@ -6,6 +6,7 @@ export type WeekStripCopy = {
   previousWeek: string;
   nextWeek: string;
   openCalendar: string;
+  backToToday: string;
   periodMarker: string;
   predictedMarker: string;
   ovulationMarker: string;
@@ -55,10 +56,11 @@ export function WeekStrip({
     setWeekStart(mondayOf(selectedDate));
   }, [selectedDate]);
 
-  const { days, rangeLabel } = useMemo(() => {
+  const { days, isTodayWeekVisible, rangeLabel } = useMemo(() => {
     const periodSet = new Set(periodDays);
     const predictedSet = new Set(predictedPeriodDays);
     const ovulationSet = new Set(ovulationDays);
+    const weekEnd = addDaysToIsoDate(weekStart, 6);
 
     return {
       days: Array.from({ length: 7 }, (_, index) => {
@@ -75,6 +77,7 @@ export function WeekStrip({
           weekdayLabel: weekdayLabels[index] ?? ""
         };
       }),
+      isTodayWeekVisible: today >= weekStart && today <= weekEnd,
       rangeLabel: formatRangeLabel(weekStart, addDaysToIsoDate(weekStart, 6))
     };
   }, [
@@ -92,6 +95,11 @@ export function WeekStrip({
 
   function shiftWeek(delta: number) {
     setWeekStart((current) => addDaysToIsoDate(current, delta * 7));
+  }
+
+  function jumpToToday() {
+    setWeekStart(mondayOf(today));
+    onSelect(today);
   }
 
   function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
@@ -234,6 +242,13 @@ export function WeekStrip({
           );
         })}
       </div>
+      {!isTodayWeekVisible ? (
+        <div className="week-strip-actions">
+          <button className="week-strip-back-today" onClick={jumpToToday} type="button">
+            {copy.backToToday}
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

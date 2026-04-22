@@ -8,6 +8,7 @@ import { WeekStrip, type WeekStripCopy } from "./WeekStrip";
 const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const copy: WeekStripCopy = {
+  backToToday: "Back to today",
   stripLabel: "Week strip",
   previousWeek: "Previous week",
   nextWeek: "Next week",
@@ -72,7 +73,24 @@ describe("WeekStrip", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next week" }));
 
     expect(screen.getByRole("button", { name: /2026-04-20/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back to today" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /2026-04-13/ })).not.toBeInTheDocument();
+  });
+
+  it("hides the back-to-today control while today's week is visible", () => {
+    renderStrip();
+
+    expect(screen.queryByRole("button", { name: "Back to today" })).not.toBeInTheDocument();
+  });
+
+  it("returns to today's date when the back-to-today control is pressed", () => {
+    const { onSelect } = renderStrip({ selectedDate: "2026-04-14" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Next week" }));
+    fireEvent.click(screen.getByRole("button", { name: "Back to today" }));
+
+    expect(onSelect).toHaveBeenCalledWith("2026-04-15");
+    expect(screen.getByRole("button", { name: /2026-04-13/ })).toBeInTheDocument();
   });
 
   it("invokes the open-calendar callback", () => {

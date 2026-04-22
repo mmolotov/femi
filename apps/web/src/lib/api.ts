@@ -30,7 +30,7 @@ type ApiClient = {
   getCalendar(month: string): Promise<CalendarResponse>;
   getCheckin(date: string): Promise<DailyCheckinResponse>;
   getCycleSummary(): Promise<CycleSummaryResponse>;
-  getHistory(limit?: number): Promise<HistoryResponse>;
+  getHistory(input?: { before?: string }): Promise<HistoryResponse>;
   getMe(): Promise<MeResponse>;
   logPeriod(input: PeriodLogRequest): Promise<PeriodLogResponse>;
   saveCheckin(date: string, input: DailyCheckinRequest): Promise<DailyCheckinResponse>;
@@ -139,8 +139,14 @@ export function createApiClient(initDataRaw: string): ApiClient {
         (payload) => cycleSummaryResponseSchema.parse(payload)
       );
     },
-    async getHistory(limit) {
-      const search = limit ? `?limit=${encodeURIComponent(String(limit))}` : "";
+    async getHistory(input) {
+      const searchParams = new URLSearchParams();
+
+      if (input?.before) {
+        searchParams.set("before", input.before);
+      }
+
+      const search = searchParams.size > 0 ? `?${searchParams.toString()}` : "";
 
       return requestJson(
         initDataRaw,

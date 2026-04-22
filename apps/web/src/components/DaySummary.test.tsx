@@ -6,13 +6,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DaySummary, type DaySummaryCopy } from "./DaySummary";
 
 const copy: DaySummaryCopy = {
-  countdownFallback: "No prediction yet",
-  countdownLabel: "Next",
-  countdownNextPeriod: (days) => `${days}d to period`,
-  countdownOvulation: (days) => `${days}d to ovulation`,
-  countdownToday: "Today",
-  countdownTodayOvulation: "Today ovulation",
-  countdownTodayPeriod: "Today period",
   errorFallback: "Something went wrong",
   markPeriodDay: "Mark period day",
   phaseFallback: "Phase unavailable",
@@ -41,13 +34,13 @@ function renderSummary(overrides: Partial<Parameters<typeof DaySummary>[0]> = {}
     canEdit: true,
     conceptionProbability: "low" as const,
     copy,
-    daysToNextPeriod: 3,
-    daysToOvulation: null,
     error: null,
     isPeriodDay: false,
     isSaving: false,
     onTogglePeriodDay: onToggle,
-    phase: "menstrual" as const
+    phase: "menstrual" as const,
+    primaryLabel: "Next",
+    primaryValue: "3d to period"
   };
 
   const utils = render(<DaySummary {...defaults} {...overrides} />);
@@ -61,17 +54,13 @@ describe("DaySummary", () => {
   });
 
   it("renders countdown, phase, and probability for a menstrual day", () => {
-    renderSummary();
+    const { container } = renderSummary();
 
+    expect(container.querySelectorAll(".day-summary-tile")).toHaveLength(3);
+    expect(screen.getByText("Phase")).toBeInTheDocument();
     expect(screen.getByText("3d to period")).toBeInTheDocument();
     expect(screen.getByText("Menstrual")).toBeInTheDocument();
     expect(screen.getByText("low")).toBeInTheDocument();
-  });
-
-  it("picks the nearest countdown between period and ovulation", () => {
-    renderSummary({ daysToNextPeriod: 10, daysToOvulation: 2 });
-
-    expect(screen.getByText("2d to ovulation")).toBeInTheDocument();
   });
 
   it("renders 'mark period day' when the selected day is not logged, and toggles", () => {
@@ -91,9 +80,8 @@ describe("DaySummary", () => {
   it("uses 'peak' probability label when computed tier is peak", () => {
     renderSummary({
       conceptionProbability: "peak",
-      daysToNextPeriod: 14,
-      daysToOvulation: 0,
-      phase: "ovulatory"
+      phase: "ovulatory",
+      primaryValue: "Today ovulation"
     });
 
     expect(screen.getByText("peak")).toBeInTheDocument();
@@ -101,12 +89,29 @@ describe("DaySummary", () => {
     expect(screen.getByText("Ovulatory")).toBeInTheDocument();
   });
 
-  it("renders today's period label when the nearest event is a period day", () => {
-    renderSummary({
-      daysToNextPeriod: 0,
-      daysToOvulation: 3
+  it("hides the first summary tile when no primary label/value are provided", () => {
+    const { container } = renderSummary({
+      primaryLabel: undefined,
+      primaryValue: undefined
     });
 
-    expect(screen.getByText("Today period")).toBeInTheDocument();
+    expect(container.querySelectorAll(".day-summary-tile")).toHaveLength(2);
+    expect(screen.queryByText("3d to period")).not.toBeInTheDocument();
+  });
+
+  it("renders all summary tiles for longer localized phase labels", () => {
+    const { container } = renderSummary({
+      phase: "ovulatory",
+      copy: {
+        ...copy,
+        phaseNames: {
+          ...copy.phaseNames,
+          ovulatory: "Овуляторная фаза"
+        }
+      }
+    });
+
+    expect(container.querySelectorAll(".day-summary-tile")).toHaveLength(3);
+    expect(screen.getByText("Овуляторная фаза")).toBeInTheDocument();
   });
 });

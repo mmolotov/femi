@@ -2,7 +2,7 @@
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route, useLocation } from "react-router-dom";
 
 const { useAppDataMock } = vi.hoisted(() => ({
   useAppDataMock: vi.fn()
@@ -55,6 +55,12 @@ function renderCalendar() {
   );
 }
 
+function LocationProbe() {
+  const location = useLocation();
+
+  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
+}
+
 describe("CalendarRoute", () => {
   afterEach(() => {
     cleanup();
@@ -86,6 +92,72 @@ describe("CalendarRoute", () => {
     expect(await screen.findByRole("button", { name: "2026-03-15" })).toBeInTheDocument();
   });
 
+  it("renders the projection switch and back-to-today control on the same top row", async () => {
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi
+          .fn()
+          .mockImplementation(async (month: string) => createCalendarResponse(month)),
+        getCheckin: vi.fn(),
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary()
+    });
+
+    const { container } = renderCalendar();
+
+    await screen.findByRole("button", { name: "Back to Today" });
+
+    const topRow = container.querySelector(".calendar-controls-top");
+
+    expect(topRow).not.toBeNull();
+    expect(topRow).toContainElement(screen.getByRole("tab", { name: "Month" }));
+    expect(topRow).toContainElement(screen.getByRole("button", { name: "Back to Today" }));
+    expect(container.querySelector(".calendar-nav")).not.toBeNull();
+  });
+
+  it("navigates to the tapped day on the Today route", async () => {
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi
+          .fn()
+          .mockImplementation(async (month: string) => createCalendarResponse(month)),
+        getCheckin: vi.fn(),
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary()
+    });
+
+    render(
+      <I18nProvider>
+        <MemoryRouter initialEntries={["/calendar"]}>
+          <Routes>
+            <Route element={<CalendarRoute />} path="/calendar" />
+            <Route element={<LocationProbe />} path="/" />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "2026-03-02" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent("/?date=2026-03-02");
+    });
+  });
+
   it("switches to year projection and renders twelve mini months", async () => {
     useAppDataMock.mockReturnValue({
       api: {
@@ -111,6 +183,12 @@ describe("CalendarRoute", () => {
     await waitFor(() => {
       expect(container.querySelectorAll(".mini-month")).toHaveLength(12);
     });
+
+    const miniDaysWithNumbers = Array.from(container.querySelectorAll(".mini-day")).filter(
+      (element) => element.textContent?.trim().length
+    );
+
+    expect(miniDaysWithNumbers.length).toBeGreaterThan(0);
   });
 
   it("toggles bulk edits for past days and saves them via the API", async () => {

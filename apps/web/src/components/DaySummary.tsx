@@ -5,13 +5,6 @@ export type DaySummaryCopy = {
   phaseLabel: string;
   phaseFallback: string;
   phaseNames: Record<CyclePhase, string>;
-  countdownLabel: string;
-  countdownNextPeriod: (days: number) => string;
-  countdownOvulation: (days: number) => string;
-  countdownToday: string;
-  countdownTodayPeriod: string;
-  countdownTodayOvulation: string;
-  countdownFallback: string;
   probabilityLabel: string;
   probabilityValues: Record<ConceptionProbability, string>;
   probabilityFallback: string;
@@ -22,10 +15,10 @@ export type DaySummaryCopy = {
 };
 
 type DaySummaryProps = {
+  primaryLabel?: string;
+  primaryValue?: string;
   phase: CyclePhase | null;
   conceptionProbability: ConceptionProbability | null;
-  daysToNextPeriod: number | null;
-  daysToOvulation: number | null;
   isPeriodDay: boolean;
   canEdit: boolean;
   isSaving: boolean;
@@ -49,53 +42,11 @@ function phaseTone(phase: CyclePhase | null): string {
   }
 }
 
-function pickCountdown(
-  copy: DaySummaryCopy,
-  daysToPeriod: number | null,
-  daysToOvulation: number | null
-): string {
-  const candidates: Array<{
-    days: number;
-    render: (n: number) => string;
-    renderToday: string;
-  }> = [];
-
-  if (daysToPeriod !== null && daysToPeriod >= 0) {
-    candidates.push({
-      days: daysToPeriod,
-      render: copy.countdownNextPeriod,
-      renderToday: copy.countdownTodayPeriod
-    });
-  }
-
-  if (daysToOvulation !== null && daysToOvulation >= 0) {
-    candidates.push({
-      days: daysToOvulation,
-      render: copy.countdownOvulation,
-      renderToday: copy.countdownTodayOvulation
-    });
-  }
-
-  if (candidates.length === 0) {
-    return copy.countdownFallback;
-  }
-
-  const nearest = candidates.reduce((best, candidate) =>
-    candidate.days < best.days ? candidate : best
-  );
-
-  if (nearest.days === 0) {
-    return nearest.renderToday ?? copy.countdownToday;
-  }
-
-  return nearest.render(nearest.days);
-}
-
 export function DaySummary({
+  primaryLabel,
+  primaryValue,
   phase,
   conceptionProbability,
-  daysToNextPeriod,
-  daysToOvulation,
   isPeriodDay,
   canEdit,
   isSaving,
@@ -103,19 +54,21 @@ export function DaySummary({
   onTogglePeriodDay,
   copy
 }: DaySummaryProps) {
-  const countdownText = pickCountdown(copy, daysToNextPeriod, daysToOvulation);
   const phaseText = phase ? copy.phaseNames[phase] : copy.phaseFallback;
   const probabilityText = conceptionProbability
     ? copy.probabilityValues[conceptionProbability]
     : copy.probabilityFallback;
+  const hasPrimaryTile = Boolean(primaryLabel && primaryValue);
 
   return (
     <section aria-label={copy.title} className="day-summary">
       <div className="day-summary-grid">
-        <div className="day-summary-tile">
-          <span className="day-summary-label">{copy.countdownLabel}</span>
-          <strong className="day-summary-value">{countdownText}</strong>
-        </div>
+        {hasPrimaryTile ? (
+          <div className="day-summary-tile">
+            <span className="day-summary-label">{primaryLabel}</span>
+            <strong className="day-summary-value">{primaryValue}</strong>
+          </div>
+        ) : null}
         <div className="day-summary-tile">
           <span className="day-summary-label">{copy.phaseLabel}</span>
           <strong className={`day-summary-value phase-pill ${phaseTone(phase)}`}>

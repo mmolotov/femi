@@ -288,7 +288,8 @@ export const historyDaySchema = z.object({
 });
 
 export const historyQuerySchema = z.object({
-  limit: z.number().int().min(1).max(12).optional()
+  before: isoDateSchema.optional(),
+  limit: z.coerce.number().int().min(1).max(12).optional()
 });
 
 export const historyPhaseSchema = z.object({
@@ -314,7 +315,9 @@ export const historyCycleSchema = z.object({
 });
 
 export const historyResponseSchema = z.object({
-  cycles: z.array(historyCycleSchema)
+  cycles: z.array(historyCycleSchema),
+  hasMore: z.boolean(),
+  nextBefore: isoDateSchema.nullable()
 });
 
 function parseIsoDateValue(value: string): Date {

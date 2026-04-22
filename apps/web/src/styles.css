@@ -1357,15 +1357,34 @@ select {
   gap: 0.9rem;
 }
 
+.history-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
 .history-card {
   background: var(--bg-canvas);
   border: 1px solid var(--rule);
   border-radius: 1rem;
+}
+
+.history-card-summary {
+  cursor: pointer;
+  list-style: none;
   padding: 1.15rem;
 }
 
+.history-card-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-card-body {
+  padding: 0 1.15rem 1.15rem;
+}
+
 .history-card-header {
-  margin-bottom: 0.85rem;
+  margin: 0;
 }
 
 .history-card-header strong {
@@ -1712,6 +1731,28 @@ select {
   text-align: center;
 }
 
+.week-strip-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.week-strip-back-today {
+  background: color-mix(in srgb, var(--bg-canvas) 78%, var(--accent-soft) 22%);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  padding: 0.45rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.week-strip-back-today:hover {
+  border-color: var(--rule-strong);
+}
+
 .week-strip-days {
   display: grid;
   gap: 0.35rem;
@@ -1823,7 +1864,7 @@ select {
 .day-summary-grid {
   display: grid;
   gap: 0.6rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .day-summary-tile {
@@ -1833,6 +1874,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 0;
   padding: 0.7rem 0.65rem;
 }
 
@@ -1858,11 +1900,16 @@ select {
   background: var(--bg-elevated);
   border: 1px solid var(--rule);
   border-radius: 999px;
+  display: inline-flex;
   font-family: var(--font-sans);
   font-size: 0.76rem;
   font-weight: 500;
+  justify-content: flex-start;
   letter-spacing: 0.02em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 0.25rem 0.6rem;
+  white-space: normal;
 }
 
 .probability-pill {
@@ -1870,9 +1917,13 @@ select {
   background: var(--bg-elevated);
   border: 1px solid var(--rule);
   border-radius: 999px;
+  display: inline-flex;
   font-family: var(--font-sans);
   font-size: 0.76rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 0.25rem 0.6rem;
+  white-space: normal;
 }
 
 .probability-pill.low {
@@ -1901,12 +1952,41 @@ select {
    Calendar route — projections + bulk edit
    ========================================================================= */
 .calendar-controls {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.calendar-controls-top {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: space-between;
-  margin-bottom: 0.8rem;
+}
+
+.calendar-back-today {
+  align-items: center;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 1 auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  justify-content: center;
+  letter-spacing: 0.12em;
+  min-width: 0;
+  padding: 0.55rem 1.15rem;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+.calendar-back-today:hover {
+  border-color: var(--rule-strong);
 }
 
 .segmented {
@@ -1939,6 +2019,7 @@ select {
   align-items: center;
   display: inline-flex;
   gap: 0.6rem;
+  justify-content: center;
 }
 
 .calendar-range {
@@ -2079,7 +2160,13 @@ select {
   aspect-ratio: 1 / 1;
   background: var(--bg-sunken);
   border-radius: 2px;
-  display: inline-block;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
 }
 
 .mini-day.out-of-month {
@@ -2092,6 +2179,7 @@ select {
 
 .mini-day.period {
   background: var(--flow);
+  color: var(--flow-ink);
 }
 
 .mini-day.predicted {
@@ -2100,6 +2188,7 @@ select {
 
 .mini-day.ovulation {
   background: var(--sage);
+  color: var(--sage-ink);
 }
 
 @media (width <= 480px) {
