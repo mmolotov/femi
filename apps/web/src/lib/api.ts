@@ -25,6 +25,7 @@ const telegramInitDataHeader = "x-telegram-init-data";
 
 type ApiClient = {
   completeOnboarding(input: OnboardingSetupRequest): Promise<UpdateUserSettingsResponse>;
+  deleteAccount(): Promise<void>;
   deletePeriodDay(date: string): Promise<void>;
   endPeriod(date: string): Promise<PeriodLogResponse>;
   getCalendar(month: string): Promise<CalendarResponse>;
@@ -80,6 +81,20 @@ export function createApiClient(initDataRaw: string): ApiClient {
         },
         (payload) => updateUserSettingsResponseSchema.parse(payload)
       );
+    },
+    async deleteAccount() {
+      const response = await fetch("/api/me", {
+        headers: {
+          [telegramInitDataHeader]: initDataRaw
+        },
+        method: "DELETE"
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await readErrorMessage(response, `Request failed with status ${response.status}.`)
+        );
+      }
     },
     async deletePeriodDay(date) {
       const response = await fetch(`/api/period/log/${encodeURIComponent(date)}`, {

@@ -1,5 +1,5 @@
 import { cycleLengthRange, periodLengthRange } from "@femi/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Panel } from "../components/Panel";
 import { useAppData } from "../data/AppDataProvider";
@@ -10,7 +10,7 @@ import { type ThemeChoice, useTheme } from "../theme/ThemeProvider";
 
 export function SettingsRoute() {
   const { language, languages, messages, setLanguage } = useI18n();
-  const { me, updateSettings } = useAppData();
+  const { deleteAccount, me, updateSettings } = useAppData();
   const session = useSession();
   const { choice: themeChoice, setChoice: setThemeChoice } = useTheme();
   const themeOptions: Array<{ value: ThemeChoice; label: string }> = [
@@ -31,6 +31,16 @@ export function SettingsRoute() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteDialogTitleId = useId();
+  const deleteDialogDescriptionId = useId();
+  const deleteDialogErrorId = useId();
+  const cancelDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const confirmDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null);
+  const wasDeleteDialogOpenRef = useRef(false);
 
   useEffect(() => {
     if (!me) {
@@ -42,6 +52,68 @@ export function SettingsRoute() {
     setTimezone(me.settings.timezone);
     setRemindersEnabled(me.settings.remindersEnabled);
   }, [me]);
+
+  useEffect(() => {
+    if (!isDeleteDialogOpen) {
+      if (wasDeleteDialogOpenRef.current) {
+        lastFocusedElementRef.current?.focus();
+        lastFocusedElementRef.current = null;
+      }
+
+      wasDeleteDialogOpenRef.current = false;
+      return;
+    }
+
+    wasDeleteDialogOpenRef.current = true;
+    const animationFrameId = window.requestAnimationFrame(() => {
+      cancelDeleteButtonRef.current?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+
+        if (!isDeleting) {
+          setDeleteError(null);
+          setIsDeleteDialogOpen(false);
+        }
+
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = [
+        cancelDeleteButtonRef.current,
+        confirmDeleteButtonRef.current
+      ].filter((element): element is HTMLButtonElement => element !== null);
+
+      if (focusableElements.length === 0) {
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isDeleteDialogOpen, isDeleting]);
+
   const parsedCycleLengthDays = parseIntegerInput(cycleLengthInput);
   const parsedPeriodLengthDays = parseIntegerInput(periodLengthInput);
   const canSave =
@@ -54,9 +126,11 @@ export function SettingsRoute() {
       ? messages.settings.sessionAuthenticated
       : session.status === "preview"
         ? messages.settings.sessionPreview
-        : session.status === "error"
-          ? messages.settings.sessionError
-          : messages.settings.sessionAuthenticating;
+        : session.status === "signed_out"
+          ? messages.settings.sessionSignedOut
+          : session.status === "error"
+            ? messages.settings.sessionError
+            : messages.settings.sessionAuthenticating;
 
   const telegramAccountLabel =
     (session.user?.username ??
@@ -249,11 +323,110 @@ export function SettingsRoute() {
       </Panel>
 
       <Panel
+        description={messages.settings.accountDescription}
+        title={messages.settings.accountTitle}
+      >
+        <div className="account-danger-card">
+          <p className="notice">{messages.settings.accountWarning}</p>
+          <button
+            className="destructive-button"
+            onClick={() => {
+              lastFocusedElementRef.current =
+                document.activeElement instanceof HTMLElement ? document.activeElement : null;
+              setDeleteError(null);
+              setIsDeleteDialogOpen(true);
+            }}
+            type="button"
+          >
+            {messages.settings.deleteAccountIdle}
+          </button>
+        </div>
+      </Panel>
+
+      <Panel
         description={messages.settings.importantNoticeDescription}
         title={messages.settings.importantNoticeTitle}
       >
         <p className="notice">{messages.settings.importantNotice}</p>
       </Panel>
+
+      {isDeleteDialogOpen ? (
+        <div
+          className="dialog-backdrop"
+          onClick={() => {
+            if (isDeleting) {
+              return;
+            }
+
+            setDeleteError(null);
+            setIsDeleteDialogOpen(false);
+          }}
+        >
+          <div
+            aria-describedby={
+              deleteError
+                ? `${deleteDialogDescriptionId} ${deleteDialogErrorId}`
+                : deleteDialogDescriptionId
+            }
+            aria-labelledby={deleteDialogTitleId}
+            aria-modal="true"
+            className="dialog-card"
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            role="dialog"
+          >
+            <h3 id={deleteDialogTitleId}>{messages.settings.deleteDialogTitle}</h3>
+            <p id={deleteDialogDescriptionId}>{messages.settings.deleteDialogDescription}</p>
+            {deleteError ? (
+              <p className="inline-error" id={deleteDialogErrorId}>
+                {deleteError}
+              </p>
+            ) : null}
+            <div className="action-row">
+              <button
+                className="secondary-button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteError(null);
+                  setIsDeleteDialogOpen(false);
+                }}
+                ref={cancelDeleteButtonRef}
+                type="button"
+              >
+                {messages.settings.deleteDialogCancel}
+              </button>
+              <button
+                className="destructive-button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setIsDeleting(true);
+                  setDeleteError(null);
+
+                  void deleteAccount()
+                    .then(() => {
+                      setIsDeleteDialogOpen(false);
+                    })
+                    .catch((error) => {
+                      setDeleteError(
+                        error instanceof Error ? error.message : messages.settings.deleteError
+                      );
+                    })
+                    .finally(() => {
+                      setIsDeleting(false);
+                    });
+                }}
+                ref={confirmDeleteButtonRef}
+                type="button"
+              >
+                {isDeleting
+                  ? messages.settings.deletePending
+                  : messages.settings.deleteDialogConfirm}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

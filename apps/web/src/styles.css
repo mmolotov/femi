@@ -693,7 +693,8 @@ select {
   }
 
   .action-row > .primary-button,
-  .action-row > .secondary-button {
+  .action-row > .secondary-button,
+  .action-row > .destructive-button {
     width: 100%;
   }
 
@@ -708,6 +709,7 @@ select {
 
 .primary-button,
 .secondary-button,
+.destructive-button,
 .pill-button {
   align-items: center;
   border: 1px solid transparent;
@@ -730,7 +732,8 @@ select {
 }
 
 .primary-button,
-.secondary-button {
+.secondary-button,
+.destructive-button {
   padding: 0.85rem 1.25rem;
 }
 
@@ -799,6 +802,7 @@ select {
 
 .primary-button:disabled,
 .secondary-button:disabled,
+.destructive-button:disabled,
 .pill-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
@@ -841,6 +845,54 @@ select {
   display: inline-block;
   height: 0.45rem;
   width: 0.45rem;
+}
+
+.account-danger-card {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: 1rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.dialog-backdrop {
+  align-items: center;
+  background: rgb(21 17 13 / 48%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 30;
+}
+
+.dialog-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-float);
+  display: grid;
+  gap: 1rem;
+  max-width: 30rem;
+  padding: 1.5rem;
+  width: min(100%, 30rem);
+}
+
+.dialog-card h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+  font-variation-settings:
+    "opsz" 40,
+    "wght" 430;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.dialog-card p {
+  color: var(--ink-secondary);
+  margin: 0;
 }
 
 /* =========================================================================

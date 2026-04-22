@@ -2,11 +2,16 @@
 
 import type { PropsWithChildren } from "react";
 
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
+
+const { useAppDataMock, useSessionMock } = vi.hoisted(() => ({
+  useAppDataMock: vi.fn(),
+  useSessionMock: vi.fn()
+}));
 
 const messages = {
   app: {
@@ -14,6 +19,8 @@ const messages = {
     previewBody: "Preview mode",
     previewTitle: "Preview",
     primaryNavLabel: "Primary navigation",
+    signedOutBody: "Your account has been removed.",
+    signedOutTitle: "Account deleted",
     syncErrorBody: "Could not sync data",
     syncErrorTitle: "Sync error",
     tabs: {
@@ -44,43 +51,12 @@ vi.mock("./i18n/I18nProvider", () => ({
 
 vi.mock("./session/SessionProvider", () => ({
   SessionProvider: ({ children }: PropsWithChildren) => children,
-  useSession: () => ({
-    environment: "browser",
-    error: null,
-    initDataRaw: null,
-    status: "authenticated",
-    user: {
-      firstName: "Test",
-      id: "user-1",
-      languageCode: "ru",
-      lastName: "User",
-      telegramUserId: "tg-1",
-      username: "tester"
-    }
-  })
+  useSession: useSessionMock
 }));
 
 vi.mock("./data/AppDataProvider", () => ({
   AppDataProvider: ({ children }: PropsWithChildren) => children,
-  useAppData: () => ({
-    api: null,
-    completeOnboarding: vi.fn(),
-    error: null,
-    me: {
-      id: "user-1",
-      settings: {
-        cycleLengthDays: 28,
-        onboardingCompleted: true,
-        periodLengthDays: 5,
-        remindersEnabled: true,
-        timezone: "UTC"
-      }
-    },
-    refresh: vi.fn(),
-    status: "ready",
-    summary: null,
-    updateSettings: vi.fn()
-  })
+  useAppData: useAppDataMock
 }));
 
 vi.mock("./theme/ThemeProvider", () => ({
@@ -119,6 +95,48 @@ vi.mock("./components/OnboardingGate", () => ({
 }));
 
 describe("App shell", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  beforeEach(() => {
+    useSessionMock.mockReturnValue({
+      environment: "browser",
+      error: null,
+      initDataRaw: null,
+      signOut: vi.fn(),
+      status: "authenticated",
+      user: {
+        firstName: "Test",
+        id: "user-1",
+        languageCode: "ru",
+        lastName: "User",
+        telegramUserId: "tg-1",
+        username: "tester"
+      }
+    });
+    useAppDataMock.mockReturnValue({
+      api: null,
+      completeOnboarding: vi.fn(),
+      deleteAccount: vi.fn(),
+      error: null,
+      me: {
+        id: "user-1",
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: true,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        }
+      },
+      refresh: vi.fn(),
+      status: "ready",
+      summary: null,
+      updateSettings: vi.fn()
+    });
+  });
+
   it("renders the primary navigation tabs", async () => {
     render(
       <MemoryRouter>
@@ -140,5 +158,25 @@ describe("App shell", () => {
 
     expect(await screen.findByRole("heading", { name: "Language" })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /Русский/i })).toBeInTheDocument();
+  });
+
+  it("renders the signed-out public screen after account deletion", async () => {
+    useSessionMock.mockReturnValue({
+      environment: "browser",
+      error: null,
+      initDataRaw: null,
+      signOut: vi.fn(),
+      status: "signed_out",
+      user: null
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/settings"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText("Account deleted")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Settings" })).not.toBeInTheDocument();
   });
 });

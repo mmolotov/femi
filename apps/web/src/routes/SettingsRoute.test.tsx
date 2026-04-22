@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { useAppDataMock, useSessionMock } = vi.hoisted(() => ({
   useAppDataMock: vi.fn(),
@@ -20,6 +21,34 @@ import { I18nProvider } from "../i18n/I18nProvider";
 import { SettingsRoute } from "./SettingsRoute";
 
 describe("SettingsRoute", () => {
+  beforeEach(() => {
+    useAppDataMock.mockReturnValue({
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
+      me: {
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: true,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        }
+      },
+      updateSettings: vi.fn().mockResolvedValue(undefined)
+    });
+    useSessionMock.mockReturnValue({
+      environment: "telegram",
+      error: null,
+      signOut: vi.fn(),
+      status: "authenticated",
+      user: {
+        firstName: "Ada",
+        languageCode: "en",
+        lastName: null,
+        username: "ada"
+      }
+    });
+  });
+
   afterEach(() => {
     cleanup();
   });
@@ -28,6 +57,7 @@ describe("SettingsRoute", () => {
     const updateSettings = vi.fn().mockResolvedValue(undefined);
 
     useAppDataMock.mockReturnValue({
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
       me: {
         settings: {
           cycleLengthDays: 28,
@@ -39,22 +69,13 @@ describe("SettingsRoute", () => {
       },
       updateSettings
     });
-    useSessionMock.mockReturnValue({
-      environment: "telegram",
-      error: null,
-      status: "authenticated",
-      user: {
-        firstName: "Ada",
-        languageCode: "en",
-        lastName: null,
-        username: "ada"
-      }
-    });
 
     render(
-      <I18nProvider>
-        <SettingsRoute />
-      </I18nProvider>
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
     );
 
     fireEvent.change(screen.getByLabelText(/cycle length/i), {
@@ -81,6 +102,7 @@ describe("SettingsRoute", () => {
     const updateSettings = vi.fn().mockResolvedValue(undefined);
 
     useAppDataMock.mockReturnValue({
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
       me: {
         settings: {
           cycleLengthDays: 28,
@@ -92,32 +114,79 @@ describe("SettingsRoute", () => {
       },
       updateSettings
     });
-    useSessionMock.mockReturnValue({
-      environment: "telegram",
-      error: null,
-      status: "authenticated",
-      user: {
-        firstName: "Ada",
-        languageCode: "en",
-        lastName: null,
-        username: "ada"
-      }
-    });
 
-    const { getByLabelText, getByRole } = render(
-      <I18nProvider>
-        <SettingsRoute />
-      </I18nProvider>
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
     );
 
-    const cycleLengthInput = getByLabelText(/cycle length/i);
+    const cycleLengthInput = screen.getByLabelText(/cycle length/i);
 
     fireEvent.change(cycleLengthInput, {
       target: { value: "" }
     });
 
     expect(cycleLengthInput).toHaveValue(null);
-    expect(getByRole("button", { name: /save settings/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /save settings/i })).toBeDisabled();
     expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("opens the delete dialog and closes it with Escape", async () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /delete account and data/i }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /cancel/i })).toHaveFocus();
+    });
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("confirms account deletion via the destructive action", async () => {
+    const deleteAccount = vi.fn().mockResolvedValue(undefined);
+
+    useAppDataMock.mockReturnValue({
+      deleteAccount,
+      me: {
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: true,
+          periodLengthDays: 5,
+          remindersEnabled: true,
+          timezone: "UTC"
+        }
+      },
+      updateSettings: vi.fn().mockResolvedValue(undefined)
+    });
+
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /delete account and data/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /delete permanently/i }));
+
+    await waitFor(() => {
+      expect(deleteAccount).toHaveBeenCalledTimes(1);
+    });
   });
 });

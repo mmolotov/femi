@@ -1,5 +1,5 @@
 import type { Database } from "@femi/db";
-import { cycles, periodLogs, userSettings } from "@femi/db";
+import { cycles, periodLogs, userSettings, users } from "@femi/db";
 import {
   getIsoDateInTimeZone,
   meResponseSchema,
@@ -89,6 +89,32 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
           user: authenticatedUser.user
         })
       );
+    } catch (error) {
+      if (error instanceof AuthContextError) {
+        return reply.code(error.statusCode).send({
+          error: error.message
+        });
+      }
+
+      throw error;
+    }
+  });
+
+  app.delete("/api/me", async (request, reply) => {
+    try {
+      const authenticatedUser = await resolveAuthenticatedUser(request, deps.db, deps.env);
+      const [deletedUser] = await deps.db
+        .delete(users)
+        .where(eq(users.id, authenticatedUser.user.id))
+        .returning({ id: users.id });
+
+      if (!deletedUser) {
+        return reply.code(404).send({
+          error: "User was not found."
+        });
+      }
+
+      return reply.code(204).send();
     } catch (error) {
       if (error instanceof AuthContextError) {
         return reply.code(error.statusCode).send({

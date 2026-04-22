@@ -126,6 +126,86 @@ describe("me routes", () => {
     });
   });
 
+  it("deletes only the authenticated user account", async () => {
+    const returningMock = vi
+      .fn()
+      .mockResolvedValue([{ id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0" }]);
+    const whereMock = vi.fn(() => ({
+      returning: returningMock
+    }));
+    const deleteMock = vi.fn(() => ({
+      where: whereMock
+    }));
+
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 29,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {
+        delete: deleteMock
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "DELETE",
+      url: "/api/me"
+    });
+
+    expect(response.statusCode).toBe(204);
+    expect(deleteMock).toHaveBeenCalledTimes(1);
+    const deleteFilter = whereMock.mock.calls.at(0)?.at(0);
+
+    expect(deleteFilter).toBeDefined();
+    expect(deleteFilter).toMatchObject({
+      queryChunks: expect.arrayContaining([
+        expect.objectContaining({ value: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0" })
+      ])
+    });
+    expect(deleteFilter).not.toMatchObject({
+      queryChunks: expect.arrayContaining([expect.objectContaining({ value: "other-user-id" })])
+    });
+  });
+
+  it("rejects unauthenticated account deletion", async () => {
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockRejectedValue(new AuthContextErrorMock("Unauthorized", 401));
+
+    await registerMeRoutes(app, {
+      db: {} as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/api/me"
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({
+      error: "Unauthorized"
+    });
+  });
+
   it("updates settings and marks onboarding complete", async () => {
     const returningMock = vi.fn().mockResolvedValue([
       {

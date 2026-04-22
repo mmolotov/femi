@@ -614,6 +614,9 @@ export function createDemoApiClient(): ApiClient {
         settings: demoState.me.settings
       };
     },
+    async deleteAccount(): Promise<void> {
+      demoState = createResetState();
+    },
     async deletePeriodDay(date: string): Promise<void> {
       delete demoState.periodLogs[date];
       syncCyclesFromPeriodLogs();
