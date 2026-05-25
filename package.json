@@ -2,10 +2,10 @@
   "name": "femi",
   "private": true,
   "license": "MIT",
-  "packageManager": "pnpm@10.0.0",
+  "packageManager": "pnpm@10.33.4",
   "engines": {
     "node": ">=24 <25",
-    "pnpm": ">=10"
+    "pnpm": ">=10.16"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

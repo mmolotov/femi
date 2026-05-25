@@ -2,3 +2,12 @@ packages:
   - evidence
   - apps/*
   - packages/*
+
+# Supply-chain cooldown: refuse to resolve versions published less than this many
+# minutes ago, so freshly-compromised releases can't enter the lockfile via
+# `pnpm add`/`pnpm update` (or any non-frozen install). 4320 = 3 days.
+# Requires pnpm >= 10.16. Pair with the Dependabot `cooldown` in dependabot.yml.
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  # Escape hatch for urgent security patches you need before the cooldown elapses.
+  - "@femi/*"
