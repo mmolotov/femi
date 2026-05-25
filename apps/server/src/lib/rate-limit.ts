@@ -7,13 +7,14 @@ export const API_RATE_LIMIT_MAX = 100;
 export const API_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
 export async function registerRateLimit(app: FastifyInstance, env: AppEnv): Promise<void> {
-  if (env.NODE_ENV === "development") {
+  const enableGlobalLimit = env.NODE_ENV !== "development";
+
+  if (!enableGlobalLimit) {
     app.log.info("Skipping global API rate limit in development.");
-    return;
   }
 
   await app.register(fastifyRateLimit, {
-    global: true,
+    global: enableGlobalLimit,
     hook: "preHandler",
     max: API_RATE_LIMIT_MAX,
     timeWindow: API_RATE_LIMIT_WINDOW_MS
