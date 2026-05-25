@@ -22,7 +22,7 @@
     "@telegram-apps/init-data-node": "^2.0.0",
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.45.2",
-    "fastify": "^5.6.0",
+    "fastify": "^5.8.5",
     "grammy": "^1.38.3",
     "zod": "^4.1.5"
   },
