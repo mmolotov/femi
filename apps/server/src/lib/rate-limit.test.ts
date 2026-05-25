@@ -21,12 +21,12 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
 }
 
 describe("registerRateLimit", () => {
-  it("skips global rate limiting in development", async () => {
+  it("registers the limiter without a global hook in development", async () => {
     const app = {
       log: {
         info: vi.fn()
       },
-      register: vi.fn()
+      register: vi.fn().mockResolvedValue(undefined)
     } as unknown as {
       log: {
         info: ReturnType<typeof vi.fn>;
@@ -36,7 +36,12 @@ describe("registerRateLimit", () => {
 
     await registerRateLimit(app as never, createEnv({ NODE_ENV: "development" }));
 
-    expect(app.register).not.toHaveBeenCalled();
+    expect(app.register).toHaveBeenCalledWith(expect.any(Function), {
+      global: false,
+      hook: "preHandler",
+      max: API_RATE_LIMIT_MAX,
+      timeWindow: API_RATE_LIMIT_WINDOW_MS
+    });
     expect(app.log.info).toHaveBeenCalledWith("Skipping global API rate limit in development.");
   });
 
