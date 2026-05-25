@@ -51,6 +51,7 @@ describe("SettingsRoute", () => {
 
   afterEach(() => {
     cleanup();
+    window.localStorage.clear();
   });
 
   it("saves updated tracking preferences", async () => {
@@ -187,6 +188,97 @@ describe("SettingsRoute", () => {
 
     await waitFor(() => {
       expect(deleteAccount).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("no longer renders timezone or reminders controls", () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByLabelText(/timezone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/reminders enabled/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("switches the interface language from the dropdown", () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    const languageSelect = screen.getByRole("combobox");
+    expect(languageSelect).toHaveValue("en");
+
+    fireEvent.change(languageSelect, { target: { value: "ru" } });
+
+    expect(languageSelect).toHaveValue("ru");
+    expect(screen.getByRole("button", { name: "Сохранить настройки" })).toBeInTheDocument();
+  });
+
+  it("shows only the linked account in the Telegram integration panel", () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Telegram account")).toBeInTheDocument();
+    expect(screen.getByText("ada")).toBeInTheDocument();
+    expect(screen.queryByText(/runtime environment/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/session status/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/telegram language/i)).not.toBeInTheDocument();
+  });
+
+  it("opens the About dialog and closes it with the close button", async () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /about the app/i }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/about femi/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /close/i })).toHaveFocus();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /close/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes the About dialog with Escape", async () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /about the app/i }));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
   });
 });

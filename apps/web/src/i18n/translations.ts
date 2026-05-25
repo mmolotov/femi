@@ -248,15 +248,11 @@ export const baseMessages = {
     }
   },
   settings: {
-    title: "Settings",
-    description: "This page anchors the non-medical and privacy posture from the start.",
     preferencesTitle: "Tracking preferences",
     preferencesDescription:
       "These values drive the first prediction model and the onboarding baseline for cycle tracking.",
     cycleLengthLabel: "Cycle length (days)",
     periodLengthLabel: "Period length (days)",
-    timezoneLabel: "Timezone",
-    remindersEnabledLabel: "Reminders enabled",
     saveIdle: "Save settings",
     savePending: "Saving settings…",
     saveSuccess: "Settings saved.",
@@ -273,37 +269,21 @@ export const baseMessages = {
       "This action is permanent. Your account, cycle history, settings, check-ins, and all related data will be deleted and cannot be restored.",
     deleteDialogCancel: "Cancel",
     deleteDialogConfirm: "Delete permanently",
-    productType: "Product type",
-    productTypeValue: "Personal tracking app, not a medical application.",
-    coreModel: "Core model",
-    coreModelValue: "Ad-free and no subscription gate for baseline functionality.",
-    dataPosture: "Data posture",
-    dataPostureValue: "No ads, no sale of personal data, no unrelated third-party sharing.",
     integrationTitle: "Telegram integration",
-    integrationDescription:
-      "This block shows whether the app is running inside Telegram and whether the initial Telegram auth path succeeded.",
-    environment: "Runtime environment",
-    environmentTelegram: "Telegram Mini App",
-    environmentBrowser: "Browser preview",
-    sessionStatus: "Session status",
-    sessionAuthenticating: "authorizing with Telegram",
-    sessionAuthenticated: "authenticated",
-    sessionPreview: "preview mode, no Telegram init data",
-    sessionSignedOut: "signed out",
-    sessionError: "Telegram auth failed",
+    integrationDescription: "Shows the Telegram account linked to this app.",
     telegramAccount: "Telegram account",
     telegramAccountFallback: "account not available yet",
-    telegramLanguage: "Telegram language",
-    telegramLanguageFallback: "not provided",
-    authErrorLabel: "Auth error",
     languageTitle: "Language",
-    languageDescription:
-      "The app detects Telegram or browser language automatically, but the user can override it here.",
     importantNoticeTitle: "Important notice",
     importantNoticeDescription:
       "This copy matches the project disclaimer and should remain visible in the product.",
     importantNotice:
-      "femi is not a medical app and does not provide medical advice, diagnosis, or treatment recommendations."
+      "femi is not a medical app and does not provide medical advice, diagnosis, or treatment recommendations.",
+    aboutButton: "About the app",
+    aboutTitle: "About femi",
+    aboutBody:
+      "femi is a personal cycle tracking app, not a medical application. Baseline functionality is ad-free with no subscription gate. We don't show ads, sell personal data, or share it with unrelated third parties.",
+    aboutClose: "Close"
   },
   theme: {
     title: "Appearance",
@@ -570,16 +550,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       }
     },
     settings: {
-      title: "Настройки",
-      description:
-        "Эта страница с самого начала фиксирует немедицинский и приватный характер продукта.",
       preferencesTitle: "Параметры трекинга",
       preferencesDescription:
         "Эти значения используются для первого прогноза и базовой настройки трекинга цикла.",
       cycleLengthLabel: "Длина цикла (дни)",
       periodLengthLabel: "Длина менструации (дни)",
-      timezoneLabel: "Часовой пояс",
-      remindersEnabledLabel: "Напоминания включены",
       saveIdle: "Сохранить настройки",
       savePending: "Сохраняем настройки…",
       saveSuccess: "Настройки сохранены.",
@@ -596,38 +571,21 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Это действие необратимо. Аккаунт, история цикла, настройки, чек-ины и все связанные данные будут удалены без возможности восстановления.",
       deleteDialogCancel: "Отмена",
       deleteDialogConfirm: "Удалить навсегда",
-      productType: "Тип продукта",
-      productTypeValue: "Приложение для личного трекинга, а не медицинское приложение.",
-      coreModel: "Базовая модель",
-      coreModelValue: "Без рекламы и без подписки, блокирующей базовый функционал.",
-      dataPosture: "Подход к данным",
-      dataPostureValue:
-        "Без рекламы, без продажи персональных данных и без передачи не связанным третьим сторонам.",
       integrationTitle: "Интеграция с Telegram",
-      integrationDescription:
-        "Этот блок показывает, запущено ли приложение внутри Telegram и прошел ли начальный путь аутентификации.",
-      environment: "Среда запуска",
-      environmentTelegram: "Telegram Mini App",
-      environmentBrowser: "Превью в браузере",
-      sessionStatus: "Статус сессии",
-      sessionAuthenticating: "авторизация через Telegram",
-      sessionAuthenticated: "аутентификация выполнена",
-      sessionPreview: "режим превью, без Telegram init data",
-      sessionSignedOut: "выход из аккаунта выполнен",
-      sessionError: "ошибка Telegram auth",
+      integrationDescription: "Показывает аккаунт Telegram, привязанный к приложению.",
       telegramAccount: "Аккаунт Telegram",
       telegramAccountFallback: "аккаунт пока недоступен",
-      telegramLanguage: "Язык Telegram",
-      telegramLanguageFallback: "не передан",
-      authErrorLabel: "Ошибка auth",
       languageTitle: "Язык",
-      languageDescription:
-        "Приложение автоматически определяет язык Telegram или браузера, но пользователь может переопределить его здесь.",
       importantNoticeTitle: "Важное уведомление",
       importantNoticeDescription:
         "Этот текст повторяет project disclaimer и должен оставаться видимым в продукте.",
       importantNotice:
-        "femi не является медицинским приложением и не дает медицинских рекомендаций, диагнозов или назначений лечения."
+        "femi не является медицинским приложением и не дает медицинских рекомендаций, диагнозов или назначений лечения.",
+      aboutButton: "О приложении",
+      aboutTitle: "О femi",
+      aboutBody:
+        "femi — приложение для личного трекинга, а не медицинское приложение. Базовый функционал без рекламы и без подписки. Мы не показываем рекламу, не продаём персональные данные и не передаём их посторонним третьим лицам.",
+      aboutClose: "Закрыть"
     },
     theme: {
       title: "Оформление",
@@ -854,43 +812,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Estos valores alimentan el primer modelo de predicción y la base del seguimiento del ciclo.",
       cycleLengthLabel: "Duración del ciclo (días)",
       periodLengthLabel: "Duración del período (días)",
-      timezoneLabel: "Zona horaria",
-      remindersEnabledLabel: "Recordatorios activados",
       saveIdle: "Guardar ajustes",
       savePending: "Guardando ajustes…",
       saveSuccess: "Ajustes guardados.",
       saveError: "No se pudieron guardar los ajustes.",
-      productType: "Tipo de producto",
-      productTypeValue: "Aplicación de seguimiento personal, no una aplicación médica.",
-      coreModel: "Modelo base",
-      coreModelValue: "Sin anuncios y sin suscripción para el funcionamiento básico.",
-      dataPosture: "Tratamiento de datos",
-      dataPostureValue:
-        "Sin anuncios, sin venta de datos personales y sin compartir con terceros no relacionados.",
       integrationTitle: "Integración con Telegram",
-      integrationDescription:
-        "Este bloque muestra si la app se ejecuta dentro de Telegram y si la autenticación inicial se completó.",
-      environment: "Entorno de ejecución",
-      environmentTelegram: "Telegram Mini App",
-      environmentBrowser: "Vista previa en navegador",
-      sessionStatus: "Estado de la sesión",
-      sessionAuthenticating: "autorizando con Telegram",
-      sessionAuthenticated: "autenticada",
-      sessionPreview: "modo vista previa, sin init data de Telegram",
-      sessionError: "falló la auth de Telegram",
+      integrationDescription: "Muestra la cuenta de Telegram vinculada a esta app.",
       telegramAccount: "Cuenta de Telegram",
       telegramAccountFallback: "la cuenta todavía no está disponible",
-      telegramLanguage: "Idioma de Telegram",
-      telegramLanguageFallback: "no proporcionado",
-      authErrorLabel: "Error de auth",
       languageTitle: "Idioma",
-      languageDescription:
-        "La app detecta automáticamente el idioma de Telegram o del navegador, pero la usuaria puede cambiarlo aquí.",
       importantNoticeTitle: "Aviso importante",
       importantNoticeDescription:
         "Este texto coincide con el disclaimer del proyecto y debe permanecer visible en el producto.",
       importantNotice:
-        "femi no es una aplicación médica y no ofrece recomendaciones médicas, diagnóstico ni tratamiento."
+        "femi no es una aplicación médica y no ofrece recomendaciones médicas, diagnóstico ni tratamiento.",
+      aboutButton: "Acerca de la app",
+      aboutTitle: "Acerca de femi",
+      aboutBody:
+        "femi es una app de seguimiento personal, no una aplicación médica. La funcionalidad básica es sin anuncios y sin suscripción. No mostramos anuncios, no vendemos datos personales ni los compartimos con terceros ajenos.",
+      aboutClose: "Cerrar"
     },
     theme: {
       title: "Apariencia",
@@ -1129,8 +1069,12 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPostureValue:
         "Sem anúncios, sem venda de dados pessoais e sem compartilhamento com terceiros não relacionados.",
       integrationTitle: "Integração com Telegram",
-      integrationDescription:
-        "Este bloco mostra se o app está rodando dentro do Telegram e se a autenticação inicial foi concluída.",
+      integrationDescription: "Mostra a conta do Telegram vinculada a este app.",
+      aboutButton: "Sobre o app",
+      aboutTitle: "Sobre o femi",
+      aboutBody:
+        "O femi é um app de rastreamento pessoal, não uma aplicação médica. A funcionalidade básica é sem anúncios e sem assinatura. Não exibimos anúncios, não vendemos dados pessoais nem os compartilhamos com terceiros não relacionados.",
+      aboutClose: "Fechar",
       environment: "Ambiente de execução",
       environmentTelegram: "Telegram Mini App",
       environmentBrowser: "Prévia no navegador",
@@ -1386,8 +1330,12 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPosture: "Veri yaklaşımı",
       dataPostureValue: "Reklam yok, kişisel veri satışı yok, alakasız üçüncü taraf paylaşımı yok.",
       integrationTitle: "Telegram entegrasyonu",
-      integrationDescription:
-        "Bu blok uygulamanın Telegram içinde çalışıp çalışmadığını ve ilk Telegram auth yolunun başarılı olup olmadığını gösterir.",
+      integrationDescription: "Bu uygulamaya bağlı Telegram hesabını gösterir.",
+      aboutButton: "Uygulama hakkında",
+      aboutTitle: "femi hakkında",
+      aboutBody:
+        "femi kişisel bir döngü takip uygulamasıdır, tıbbi bir uygulama değildir. Temel işlevsellik reklamsızdır ve abonelik gerektirmez. Reklam göstermeyiz, kişisel verileri satmayız ve ilgisiz üçüncü taraflarla paylaşmayız.",
+      aboutClose: "Kapat",
       environment: "Çalışma ortamı",
       environmentTelegram: "Telegram Mini App",
       environmentBrowser: "Tarayıcı önizlemesi",
@@ -1645,8 +1593,12 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPostureValue:
         "Без реклами, без продажу персональних даних і без передачі не пов'язаним третім сторонам.",
       integrationTitle: "Інтеграція з Telegram",
-      integrationDescription:
-        "Цей блок показує, чи запущено застосунок усередині Telegram і чи пройшов початковий шлях автентифікації.",
+      integrationDescription: "Показує акаунт Telegram, прив'язаний до застосунку.",
+      aboutButton: "Про застосунок",
+      aboutTitle: "Про femi",
+      aboutBody:
+        "femi — застосунок для особистого трекінгу, а не медичний застосунок. Базовий функціонал без реклами та без підписки. Ми не показуємо рекламу, не продаємо персональні дані й не передаємо їх стороннім третім особам.",
+      aboutClose: "Закрити",
       environment: "Середовище запуску",
       environmentTelegram: "Telegram Mini App",
       environmentBrowser: "Прев'ю у браузері",
@@ -1900,8 +1852,12 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPostureValue:
         "لا إعلانات، لا بيع للبيانات الشخصية، ولا مشاركة مع أطراف ثالثة غير مرتبطة.",
       integrationTitle: "تكامل Telegram",
-      integrationDescription:
-        "يوضح هذا القسم ما إذا كان التطبيق يعمل داخل Telegram وما إذا كان مسار المصادقة الأولي قد نجح.",
+      integrationDescription: "يعرض حساب Telegram المرتبط بهذا التطبيق.",
+      aboutButton: "حول التطبيق",
+      aboutTitle: "حول femi",
+      aboutBody:
+        "femi تطبيق لتتبع الدورة الشخصية، وليس تطبيقًا طبيًا. الوظائف الأساسية بدون إعلانات وبدون اشتراك. نحن لا نعرض إعلانات ولا نبيع البيانات الشخصية ولا نشاركها مع أطراف ثالثة غير ذات صلة.",
+      aboutClose: "إغلاق",
       environment: "بيئة التشغيل",
       environmentTelegram: "Telegram Mini App",
       environmentBrowser: "معاينة المتصفح",
