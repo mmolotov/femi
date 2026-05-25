@@ -1,7 +1,7 @@
 /* =========================================================================
    femi — Editorial Diary
-   A calm, private cycle journal. Warm paper (light) / Deep ink (dark).
-   Fraunces for display serifs, IBM Plex Sans for UI, IBM Plex Mono for eyebrows.
+   A calm, private cycle journal. Warm paper (light) / Cool graphite (dark).
+   Figtree as the single, minimal sans for display, UI, and eyebrows.
    ========================================================================= */
 
 :root {
@@ -61,10 +61,10 @@
   --shadow-raised: 0 1px 0 rgb(21 17 13 / 4%), 0 18px 40px rgb(21 17 13 / 6%);
   --shadow-float: 0 24px 60px rgb(21 17 13 / 12%);
 
-  /* Typography */
-  --font-display: "Fraunces", "Iowan Old Style", "Times New Roman", "Georgia", serif;
-  --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", "Consolas", "Courier New", monospace;
+  /* Typography — one minimal sans for everything */
+  --font-display: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -77,67 +77,66 @@
   color: var(--ink-primary);
   font-family: var(--font-sans);
   font-weight: 400;
-  font-feature-settings: "ss01", "cv11";
   line-height: 1.55;
 }
 
 [data-theme="dark"] {
-  /* Canvas & surface — warm graphite, lifted from near-black for a softer editorial night */
-  --bg-canvas: #1f1a15;
-  --bg-elevated: #2a231c;
-  --bg-sunken: #15110d;
-  --bg-contrast: #f1e8d6;
+  /* Canvas & surface — cool graphite, neutral with a faint blue undertone for a calm night */
+  --bg-canvas: #17191c;
+  --bg-elevated: #1f2228;
+  --bg-sunken: #101214;
+  --bg-contrast: #e8eaee;
 
-  /* Ink / text */
-  --ink-primary: #f2e8d4;
-  --ink-secondary: #c1b49e;
-  --ink-tertiary: #897d6b;
-  --ink-quaternary: #544a3a;
-  --ink-inverse: #15110d;
+  /* Ink / text — cool near-neutral greys */
+  --ink-primary: #e8eaee;
+  --ink-secondary: #b2b7c0;
+  --ink-tertiary: #868d99;
+  --ink-quaternary: #4d525b;
+  --ink-inverse: #15171a;
 
   /* Rules */
-  --rule: rgb(241 232 214 / 16%);
-  --rule-soft: rgb(241 232 214 / 8%);
-  --rule-strong: rgb(241 232 214 / 30%);
+  --rule: rgb(232 234 238 / 14%);
+  --rule-soft: rgb(232 234 238 / 7%);
+  --rule-strong: rgb(232 234 238 / 26%);
 
-  /* Accent */
-  --accent: #eaa5b0;
-  --accent-ink: #15110d;
-  --accent-soft: rgb(234 165 176 / 16%);
-  --accent-ring: rgb(234 165 176 / 42%);
+  /* Accent — soft rose, kept on-brand but cooled to sit on graphite */
+  --accent: #ecaab8;
+  --accent-ink: #15171a;
+  --accent-soft: rgb(236 170 184 / 15%);
+  --accent-ring: rgb(236 170 184 / 42%);
 
-  /* Phase palette — calibrated for lifted dark */
-  --flow: #ea9370;
-  --flow-soft: rgb(234 147 112 / 20%);
-  --flow-ink: #f8d7c5;
-  --sand: #e8c585;
-  --sand-soft: rgb(232 197 133 / 16%);
-  --sand-ink: #f6e3b9;
-  --sage: #abc9a1;
-  --sage-soft: rgb(171 201 161 / 16%);
-  --sage-ink: #dbeacf;
-  --luteal: #c9a9bc;
-  --luteal-soft: rgb(201 169 188 / 18%);
-  --luteal-ink: #ecd6e2;
+  /* Phase palette — recalibrated to read cleanly on cool graphite */
+  --flow: #ef9d8c;
+  --flow-soft: rgb(239 157 140 / 18%);
+  --flow-ink: #f9d8cd;
+  --sand: #e6c688;
+  --sand-soft: rgb(230 198 136 / 16%);
+  --sand-ink: #f4e4bd;
+  --sage: #a4cbab;
+  --sage-soft: rgb(164 203 171 / 16%);
+  --sage-ink: #d8ecdc;
+  --luteal: #c3acd4;
+  --luteal-soft: rgb(195 172 212 / 18%);
+  --luteal-ink: #e7daf2;
 
   /* Feedback */
-  --danger: #ec9484;
-  --danger-soft: rgb(236 148 132 / 18%);
-  --success: #93c495;
-  --success-soft: rgb(147 196 149 / 18%);
+  --danger: #ef988a;
+  --danger-soft: rgb(239 152 138 / 18%);
+  --success: #8fc8a3;
+  --success-soft: rgb(143 200 163 / 18%);
 
-  /* Atmosphere */
+  /* Atmosphere — cool glows over a graphite gradient */
   --atmosphere:
-    radial-gradient(circle at 90% -5%, rgb(234 165 176 / 14%) 0%, transparent 34rem),
-    radial-gradient(circle at 2% 8%, rgb(234 147 112 / 12%) 0%, transparent 32rem),
-    radial-gradient(circle at 50% 120%, rgb(171 201 161 / 8%) 0%, transparent 40rem),
-    linear-gradient(180deg, #261f18 0%, #1f1a15 60%, #15110d 100%);
-  --grain-opacity: 0.07;
+    radial-gradient(circle at 90% -5%, rgb(236 170 184 / 12%) 0%, transparent 34rem),
+    radial-gradient(circle at 2% 8%, rgb(140 170 214 / 10%) 0%, transparent 32rem),
+    radial-gradient(circle at 50% 120%, rgb(164 203 171 / 7%) 0%, transparent 40rem),
+    linear-gradient(180deg, #1b1e22 0%, #17191c 60%, #101214 100%);
+  --grain-opacity: 0.06;
 
   /* Elevation */
-  --shadow-hairline: inset 0 0 0 1px rgb(241 232 214 / 7%);
-  --shadow-raised: 0 1px 0 rgb(0 0 0 / 32%), 0 24px 60px rgb(0 0 0 / 34%);
-  --shadow-float: 0 36px 80px rgb(0 0 0 / 48%);
+  --shadow-hairline: inset 0 0 0 1px rgb(232 234 238 / 7%);
+  --shadow-raised: 0 1px 0 rgb(0 0 0 / 32%), 0 24px 60px rgb(0 0 0 / 38%);
+  --shadow-float: 0 36px 80px rgb(0 0 0 / 50%);
 
   color-scheme: dark;
 }
@@ -508,7 +507,7 @@ select {
 /* Non-numeric metric values get a smaller treatment */
 .metric-card strong:has(+ *),
 .metric-card strong {
-  font-feature-settings: "ss01", "lnum", "tnum";
+  font-feature-settings: "lnum", "tnum";
 }
 
 /* =========================================================================
@@ -858,7 +857,7 @@ select {
 
 .dialog-backdrop {
   align-items: center;
-  background: rgb(21 17 13 / 48%);
+  background: rgb(12 14 17 / 52%);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -927,56 +926,47 @@ select {
 }
 
 /* =========================================================================
-   Language grid
+   Appearance panel — theme segment + language select
    ========================================================================= */
 
-.language-grid {
+.appearance-controls {
   display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1.1rem;
 }
 
-.language-button {
-  align-items: center;
-  background: var(--bg-canvas);
-  border: 1px solid var(--rule);
-  border-radius: 1rem;
-  color: var(--ink-primary);
-  cursor: pointer;
+/* =========================================================================
+   About the app — quiet text trigger at the foot of Settings
+   ========================================================================= */
+
+.about-app-row {
   display: flex;
-  gap: 0.75rem;
-  justify-content: space-between;
-  padding: 1rem 1.15rem;
-  text-align: left;
-  transition:
-    border-color var(--dur-sm) var(--ease),
-    transform var(--dur-sm) var(--ease),
-    box-shadow var(--dur-sm) var(--ease),
-    background-color var(--dur-sm) var(--ease);
-  width: 100%;
+  justify-content: center;
+  padding: 0.25rem 0 1.5rem;
 }
 
-.language-button:hover {
-  border-color: var(--accent-ring);
-  transform: translateY(-1px);
-}
-
-.language-button.active {
-  background: var(--bg-elevated);
-  border-color: var(--ink-primary);
-  box-shadow: var(--shadow-raised);
-}
-
-.language-button span:first-child {
-  font-weight: 500;
-}
-
-.language-code {
+.text-button {
+  background: none;
+  border: none;
   color: var(--ink-tertiary);
+  cursor: pointer;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
+  padding: 0.5rem 0.75rem;
+  text-transform: uppercase;
+  transition: color var(--dur-sm) var(--ease);
+}
+
+.text-button:hover {
+  color: var(--ink-primary);
+}
+
+.text-button:focus-visible {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  color: var(--ink-primary);
+  outline: none;
 }
 
 /* =========================================================================

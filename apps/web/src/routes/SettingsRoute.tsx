@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Panel } from "../components/Panel";
 import { useAppData } from "../data/AppDataProvider";
 import { useI18n } from "../i18n/I18nProvider";
+import { type SupportedLanguage } from "../i18n/translations";
 import { isNumberInRange, parseIntegerInput } from "../lib/numberInput";
 import { useSession } from "../session/SessionProvider";
 import { type ThemeChoice, useTheme } from "../theme/ThemeProvider";
@@ -24,6 +25,8 @@ export function SettingsRoute() {
   const [periodLengthInput, setPeriodLengthInput] = useState(
     String(me?.settings.periodLengthDays ?? 5)
   );
+  // Timezone and reminders no longer have visible controls, but the values are
+  // still persisted so the settings API contract stays intact.
   const [timezone, setTimezone] = useState(
     me?.settings.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
   );
@@ -34,13 +37,19 @@ export function SettingsRoute() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const deleteDialogTitleId = useId();
   const deleteDialogDescriptionId = useId();
   const deleteDialogErrorId = useId();
+  const aboutDialogTitleId = useId();
+  const aboutDialogBodyId = useId();
   const cancelDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
   const confirmDeleteButtonRef = useRef<HTMLButtonElement | null>(null);
+  const aboutCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const lastFocusedElementRef = useRef<HTMLElement | null>(null);
   const wasDeleteDialogOpenRef = useRef(false);
+  const aboutLastFocusedElementRef = useRef<HTMLElement | null>(null);
+  const wasAboutDialogOpenRef = useRef(false);
 
   useEffect(() => {
     if (!me) {
@@ -114,23 +123,49 @@ export function SettingsRoute() {
     };
   }, [isDeleteDialogOpen, isDeleting]);
 
+  useEffect(() => {
+    if (!isAboutDialogOpen) {
+      if (wasAboutDialogOpenRef.current) {
+        aboutLastFocusedElementRef.current?.focus();
+        aboutLastFocusedElementRef.current = null;
+      }
+
+      wasAboutDialogOpenRef.current = false;
+      return;
+    }
+
+    wasAboutDialogOpenRef.current = true;
+    const animationFrameId = window.requestAnimationFrame(() => {
+      aboutCloseButtonRef.current?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setIsAboutDialogOpen(false);
+        return;
+      }
+
+      // The dialog has a single focusable control; keep focus trapped on it.
+      if (event.key === "Tab") {
+        event.preventDefault();
+        aboutCloseButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAboutDialogOpen]);
+
   const parsedCycleLengthDays = parseIntegerInput(cycleLengthInput);
   const parsedPeriodLengthDays = parseIntegerInput(periodLengthInput);
   const canSave =
     isNumberInRange(parsedCycleLengthDays, cycleLengthRange) &&
-    isNumberInRange(parsedPeriodLengthDays, periodLengthRange) &&
-    timezone.trim().length > 0;
-
-  const sessionStatusLabel =
-    session.status === "authenticated"
-      ? messages.settings.sessionAuthenticated
-      : session.status === "preview"
-        ? messages.settings.sessionPreview
-        : session.status === "signed_out"
-          ? messages.settings.sessionSignedOut
-          : session.status === "error"
-            ? messages.settings.sessionError
-            : messages.settings.sessionAuthenticating;
+    isNumberInRange(parsedPeriodLengthDays, periodLengthRange);
 
   const telegramAccountLabel =
     (session.user?.username ??
@@ -200,28 +235,6 @@ export function SettingsRoute() {
             </label>
           </div>
 
-          <label className="field">
-            <span>{messages.settings.timezoneLabel}</span>
-            <input
-              onChange={(event) => {
-                setTimezone(event.target.value);
-              }}
-              type="text"
-              value={timezone}
-            />
-          </label>
-
-          <label className="toggle-field">
-            <input
-              checked={remindersEnabled}
-              onChange={(event) => {
-                setRemindersEnabled(event.target.checked);
-              }}
-              type="checkbox"
-            />
-            <span>{messages.settings.remindersEnabledLabel}</span>
-          </label>
-
           {saveError ? <p className="inline-error">{saveError}</p> : null}
           {saveSuccess ? <p className="inline-success">{messages.settings.saveSuccess}</p> : null}
 
@@ -231,21 +244,41 @@ export function SettingsRoute() {
         </form>
       </Panel>
 
-      <Panel description={messages.settings.description} title={messages.settings.title}>
-        <dl className="details-list">
-          <div>
-            <dt>{messages.settings.productType}</dt>
-            <dd>{messages.settings.productTypeValue}</dd>
+      <Panel description={messages.theme.description} title={messages.theme.title}>
+        <div className="appearance-controls">
+          <div className="theme-segment" role="radiogroup" aria-label={messages.theme.title}>
+            {themeOptions.map((option) => (
+              <button
+                key={option.value}
+                aria-checked={themeChoice === option.value}
+                className={themeChoice === option.value ? "active" : ""}
+                onClick={() => {
+                  setThemeChoice(option.value);
+                }}
+                role="radio"
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-          <div>
-            <dt>{messages.settings.coreModel}</dt>
-            <dd>{messages.settings.coreModelValue}</dd>
-          </div>
-          <div>
-            <dt>{messages.settings.dataPosture}</dt>
-            <dd>{messages.settings.dataPostureValue}</dd>
-          </div>
-        </dl>
+
+          <label className="field">
+            <span>{messages.settings.languageTitle}</span>
+            <select
+              onChange={(event) => {
+                setLanguage(event.target.value as SupportedLanguage);
+              }}
+              value={language}
+            >
+              {languages.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </Panel>
 
       <Panel
@@ -254,72 +287,10 @@ export function SettingsRoute() {
       >
         <dl className="details-list">
           <div>
-            <dt>{messages.settings.environment}</dt>
-            <dd>
-              {session.environment === "telegram"
-                ? messages.settings.environmentTelegram
-                : messages.settings.environmentBrowser}
-            </dd>
-          </div>
-          <div>
-            <dt>{messages.settings.sessionStatus}</dt>
-            <dd>{sessionStatusLabel}</dd>
-          </div>
-          <div>
             <dt>{messages.settings.telegramAccount}</dt>
             <dd>{telegramAccountLabel}</dd>
           </div>
-          <div>
-            <dt>{messages.settings.telegramLanguage}</dt>
-            <dd>{session.user?.languageCode ?? messages.settings.telegramLanguageFallback}</dd>
-          </div>
-          {session.error ? (
-            <div>
-              <dt>{messages.settings.authErrorLabel}</dt>
-              <dd>{session.error}</dd>
-            </div>
-          ) : null}
         </dl>
-      </Panel>
-
-      <Panel description={messages.theme.description} title={messages.theme.title}>
-        <div className="theme-segment" role="radiogroup" aria-label={messages.theme.title}>
-          {themeOptions.map((option) => (
-            <button
-              key={option.value}
-              aria-checked={themeChoice === option.value}
-              className={themeChoice === option.value ? "active" : ""}
-              onClick={() => {
-                setThemeChoice(option.value);
-              }}
-              role="radio"
-              type="button"
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </Panel>
-
-      <Panel
-        description={messages.settings.languageDescription}
-        title={messages.settings.languageTitle}
-      >
-        <div className="language-grid" role="list">
-          {languages.map((option) => (
-            <button
-              key={option.code}
-              className={option.code === language ? "language-button active" : "language-button"}
-              onClick={() => {
-                setLanguage(option.code);
-              }}
-              type="button"
-            >
-              <span>{option.label}</span>
-              <span className="language-code">{option.code.toUpperCase()}</span>
-            </button>
-          ))}
-        </div>
       </Panel>
 
       <Panel
@@ -349,6 +320,20 @@ export function SettingsRoute() {
       >
         <p className="notice">{messages.settings.importantNotice}</p>
       </Panel>
+
+      <div className="about-app-row">
+        <button
+          className="text-button"
+          onClick={() => {
+            aboutLastFocusedElementRef.current =
+              document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            setIsAboutDialogOpen(true);
+          }}
+          type="button"
+        >
+          {messages.settings.aboutButton}
+        </button>
+      </div>
 
       {isDeleteDialogOpen ? (
         <div
@@ -422,6 +407,41 @@ export function SettingsRoute() {
                 {isDeleting
                   ? messages.settings.deletePending
                   : messages.settings.deleteDialogConfirm}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isAboutDialogOpen ? (
+        <div
+          className="dialog-backdrop"
+          onClick={() => {
+            setIsAboutDialogOpen(false);
+          }}
+        >
+          <div
+            aria-describedby={aboutDialogBodyId}
+            aria-labelledby={aboutDialogTitleId}
+            aria-modal="true"
+            className="dialog-card"
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            role="dialog"
+          >
+            <h3 id={aboutDialogTitleId}>{messages.settings.aboutTitle}</h3>
+            <p id={aboutDialogBodyId}>{messages.settings.aboutBody}</p>
+            <div className="action-row action-row-end">
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  setIsAboutDialogOpen(false);
+                }}
+                ref={aboutCloseButtonRef}
+                type="button"
+              >
+                {messages.settings.aboutClose}
               </button>
             </div>
           </div>
