@@ -32,7 +32,7 @@ jobs:
 
       - name: Dependency review
         if: steps.dependency-graph.outputs.status == 'enabled'
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
 
       - name: Dependency review unavailable
         if: steps.dependency-graph.outputs.status != 'enabled'
