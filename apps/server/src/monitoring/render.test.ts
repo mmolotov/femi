@@ -76,6 +76,12 @@ describe("renderDashboard", () => {
     expect(html).toContain("Status");
   });
 
+  it("renders null values as an em dash rather than the string 'null'", () => {
+    const html = renderDashboard([metric({ display: "value", rows: [{ completion_rate: null }] })]);
+    expect(html).toContain("—");
+    expect(html).not.toContain(">null<");
+  });
+
   it("shows a not-collected state when there is no snapshot", () => {
     const html = renderDashboard([metric({ generatedAt: null, rowCount: 0, rows: [] })]);
     expect(html).toContain("Not collected yet");

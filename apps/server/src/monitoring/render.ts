@@ -11,6 +11,14 @@ function escapeHtml(value: unknown): string {
     .replaceAll("'", "&#39;");
 }
 
+// Render a cell value, showing an em dash for null/undefined instead of "null".
+function formatCell(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+  return escapeHtml(value);
+}
+
 function humanize(key: string): string {
   return key
     .replace(/_/gu, " ")
@@ -85,7 +93,7 @@ function renderStatCards(rows: Record<string, unknown>[]): string {
   const cards = displayKeys(row)
     .map(
       (key) =>
-        `<div class="stat"><span class="stat-value">${escapeHtml(row[key])}</span>` +
+        `<div class="stat"><span class="stat-value">${formatCell(row[key])}</span>` +
         `<span class="stat-label">${escapeHtml(humanize(key))}</span></div>`
     )
     .join("");
@@ -149,9 +157,7 @@ function renderTable(rows: Record<string, unknown>[]): string {
   const keys = displayKeys(first);
   const head = keys.map((key) => `<th>${escapeHtml(humanize(key))}</th>`).join("");
   const body = rows
-    .map(
-      (row) => `<tr>${keys.map((key) => `<td>${escapeHtml(row[key] ?? "")}</td>`).join("")}</tr>`
-    )
+    .map((row) => `<tr>${keys.map((key) => `<td>${formatCell(row[key])}</td>`).join("")}</tr>`)
     .join("");
 
   return `<table class="grid"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;

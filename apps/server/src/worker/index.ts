@@ -7,8 +7,11 @@ import { runMonitoringTick } from "../monitoring/index.js";
 const env = getEnv();
 const { db, pool } = createDatabaseConnection(env.DATABASE_URL);
 // Metric queries run on a read-only connection so monitoring can never mutate
-// product data; snapshot writes use the writable `db` above.
-const readPool = createReadOnlyPool(env.MONITORING_DATABASE_URL ?? env.DATABASE_URL);
+// product data; snapshot writes use the writable `db` above. Only opened when
+// monitoring is enabled.
+const readPool = env.MONITORING_ENABLED
+  ? createReadOnlyPool(env.MONITORING_DATABASE_URL ?? env.DATABASE_URL)
+  : null;
 const logger = createStructuredLogger("worker", env.LOG_LEVEL);
 
 const tick = async () => {
@@ -23,7 +26,7 @@ const tick = async () => {
     client.release();
   }
 
-  if (env.MONITORING_ENABLED) {
+  if (readPool) {
     const result = await runMonitoringTick(db, readPool);
     if (result.ran.length > 0 || result.failed.length > 0) {
       logger.info("monitoring tick", {
@@ -54,7 +57,11 @@ const shutdown = async (signal: string) => {
   logger.info("worker shutdown", {
     signal
   });
-  await Promise.allSettled([pool.end(), readPool.end()]);
+  const closing = [pool.end()];
+  if (readPool) {
+    closing.push(readPool.end());
+  }
+  await Promise.allSettled(closing);
   process.exit(0);
 };
 

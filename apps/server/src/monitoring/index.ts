@@ -44,13 +44,18 @@ export async function runMonitoringTick(
       continue;
     }
 
-    const result = await runMetric(readPool, metric);
-    await persistSnapshot(db, result);
+    // Isolate each metric: a failed snapshot write must not abort the rest of the tick.
+    try {
+      const result = await runMetric(readPool, metric);
+      await persistSnapshot(db, result);
 
-    if (result.error) {
+      if (result.error) {
+        failed.push(metric.id);
+      } else {
+        ran.push(metric.id);
+      }
+    } catch {
       failed.push(metric.id);
-    } else {
-      ran.push(metric.id);
     }
   }
 
