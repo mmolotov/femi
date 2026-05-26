@@ -271,10 +271,8 @@ It is intentionally scoped only to `/opt/femi`:
 - updates the checkout in `/opt/femi`
 - runs `docker compose -f infrastructure/docker-compose.yml -f infrastructure/docker-compose.prod.yml up -d --build`
 - checks `https://$APP_DOMAIN/api/health`
-- refreshes the product-specific Evidence static site after a successful app deploy by reusing the dedicated Evidence publish workflow
 
-It does not change shared ingress configuration in `/opt/infra`, but it does
-sync the generated Evidence static output into `/opt/infra/site/evidence/femi`.
+It does not change shared ingress configuration in `/opt/infra`.
 
 ### Required GitHub secrets
 
@@ -282,7 +280,6 @@ sync the generated Evidence static output into `/opt/infra/site/evidence/femi`.
 - `DEPLOY_USER` — deploy user with access to `/opt/femi` and Docker
 - `DEPLOY_SSH_KEY` — private SSH key for that user
 - `DEPLOY_KNOWN_HOSTS` — output of `ssh-keyscan` for the VPS
-- `EVIDENCE_DB_PASSWORD` — password for the dedicated read-only Evidence database user
 - optional `DEPLOY_SSH_PORT` — custom SSH port, default is `22`
 
 ### Required server-side preparation
@@ -291,9 +288,7 @@ sync the generated Evidence static output into `/opt/infra/site/evidence/femi`.
 - `/opt/femi/.env` already exists and contains production values
 - the deploy user can run `git` and `docker compose` in `/opt/femi`
 - `/opt/infra` and the shared `edge` ingress network are already up
-- `/opt/infra/site/evidence` exists and is writable by the deploy user
 - the `/opt/femi` checkout stays clean between deploys; uncommitted server-side edits will block deployment
-- `/opt/femi/.env` contains `EVIDENCE_DB_USER` and PostgreSQL settings that the Evidence workflow can read over SSH
 - backup settings in `/opt/femi/.env` are valid enough for a one-shot upload before deploy:
 - `S3_BACKUP_BUCKET`
 - `S3_BACKUP_ENDPOINT`
@@ -366,75 +361,47 @@ Recommended restore flow:
 2. Verify that core tables such as `users`, `user_settings`, and `cycles` exist.
 3. Only then promote or copy data as part of an explicit recovery procedure.
 
-## Evidence
+## Monitoring
 
-`femi` now stores its product-specific Evidence source directly in this
-repository under [`evidence/`](./evidence/). The generated static output is
-published to `/opt/infra/site/evidence/femi`, where the shared infra static host
-serves it behind Cloudflare Tunnel and Cloudflare Access.
+Internal product metrics are collected and shown by a small in-house service in
+`@femi/server`. It replaced an Evidence.dev static site to drop a heavy
+dependency tree and keep everything on the existing stack:
 
-### Local editing
+- a scheduler in the **worker** runs each configured SQL query on its interval
+  (over a read-only DB connection) and stores the result in the
+  `metric_snapshots` table;
+- a standalone **monitoring** service serves a JSON API (`/api/metrics`) and a
+  server-rendered HTML dashboard (`/`) from those snapshots.
 
-1. Export the database connection variables for the read-only Evidence user.
-2. Use `Node.js 24`.
-3. Install dependencies with `pnpm install`.
-4. Refresh source metadata with `pnpm evidence:sources`.
-5. Start the local preview with `pnpm evidence:dev`.
-6. Build the static site with `pnpm evidence:build`.
+Metrics are defined in
+[`apps/server/src/monitoring/config.ts`](./apps/server/src/monitoring/config.ts);
+adding one there (with its SQL in `queries.ts`) surfaces it on the dashboard with
+no UI changes. See
+[`apps/server/src/monitoring/README.md`](./apps/server/src/monitoring/README.md)
+for the config format and [docs/monitoring.md](./docs/monitoring.md) for the
+read-only role setup and dashboard access.
 
-Required local environment variables:
+### Access (internal only)
 
-- `EVIDENCE_DB_HOST`
-- `EVIDENCE_DB_PORT`
-- `EVIDENCE_DB_NAME`
-- `EVIDENCE_DB_USER`
-- `EVIDENCE_DB_PASSWORD`
-- optional `EVIDENCE_DB_SSL`
+The dashboard is **not exposed to the public internet**. The `monitoring`
+service joins only the internal Compose network and binds to the host loopback
+(`127.0.0.1:${MONITORING_PORT:-3002}`), like PostgreSQL — it never joins the
+public `edge`/Caddy ingress. Reach it over an SSH tunnel to the VPS:
 
-### What is implemented
+```bash
+ssh -L 3002:127.0.0.1:3002 <deploy-user>@<vps-host>
+# then open http://localhost:3002
+```
 
-The starter Evidence site currently ships with product metrics grouped into:
+### What is collected
 
-- overview
-- activity and adoption
-- tracking quality
+Ported verbatim from the previous Evidence sources:
 
-It reads directly from raw product tables and currently covers:
-
-- total users
-- onboarding completion
-- reminders adoption
-- users with any tracking data
+- total users, onboarding completion, reminders adoption, users with any tracking
 - new users by day and by week
-- active users in 1/7/30 day windows
-- reach by tracking surface
+- active users in 1 / 7 / 30 day windows
 - daily activity by tracking type
 - top symptoms in the last 30 days
 - notification job status breakdown
 - tracking mix by user segment
 - daily check-in field completion rates
-
-### Deploy and publish
-
-Evidence publish is intentionally separate from the application stack deploy:
-
-- [`deploy-evidence-femi.yml`](./.github/workflows/deploy-evidence-femi.yml) supports manual `workflow_dispatch` and daily `schedule`
-- [`publish-evidence-femi.yml`](./.github/workflows/publish-evidence-femi.yml) is the reusable workflow that does the real build and publish work
-- the main [`deploy-femi.yml`](./.github/workflows/deploy-femi.yml) workflow calls the same reusable workflow after the app deploy succeeds
-
-The reusable publish flow:
-
-- checks out the requested ref
-- installs dependencies on the GitHub runner
-- opens an SSH tunnel to the VPS-local PostgreSQL port
-- builds the Evidence static site from the source in `evidence/`
-- uploads the result to a temporary release directory on the VPS
-- atomically swaps the release into `/opt/infra/site/evidence/femi`
-
-Expected GitHub secrets for Evidence publish:
-
-- reuses `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, and optional `DEPLOY_SSH_PORT`
-- requires `EVIDENCE_DB_PASSWORD`
-
-See [docs/evidence.md](./docs/evidence.md) for the full layout, env vars,
-workflow behavior, and the read-only role setup script.

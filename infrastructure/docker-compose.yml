@@ -53,6 +53,28 @@ services:
       WEB_APP_URL: ${WEB_APP_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
 
+  monitoring:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+    command: ["pnpm", "--filter", "@femi/server", "start:monitoring"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-femi}:${POSTGRES_PASSWORD:-femi}@postgres:5432/${POSTGRES_DB:-femi}
+      # Optional read-only role DSN; falls back to DATABASE_URL when unset.
+      MONITORING_DATABASE_URL: ${MONITORING_DATABASE_URL:-}
+      MONITORING_HOST: 0.0.0.0
+      MONITORING_PORT: ${MONITORING_PORT:-3002}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    # Internal-only: bound to host loopback (reach it via SSH tunnel), and it never
+    # joins the public `edge` network in docker-compose.prod.yml.
+    ports:
+      - 127.0.0.1:${MONITORING_PORT:-3002}:${MONITORING_PORT:-3002}
+
   migrate:
     build:
       context: ..

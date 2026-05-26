@@ -2,18 +2,18 @@
 
 set -euo pipefail
 
-if [ -z "${EVIDENCE_DB_USER:-}" ]; then
-  echo "EVIDENCE_DB_USER is required" >&2
+if [ -z "${MONITORING_DB_USER:-}" ]; then
+  echo "MONITORING_DB_USER is required" >&2
   exit 1
 fi
 
-if [ -z "${EVIDENCE_DB_PASSWORD:-}" ]; then
-  echo "EVIDENCE_DB_PASSWORD is required" >&2
+if [ -z "${MONITORING_DB_PASSWORD:-}" ]; then
+  echo "MONITORING_DB_PASSWORD is required" >&2
   exit 1
 fi
 
-if ! [[ "${EVIDENCE_DB_USER}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
-  echo "EVIDENCE_DB_USER must be a valid PostgreSQL role name using letters, digits, and underscores" >&2
+if ! [[ "${MONITORING_DB_USER}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+  echo "MONITORING_DB_USER must be a valid PostgreSQL role name using letters, digits, and underscores" >&2
   exit 1
 fi
 
@@ -51,8 +51,8 @@ fi
 psql \
   ${psql_target[@]+"${psql_target[@]}"} \
   -v ON_ERROR_STOP=1 \
-  -v evidence_db_user="${EVIDENCE_DB_USER}" \
-  -v evidence_db_password="${EVIDENCE_DB_PASSWORD}" \
+  -v monitoring_db_user="${MONITORING_DB_USER}" \
+  -v monitoring_db_password="${MONITORING_DB_PASSWORD}" \
   -v database_name="${database_name}" \
   -v db_owner_role="${db_owner_role}" \
-  -f "$(dirname "$0")/create-evidence-readonly-user.sql"
+  -f "$(dirname "$0")/create-monitoring-readonly-user.sql"
