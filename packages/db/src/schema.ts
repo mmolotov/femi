@@ -2,6 +2,7 @@ import {
   bigint,
   boolean,
   date,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -175,6 +176,28 @@ export const contraceptionLogs = pgTable("contraception_logs", {
   ...timestamps
 });
 
+// Internal monitoring: one row per metric execution. Not linked to users; holds
+// the aggregated query result so the dashboard can read the latest snapshot
+// without re-running SQL on every request.
+export const metricSnapshots = pgTable(
+  "metric_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    metricId: varchar("metric_id", { length: 128 }).notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true }).defaultNow().notNull(),
+    rows: jsonb("rows").notNull(),
+    rowCount: integer("row_count").notNull(),
+    durationMs: integer("duration_ms"),
+    error: text("error")
+  },
+  (table) => ({
+    metricGeneratedIdx: index("metric_snapshots_metric_generated_idx").on(
+      table.metricId,
+      table.generatedAt
+    )
+  })
+);
+
 export const schema = {
   users,
   userSettings,
@@ -185,5 +208,6 @@ export const schema = {
   notes,
   reminders,
   notificationJobs,
-  contraceptionLogs
+  contraceptionLogs,
+  metricSnapshots
 };

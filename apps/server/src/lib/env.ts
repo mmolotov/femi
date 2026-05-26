@@ -25,7 +25,14 @@ const envSchema = z.object({
   BOT_TOKEN: z.string().min(1),
   TELEGRAM_BOT_SECRET_TOKEN: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
   TELEGRAM_INIT_DATA_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
-  WORKER_TICK_MS: z.coerce.number().int().positive().default(60000)
+  WORKER_TICK_MS: z.coerce.number().int().positive().default(60000),
+  // Read-only connection used by the monitoring scheduler to run metric queries.
+  // Falls back to DATABASE_URL when unset (fine for local dev).
+  MONITORING_DATABASE_URL: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+  MONITORING_ENABLED: z.preprocess(
+    (value) => (typeof value === "string" ? value.toLowerCase() !== "false" : value),
+    z.boolean().default(true)
+  )
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

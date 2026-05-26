@@ -9,6 +9,7 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     DATABASE_URL: "postgres://femi:femi@localhost:5432/femi",
     HOST: "0.0.0.0",
     LOG_LEVEL: "info",
+    MONITORING_ENABLED: true,
     NODE_ENV: "development",
     PORT: 3001,
     TELEGRAM_BOT_SECRET_TOKEN: "secret",

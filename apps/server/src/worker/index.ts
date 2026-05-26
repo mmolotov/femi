@@ -1,10 +1,14 @@
-import { createDatabaseConnection } from "@femi/db";
+import { createDatabaseConnection, createReadOnlyPool } from "@femi/db";
 
 import { getEnv } from "../lib/env.js";
 import { createStructuredLogger } from "../lib/structured-log.js";
+import { runMonitoringTick } from "../monitoring/index.js";
 
 const env = getEnv();
-const { pool } = createDatabaseConnection(env.DATABASE_URL);
+const { db, pool } = createDatabaseConnection(env.DATABASE_URL);
+// Metric queries run on a read-only connection so monitoring can never mutate
+// product data; snapshot writes use the writable `db` above.
+const readPool = createReadOnlyPool(env.MONITORING_DATABASE_URL ?? env.DATABASE_URL);
 const logger = createStructuredLogger("worker", env.LOG_LEVEL);
 
 const tick = async () => {
@@ -17,6 +21,17 @@ const tick = async () => {
     });
   } finally {
     client.release();
+  }
+
+  if (env.MONITORING_ENABLED) {
+    const result = await runMonitoringTick(db, readPool);
+    if (result.ran.length > 0 || result.failed.length > 0) {
+      logger.info("monitoring tick", {
+        ran: result.ran,
+        failed: result.failed,
+        skipped: result.skipped.length
+      });
+    }
   }
 };
 
@@ -39,7 +54,7 @@ const shutdown = async (signal: string) => {
   logger.info("worker shutdown", {
     signal
   });
-  await pool.end();
+  await Promise.allSettled([pool.end(), readPool.end()]);
   process.exit(0);
 };
 
