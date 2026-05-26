@@ -40,6 +40,26 @@ ids throw immediately, so a bad config fails fast at worker startup.
 It then flows through the scheduler, snapshots, API, and UI with no other code
 changes.
 
+## Dashboard
+
+A separate, read-only Fastify process (`src/monitoring-server`, run with
+`pnpm --filter @femi/server start:monitoring`) serves the dashboard from the
+latest snapshots — it never runs SQL on request:
+
+- `GET /api/metrics` — JSON: every configured metric with `title`, `display`,
+  `generatedAt`, `rowCount`, and `rows` (the latest snapshot, or `null`/empty if
+  not collected yet).
+- `GET /` — a server-rendered HTML page (inline CSS, no client framework or chart
+  library). Each metric renders by its `display` type: `value` → stat cards,
+  `bar` → proportional bars, `line` → an inline SVG sparkline, `table` → a table.
+  Empty, not-yet-collected, and query-error states are shown explicitly.
+
+Because the page is driven entirely by the config + snapshots, **adding a metric
+to `config.ts` makes it appear on the dashboard with no UI code changes.**
+
+It binds to `127.0.0.1` by default; keeping it off the public internet is wired
+up in TASK-36.3.
+
 ## Database access
 
 Metric queries run on a **read-only** connection (`MONITORING_DATABASE_URL`,
@@ -52,3 +72,5 @@ product data. Only the snapshot insert uses the writable connection.
 | ------------------------- | -------------- | ----------------------------------------------- |
 | `MONITORING_ENABLED`      | `true`         | Set `false` to disable collection in the worker |
 | `MONITORING_DATABASE_URL` | `DATABASE_URL` | Read-only DSN used to execute metric queries    |
+| `MONITORING_PORT`         | `3002`         | Port the dashboard server listens on            |
+| `MONITORING_HOST`         | `127.0.0.1`    | Bind address (localhost-only by default)        |

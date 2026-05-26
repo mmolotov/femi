@@ -10,8 +10,10 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "dev:worker": "tsx watch src/worker/index.ts",
+    "dev:monitoring": "tsx watch src/monitoring-server/index.ts",
     "start": "node dist/index.js",
     "start:worker": "node dist/worker/index.js",
+    "start:monitoring": "node dist/monitoring-server/index.js",
     "typecheck": "tsc -p tsconfig.typecheck.json"
   },
   "dependencies": {

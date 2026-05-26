@@ -14,6 +14,8 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     HOST: "0.0.0.0",
     LOG_LEVEL: "info",
     MONITORING_ENABLED: true,
+    MONITORING_HOST: "127.0.0.1",
+    MONITORING_PORT: 3002,
     NODE_ENV: "development",
     PORT: 3001,
     TELEGRAM_BOT_SECRET_TOKEN: "secret",
