@@ -1,6 +1,6 @@
-// Auto-ported from the former Evidence sources (evidence/sources/femi/*.sql).
-// Plain read-only Postgres aggregations. Kept inline so the tsc build needs no
-// asset-copy step; edit the SQL here and reference it from config.ts.
+// Plain read-only Postgres aggregations for the monitoring dashboard. Kept inline
+// so the tsc build needs no asset-copy step; edit the SQL here and reference each
+// query from config.ts.
 
 export const activityByDaySql = `
 with all_activity as (

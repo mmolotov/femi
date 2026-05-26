@@ -364,8 +364,8 @@ Recommended restore flow:
 ## Monitoring
 
 Internal product metrics are collected and shown by a small in-house service in
-`@femi/server`. It replaced an Evidence.dev static site to drop a heavy
-dependency tree and keep everything on the existing stack:
+`@femi/server`, kept deliberately lightweight (no heavy BI dependency tree) and
+running entirely on the existing stack:
 
 - a scheduler in the **worker** runs each configured SQL query on its interval
   (over a read-only DB connection) and stores the result in the
@@ -394,8 +394,6 @@ ssh -L 3002:127.0.0.1:3002 <deploy-user>@<vps-host>
 ```
 
 ### What is collected
-
-Ported verbatim from the previous Evidence sources:
 
 - total users, onboarding completion, reminders adoption, users with any tracking
 - new users by day and by week

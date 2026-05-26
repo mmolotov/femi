@@ -1,9 +1,9 @@
 # Monitoring
 
-Internal, config-driven product monitoring that replaced the Evidence.dev static
-site. It runs on the existing stack (Postgres + the `@femi/server` worker and a
-small dashboard process) instead of a separate BI build, so there is no heavy
-dependency tree and nothing is published to the public web.
+Internal, config-driven product monitoring. It runs on the existing stack
+(Postgres + the `@femi/server` worker and a small dashboard process), kept
+lightweight with no heavy BI dependency tree and nothing published to the public
+web.
 
 ## How it works
 

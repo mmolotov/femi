@@ -1,9 +1,9 @@
 # Monitoring
 
-Lightweight, config-driven internal monitoring that replaces the Evidence
-dashboard. The worker runs each configured SQL query on its own interval and
-stores the result as a snapshot row in `metric_snapshots`; the dashboard (TASK
-36.2) reads the latest snapshot per metric — it never runs SQL on request.
+Lightweight, config-driven internal monitoring. The worker runs each configured
+SQL query on its own interval and stores the result as a snapshot row in
+`metric_snapshots`; a separate dashboard process reads the latest snapshot per
+metric — it never runs SQL on request.
 
 ## Pieces
 
@@ -13,6 +13,10 @@ stores the result as a snapshot row in `metric_snapshots`; the dashboard (TASK
 - `runner.ts` — runs a metric's query on the read-only pool and writes a snapshot.
 - `scheduler.ts` — `isMetricDue`: when has an interval elapsed since the last run.
 - `index.ts` — `runMonitoringTick`: one scheduling pass, called from the worker.
+- `retention.ts` — `pruneSnapshots`: bounds `metric_snapshots` (see Retention below).
+- `dashboard.ts` — `getDashboardMetrics`: latest snapshot per metric + metadata.
+- `render.ts` — server-renders the dashboard HTML (value / bar / line / table).
+- `server.ts` — the Fastify app (`/api/metrics`, `/`); started via `src/monitoring-server`.
 
 ## Config format
 
@@ -57,8 +61,9 @@ latest snapshots — it never runs SQL on request:
 Because the page is driven entirely by the config + snapshots, **adding a metric
 to `config.ts` makes it appear on the dashboard with no UI code changes.**
 
-It binds to `127.0.0.1` by default; keeping it off the public internet is wired
-up in TASK-36.3.
+It binds to `127.0.0.1` by default and runs as an internal-only Compose service
+(off the public ingress); see [docs/monitoring.md](../../../../docs/monitoring.md)
+for access.
 
 ## Database access
 
