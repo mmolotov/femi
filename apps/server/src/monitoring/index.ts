@@ -9,6 +9,7 @@ type MonitoringTickResult = {
   ran: string[];
   skipped: string[];
   failed: string[];
+  errors: { metricId: string; message: string }[];
 };
 
 // Latest snapshot time per metric, so the scheduler knows what is due.
@@ -37,6 +38,7 @@ export async function runMonitoringTick(
   const ran: string[] = [];
   const skipped: string[] = [];
   const failed: string[] = [];
+  const errors: { metricId: string; message: string }[] = [];
 
   for (const metric of metrics) {
     if (!isMetricDue(metric, lastByMetric.get(metric.id) ?? null, now)) {
@@ -51,13 +53,18 @@ export async function runMonitoringTick(
 
       if (result.error) {
         failed.push(metric.id);
+        errors.push({ metricId: metric.id, message: result.error });
       } else {
         ran.push(metric.id);
       }
-    } catch {
+    } catch (error) {
       failed.push(metric.id);
+      errors.push({
+        metricId: metric.id,
+        message: error instanceof Error ? error.message : String(error)
+      });
     }
   }
 
-  return { ran, skipped, failed };
+  return { ran, skipped, failed, errors };
 }

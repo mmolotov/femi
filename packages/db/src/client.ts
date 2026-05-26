@@ -24,10 +24,13 @@ export function createDatabaseConnection(connectionString: string): DatabaseConn
 }
 
 // Standalone read-only pool for the monitoring scheduler: metric queries run on
-// this connection so they can never mutate product data. Point it at a read-only
-// database role in production.
+// this connection so they can never mutate product data. Read-only is enforced at
+// the session level (default_transaction_read_only), so writes fail even if the
+// DSN points at a writable role; pointing it at a dedicated read-only role in
+// production is recommended defense-in-depth.
 export function createReadOnlyPool(connectionString: string): Pool {
   return new Pool({
-    connectionString
+    connectionString,
+    options: "-c default_transaction_read_only=on"
   });
 }

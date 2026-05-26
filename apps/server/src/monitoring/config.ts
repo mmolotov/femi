@@ -59,7 +59,9 @@ const metricDefinitions: MetricDefinition[] = [
   {
     id: "activity_by_day",
     title: "Activity by day",
-    display: "bar",
+    // A (day × activity_type) breakdown reads clearly as a table; a flat bar
+    // chart would collapse the two dimensions into duplicate-labeled bars.
+    display: "table",
     everyMinutes: 720,
     sql: activityByDaySql
   },

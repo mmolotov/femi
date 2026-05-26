@@ -36,6 +36,9 @@ function asNumber(value: unknown): number | null {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null;
   }
+  if (typeof value === "bigint") {
+    return Number(value);
+  }
   if (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value))) {
     return Number(value);
   }

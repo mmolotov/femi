@@ -60,5 +60,7 @@ describe("runMonitoringTick", () => {
     expect(result.failed).toContain("first");
     expect(result.ran).toContain("second");
     expect(result.ran.length + result.failed.length).toBe(2);
+    // The failure reason is captured (not swallowed).
+    expect(result.errors).toContainEqual({ metricId: "first", message: "write failed" });
   });
 });

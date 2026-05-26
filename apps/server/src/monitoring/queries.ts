@@ -34,7 +34,7 @@ aggregated as (
   group by 1, 2
 )
 select
-  activity_day,
+  to_char(activity_day, 'YYYY-MM-DD') as activity_day,
   activity_type,
   events_count,
   active_users,
@@ -44,7 +44,7 @@ from aggregated
 union all
 
 select
-  current_date as activity_day,
+  to_char(current_date, 'YYYY-MM-DD') as activity_day,
   'No activity yet' as activity_type,
   0::bigint as events_count,
   0::bigint as active_users,
@@ -129,7 +129,7 @@ with signups as (
   group by 1
 )
 select
-  signup_day,
+  to_char(signup_day, 'YYYY-MM-DD') as signup_day,
   new_users,
   false as is_placeholder
 from signups
@@ -137,7 +137,7 @@ from signups
 union all
 
 select
-  current_date as signup_day,
+  to_char(current_date, 'YYYY-MM-DD') as signup_day,
   0::bigint as new_users,
   true as is_placeholder
 where not exists (select 1 from signups)
@@ -155,7 +155,7 @@ with signups as (
   group by 1
 )
 select
-  signup_week,
+  to_char(signup_week, 'YYYY-MM-DD') as signup_week,
   new_users,
   false as is_placeholder
 from signups
@@ -163,7 +163,7 @@ from signups
 union all
 
 select
-  date_trunc('week', current_date)::date as signup_week,
+  to_char(date_trunc('week', current_date)::date, 'YYYY-MM-DD') as signup_week,
   0::bigint as new_users,
   true as is_placeholder
 where not exists (select 1 from signups)

@@ -35,6 +35,11 @@ const tick = async () => {
         skipped: result.skipped.length
       });
     }
+    if (result.errors.length > 0) {
+      logger.error("monitoring metrics failed", {
+        errors: result.errors
+      });
+    }
   }
 };
 
@@ -44,12 +49,25 @@ await tick().catch((error: unknown) => {
   });
 });
 
+// Guard against overlapping ticks: if one is still running when the interval
+// fires (slow query / DB stall), skip rather than double-run metrics.
+let ticking = false;
 const timer = setInterval(() => {
-  void tick().catch((error: unknown) => {
-    logger.error("worker tick failed", {
-      error
+  if (ticking) {
+    logger.warn("worker tick still running; skipping this interval");
+    return;
+  }
+
+  ticking = true;
+  void tick()
+    .catch((error: unknown) => {
+      logger.error("worker tick failed", {
+        error
+      });
+    })
+    .finally(() => {
+      ticking = false;
     });
-  });
 }, env.WORKER_TICK_MS);
 
 const shutdown = async (signal: string) => {

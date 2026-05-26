@@ -25,8 +25,14 @@ process.on("SIGTERM", () => {
   void shutdown("SIGTERM");
 });
 
-await app.listen({ host: env.MONITORING_HOST, port: env.MONITORING_PORT });
-logger.info("monitoring server listening", {
-  host: env.MONITORING_HOST,
-  port: env.MONITORING_PORT
-});
+try {
+  await app.listen({ host: env.MONITORING_HOST, port: env.MONITORING_PORT });
+  logger.info("monitoring server listening", {
+    host: env.MONITORING_HOST,
+    port: env.MONITORING_PORT
+  });
+} catch (error) {
+  logger.error("monitoring server failed to start", { error });
+  await pool.end();
+  process.exit(1);
+}

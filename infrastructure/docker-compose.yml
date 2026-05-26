@@ -52,6 +52,10 @@ services:
       PORT: 3001
       WEB_APP_URL: ${WEB_APP_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # The worker is the monitoring collector: it runs metric SQL on the
+      # read-only pool. Set MONITORING_DATABASE_URL to the read-only role DSN.
+      MONITORING_DATABASE_URL: ${MONITORING_DATABASE_URL:-}
+      MONITORING_ENABLED: ${MONITORING_ENABLED:-true}
 
   monitoring:
     build:

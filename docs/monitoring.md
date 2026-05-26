@@ -31,14 +31,19 @@ infrastructure/postgres/create-monitoring-readonly-user.sh
 ```
 
 It creates/updates the role and grants `SELECT` on the product tables plus
-`metric_snapshots`. Then point the service at it:
+`metric_snapshots`. Run it **after** migrations (it grants on `metric_snapshots`,
+which migration `0003` creates) and with `DB_OWNER_ROLE` set to the role that runs
+migrations, so the `ALTER DEFAULT PRIVILEGES` clause covers future tables. Then
+point the service at it:
 
 ```
 MONITORING_DATABASE_URL=postgres://monitoring_femi_readonly:…@127.0.0.1:5432/femi
 ```
 
-If `MONITORING_DATABASE_URL` is unset the service falls back to `DATABASE_URL`
-(fine for local dev).
+If `MONITORING_DATABASE_URL` is unset the service falls back to `DATABASE_URL`.
+Either way, the collector runs metric queries with `default_transaction_read_only=on`
+at the session level, so a query can never write regardless of the role — the
+dedicated read-only role is defense-in-depth.
 
 ## Access (internal only)
 
@@ -56,6 +61,15 @@ Reach it from your machine via an SSH tunnel to the VPS:
 ssh -L 3002:127.0.0.1:3002 <deploy-user>@<vps-host>
 # then open http://localhost:3002
 ```
+
+Access control is purely network-level: the dashboard has **no application auth**,
+so it must stay bound to loopback and off the public ingress. Do not set
+`MONITORING_HOST=0.0.0.0` on a host with a public interface unless a firewall or
+private network fronts it.
+
+Note: `MONITORING_ENABLED=false` disables **collection in the worker** only; the
+dashboard process keeps running and will show the last-collected (increasingly
+stale) snapshots. To take the dashboard down, stop/scale its service.
 
 ## Environment
 
