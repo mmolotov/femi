@@ -36,7 +36,10 @@ const envSchema = z.object({
   // Internal monitoring dashboard server. Binds to localhost by default; TASK-36.3
   // wires it into the deployment so it stays off the public internet.
   MONITORING_PORT: z.coerce.number().int().positive().default(3002),
-  MONITORING_HOST: z.string().default("127.0.0.1")
+  MONITORING_HOST: z.string().default("127.0.0.1"),
+  // Snapshots older than this are pruned by the worker (the latest per metric is
+  // always kept regardless of age).
+  MONITORING_RETENTION_DAYS: z.coerce.number().int().positive().default(30)
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

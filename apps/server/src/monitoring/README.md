@@ -68,9 +68,13 @@ product data. Only the snapshot insert uses the writable connection.
 
 ## Environment
 
-| Variable                  | Default        | Purpose                                         |
-| ------------------------- | -------------- | ----------------------------------------------- |
-| `MONITORING_ENABLED`      | `true`         | Set `false` to disable collection in the worker |
-| `MONITORING_DATABASE_URL` | `DATABASE_URL` | Read-only DSN used to execute metric queries    |
-| `MONITORING_PORT`         | `3002`         | Port the dashboard server listens on            |
-| `MONITORING_HOST`         | `127.0.0.1`    | Bind address (localhost-only by default)        |
+| Variable                    | Default        | Purpose                                                          |
+| --------------------------- | -------------- | ---------------------------------------------------------------- |
+| `MONITORING_ENABLED`        | `true`         | Set `false` to disable collection in the worker                  |
+| `MONITORING_DATABASE_URL`   | `DATABASE_URL` | Read-only DSN used to execute metric queries                     |
+| `MONITORING_PORT`           | `3002`         | Port the dashboard server listens on                             |
+| `MONITORING_HOST`           | `127.0.0.1`    | Bind address (localhost-only by default)                         |
+| `MONITORING_RETENTION_DAYS` | `30`           | Worker prunes snapshots older than this (latest per metric kept) |
+
+The worker prunes `metric_snapshots` older than `MONITORING_RETENTION_DAYS` after
+each collection, always keeping the latest snapshot per metric.

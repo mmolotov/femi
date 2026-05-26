@@ -73,9 +73,17 @@ stale) snapshots. To take the dashboard down, stop/scale its service.
 
 ## Environment
 
-| Variable                  | Default        | Purpose                                          |
-| ------------------------- | -------------- | ------------------------------------------------ |
-| `MONITORING_ENABLED`      | `true`         | Set `false` to disable collection in the worker  |
-| `MONITORING_DATABASE_URL` | `DATABASE_URL` | Read-only DSN used to execute metric queries     |
-| `MONITORING_PORT`         | `3002`         | Dashboard port (host loopback + container)       |
-| `MONITORING_HOST`         | `127.0.0.1`    | Dashboard bind address (set `0.0.0.0` in Docker) |
+| Variable                    | Default        | Purpose                                                               |
+| --------------------------- | -------------- | --------------------------------------------------------------------- |
+| `MONITORING_ENABLED`        | `true`         | Set `false` to disable collection in the worker                       |
+| `MONITORING_DATABASE_URL`   | `DATABASE_URL` | Read-only DSN used to execute metric queries                          |
+| `MONITORING_PORT`           | `3002`         | Dashboard port (host loopback + container)                            |
+| `MONITORING_HOST`           | `127.0.0.1`    | Dashboard bind address (set `0.0.0.0` in Docker)                      |
+| `MONITORING_RETENTION_DAYS` | `30`           | Prune snapshots older than this; the latest per metric is always kept |
+
+## Retention
+
+`metric_snapshots` would otherwise grow forever (one row per metric per run). After
+each collection the worker prunes rows older than `MONITORING_RETENTION_DAYS`,
+**always keeping the most recent snapshot per metric** (even if older than the
+window) so a slow/rarely-collected metric never disappears from the dashboard.

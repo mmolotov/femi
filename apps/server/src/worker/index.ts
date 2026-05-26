@@ -3,6 +3,7 @@ import { createDatabaseConnection, createReadOnlyPool } from "@femi/db";
 import { getEnv } from "../lib/env.js";
 import { createStructuredLogger } from "../lib/structured-log.js";
 import { runMonitoringTick } from "../monitoring/index.js";
+import { pruneSnapshots } from "../monitoring/retention.js";
 
 const env = getEnv();
 const { db, pool } = createDatabaseConnection(env.DATABASE_URL);
@@ -39,6 +40,18 @@ const tick = async () => {
       logger.error("monitoring metrics failed", {
         errors: result.errors
       });
+    }
+
+    // Prune after a collection so the cadence follows real metric runs rather
+    // than every heartbeat; keeps metric_snapshots bounded.
+    if (result.ran.length > 0) {
+      const pruned = await pruneSnapshots(db, env.MONITORING_RETENTION_DAYS);
+      if (pruned > 0) {
+        logger.info("monitoring snapshots pruned", {
+          pruned,
+          retentionDays: env.MONITORING_RETENTION_DAYS
+        });
+      }
     }
   }
 };
