@@ -37,6 +37,7 @@
     "dev:server": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev",
     "dev:worker": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev:worker",
     "dev:monitoring": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev:monitoring",
+    "dev:all": "bash scripts/dev.sh",
     "typecheck": "pnpm --filter @femi/shared typecheck && pnpm --filter @femi/db typecheck && pnpm --filter @femi/server typecheck && pnpm --filter @femi/web typecheck",
     "lint": "eslint . --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
     "lint:fix": "eslint . --fix --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
@@ -50,6 +51,10 @@
     "test:e2e": "playwright test",
     "analyze": "knip --treat-config-hints-as-errors",
     "validate": "pnpm format:check && pnpm lint && pnpm lint:styles && pnpm typecheck && pnpm test:coverage && pnpm analyze && pnpm build",
-    "db:migrate": "pnpm --filter @femi/db migrate"
+    "db:migrate": "pnpm --filter @femi/db migrate",
+    "stack:up": "bash scripts/stack-up.sh",
+    "stack:down": "bash scripts/stack-down.sh",
+    "db:up": "bash scripts/db-up.sh",
+    "db:down": "bash scripts/db-down.sh"
   }
 }
