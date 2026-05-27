@@ -69,7 +69,7 @@ pnpm db:down      # stop Postgres when done, keeping data
 
 ### Endpoints
 
-- frontend: `http://localhost:5173`
+- frontend: `http://localhost:5173` — served over **HTTPS** when local dev certs exist at `apps/web/certs/femi.local.*`
 - backend health: `http://localhost:3001/api/health`
 - monitoring dashboard: `http://127.0.0.1:3002/` (loopback only)
 

@@ -17,12 +17,16 @@ async function lastGeneratedByMetric(db: Database): Promise<Map<string, Date>> {
   const rows = await db
     .select({
       metricId: metricSnapshots.metricId,
-      lastGeneratedAt: sql<Date>`max(${metricSnapshots.generatedAt})`
+      // Drizzle applies its timestamp→Date column mapping only to direct column
+      // selects, not to a raw `max(...)` aggregate, so node-postgres returns this
+      // as a string (e.g. "2026-05-27 13:57:28.64+00"). Coerce it below, otherwise
+      // isMetricDue throws "lastGeneratedAt.getTime is not a function".
+      lastGeneratedAt: sql<string>`max(${metricSnapshots.generatedAt})`
     })
     .from(metricSnapshots)
     .groupBy(metricSnapshots.metricId);
 
-  return new Map(rows.map((row) => [row.metricId, row.lastGeneratedAt]));
+  return new Map(rows.map((row) => [row.metricId, new Date(row.lastGeneratedAt)]));
 }
 
 // One scheduling pass: run every metric whose interval has elapsed and persist a

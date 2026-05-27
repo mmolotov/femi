@@ -15,8 +15,11 @@ function fakeReadPool(): Pool {
   return { connect: vi.fn().mockResolvedValue({ query, release: vi.fn() }) } as unknown as Pool;
 }
 
+// `lastGeneratedAt` is typed as a string here on purpose: a raw `max(...)`
+// aggregate bypasses Drizzle's column mapping, so node-postgres returns the
+// timestamp as a string, not a Date (see the regression test below).
 function fakeDb(
-  latest: Array<{ metricId: string; lastGeneratedAt: Date }>,
+  latest: Array<{ metricId: string; lastGeneratedAt: string }>,
   values = vi.fn().mockResolvedValue(undefined)
 ): Database {
   // lastGeneratedByMetric uses db.select(...).from(...).groupBy(...)
@@ -32,7 +35,7 @@ function fakeDb(
 
 describe("runMonitoringTick", () => {
   it("runs due metrics and skips ones still within their interval", async () => {
-    const db = fakeDb([{ metricId: "recent", lastGeneratedAt: now }]);
+    const db = fakeDb([{ metricId: "recent", lastGeneratedAt: now.toISOString() }]);
 
     const result = await runMonitoringTick(db, fakeReadPool(), now, [
       metric("fresh"),
@@ -40,6 +43,18 @@ describe("runMonitoringTick", () => {
     ]);
 
     expect(result.ran).toEqual(["fresh"]);
+    expect(result.skipped).toEqual(["recent"]);
+    expect(result.failed).toEqual([]);
+  });
+
+  it("coerces the DB's string timestamp to a Date (regression: raw max() returns a string)", async () => {
+    // node-postgres returns a raw max(generated_at) aggregate as a Postgres
+    // timestamp string, not a Date. The scheduler must treat it as a date rather
+    // than throwing "lastGeneratedAt.getTime is not a function" on every tick.
+    const db = fakeDb([{ metricId: "recent", lastGeneratedAt: "2026-05-26 11:30:00+00" }]);
+
+    const result = await runMonitoringTick(db, fakeReadPool(), now, [metric("recent")]);
+
     expect(result.skipped).toEqual(["recent"]);
     expect(result.failed).toEqual([]);
   });
