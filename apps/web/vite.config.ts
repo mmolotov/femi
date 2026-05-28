@@ -17,7 +17,7 @@ function loadHttpsCerts(dir: string) {
   return undefined;
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isPreview }) => {
   const workspaceRoot = fileURLToPath(new URL("../..", import.meta.url));
   const env = loadEnv(mode, workspaceRoot, "");
   const backendUrl = env.VITE_BACKEND_URL || "http://localhost:3001";
@@ -70,7 +70,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: "0.0.0.0",
-      https: loadHttpsCerts(import.meta.dirname),
+      // Dev server (5173) uses the femi.local certs; `vite preview` (e2e on 4173)
+      // stays HTTP so Playwright's http baseURL can reach it.
+      https: isPreview ? undefined : loadHttpsCerts(import.meta.dirname),
       port: 5173,
       proxy: {
         "/api": backendUrl,
