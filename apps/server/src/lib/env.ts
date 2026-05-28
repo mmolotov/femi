@@ -18,6 +18,12 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(3001),
+  // Enable when the server runs behind a trusted reverse proxy (Caddy/Cloudflare)
+  // so request.ip reflects the forwarded client instead of the proxy address.
+  TRUST_PROXY: z.preprocess(
+    (value) => (typeof value === "string" ? value.toLowerCase() === "true" : value),
+    z.boolean().default(false)
+  ),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   WEB_APP_URL: z.string().url().default("http://localhost"),
   TELEGRAM_WEBHOOK_URL: z.preprocess(emptyStringToUndefined, z.string().url().optional()),

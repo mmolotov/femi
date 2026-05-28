@@ -27,7 +27,8 @@ export async function createAppContext(): Promise<AppContext> {
   const app = Fastify({
     logger: {
       level: env.LOG_LEVEL
-    }
+    },
+    trustProxy: env.TRUST_PROXY
   });
 
   await app.register(cors, {

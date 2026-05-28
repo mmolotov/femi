@@ -22,6 +22,7 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     TELEGRAM_BOT_SECRET_TOKEN: "secret",
     TELEGRAM_INIT_DATA_EXPIRES_IN: 3600,
     TELEGRAM_WEBHOOK_URL: undefined,
+    TRUST_PROXY: false,
     WEB_APP_URL: "http://localhost:5173",
     WORKER_TICK_MS: 60000,
     ...overrides
