@@ -326,7 +326,6 @@ select {
    ========================================================================= */
 
 .content {
-  counter-reset: panel-counter;
   display: grid;
   gap: 1.5rem;
 }
@@ -389,21 +388,8 @@ select {
   border: 1px solid var(--rule);
   border-radius: 1.5rem;
   box-shadow: var(--shadow-raised);
-  counter-increment: panel-counter;
   padding: 1.75rem;
   position: relative;
-}
-
-.panel::before {
-  color: var(--ink-quaternary);
-  content: counter(panel-counter, decimal-leading-zero);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  position: absolute;
-  right: 1.5rem;
-  top: 1.5rem;
 }
 
 .panel-header {
@@ -412,7 +398,6 @@ select {
   gap: 1rem;
   justify-content: space-between;
   margin-bottom: 1.5rem;
-  padding-right: 3rem;
 }
 
 .panel-header > div:first-child {
@@ -853,6 +838,11 @@ select {
   width: 0.45rem;
 }
 
+.account-settings {
+  display: grid;
+  gap: 1.25rem;
+}
+
 .account-danger-card {
   background: var(--danger-soft);
   border: 1px solid var(--danger);
@@ -916,7 +906,6 @@ select {
 
 .onboarding-preview .panel-header {
   margin-bottom: 0;
-  padding-right: 0;
 }
 
 .onboarding-preview h3 {
@@ -926,10 +915,6 @@ select {
     "opsz" 48,
     "wght" 500;
   margin: 0 0 0.3rem;
-}
-
-.onboarding-panel::before {
-  content: none;
 }
 
 /* =========================================================================
@@ -1609,16 +1594,6 @@ select {
    RTL corrections
    ========================================================================= */
 
-[dir="rtl"] .panel::before {
-  left: 1.5rem;
-  right: auto;
-}
-
-[dir="rtl"] .panel-header {
-  padding-left: 3rem;
-  padding-right: 0;
-}
-
 [dir="rtl"] .status-banner {
   border-left: 1px solid var(--rule);
   border-radius: 1rem 0.25rem 0.25rem 1rem;
@@ -1661,15 +1636,6 @@ select {
 
   .panel {
     padding: 1.35rem 1.15rem;
-  }
-
-  .panel::before {
-    right: 1.15rem;
-    top: 1.15rem;
-  }
-
-  .panel-header {
-    padding-right: 2.25rem;
   }
 
   .day-details-header {

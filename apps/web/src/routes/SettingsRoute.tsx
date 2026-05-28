@@ -174,6 +174,10 @@ export function SettingsRoute() {
 
   return (
     <>
+      <Panel title={messages.settings.importantNoticeTitle}>
+        <p className="notice">{messages.settings.importantNotice}</p>
+      </Panel>
+
       <Panel
         description={messages.settings.preferencesDescription}
         title={messages.settings.preferencesTitle}
@@ -244,7 +248,7 @@ export function SettingsRoute() {
         </form>
       </Panel>
 
-      <Panel description={messages.theme.description} title={messages.theme.title}>
+      <Panel title={messages.theme.title}>
         <div className="appearance-controls">
           <div className="theme-segment" role="radiogroup" aria-label={messages.theme.title}>
             {themeOptions.map((option) => (
@@ -281,44 +285,30 @@ export function SettingsRoute() {
         </div>
       </Panel>
 
-      <Panel
-        description={messages.settings.integrationDescription}
-        title={messages.settings.integrationTitle}
-      >
-        <dl className="details-list">
-          <div>
-            <dt>{messages.settings.telegramAccount}</dt>
-            <dd>{telegramAccountLabel}</dd>
+      <Panel title={messages.settings.accountTitle}>
+        <div className="account-settings">
+          <dl className="details-list">
+            <div>
+              <dt>{messages.settings.telegramAccount}</dt>
+              <dd>{telegramAccountLabel}</dd>
+            </div>
+          </dl>
+          <div className="account-danger-card">
+            <p className="notice">{messages.settings.accountWarning}</p>
+            <button
+              className="destructive-button"
+              onClick={() => {
+                lastFocusedElementRef.current =
+                  document.activeElement instanceof HTMLElement ? document.activeElement : null;
+                setDeleteError(null);
+                setIsDeleteDialogOpen(true);
+              }}
+              type="button"
+            >
+              {messages.settings.deleteAccountIdle}
+            </button>
           </div>
-        </dl>
-      </Panel>
-
-      <Panel
-        description={messages.settings.accountDescription}
-        title={messages.settings.accountTitle}
-      >
-        <div className="account-danger-card">
-          <p className="notice">{messages.settings.accountWarning}</p>
-          <button
-            className="destructive-button"
-            onClick={() => {
-              lastFocusedElementRef.current =
-                document.activeElement instanceof HTMLElement ? document.activeElement : null;
-              setDeleteError(null);
-              setIsDeleteDialogOpen(true);
-            }}
-            type="button"
-          >
-            {messages.settings.deleteAccountIdle}
-          </button>
         </div>
-      </Panel>
-
-      <Panel
-        description={messages.settings.importantNoticeDescription}
-        title={messages.settings.importantNoticeTitle}
-      >
-        <p className="notice">{messages.settings.importantNotice}</p>
       </Panel>
 
       <div className="about-app-row">

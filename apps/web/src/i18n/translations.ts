@@ -62,6 +62,7 @@ export const baseMessages = {
     periodLengthHint: "Common range: 2 to 10 days",
     submitIdle: "Save setup",
     submitPending: "Saving…",
+    disclaimerContinue: "Continue",
     saveError: "Setup could not be saved."
   },
   today: {
@@ -258,7 +259,6 @@ export const baseMessages = {
     saveSuccess: "Settings saved.",
     saveError: "Settings could not be saved.",
     accountTitle: "Account",
-    accountDescription: "Irreversible account actions live here.",
     accountWarning:
       "Deleting the account removes your profile, cycle history, check-ins, and all related data.",
     deleteAccountIdle: "Delete account and data",
@@ -269,16 +269,12 @@ export const baseMessages = {
       "This action is permanent. Your account, cycle history, settings, check-ins, and all related data will be deleted and cannot be restored.",
     deleteDialogCancel: "Cancel",
     deleteDialogConfirm: "Delete permanently",
-    integrationTitle: "Telegram integration",
-    integrationDescription: "Shows the Telegram account linked to this app.",
     telegramAccount: "Telegram account",
     telegramAccountFallback: "account not available yet",
     languageTitle: "Language",
     importantNoticeTitle: "Important notice",
-    importantNoticeDescription:
-      "This copy matches the project disclaimer and should remain visible in the product.",
     importantNotice:
-      "femi is not a medical app and does not provide medical advice, diagnosis, or treatment recommendations.",
+      "femi is not a medical app and does not provide medical advice, diagnosis, or treatment. Predictions are estimates and should not be used for contraception or to diagnose any condition — consult a healthcare professional for medical decisions.",
     aboutButton: "About the app",
     aboutTitle: "About femi",
     aboutBody:
@@ -287,7 +283,6 @@ export const baseMessages = {
   },
   theme: {
     title: "Appearance",
-    description: "Switch between paper and ink themes, or follow your system preference.",
     light: "Paper",
     dark: "Ink",
     system: "System"
@@ -348,6 +343,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthHint: "Обычный диапазон: от 2 до 10 дней",
       submitIdle: "Сохранить настройку",
       submitPending: "Сохраняем…",
+      disclaimerContinue: "Продолжить",
       saveError: "Не удалось сохранить начальную настройку."
     },
     today: {
@@ -560,7 +556,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       saveSuccess: "Настройки сохранены.",
       saveError: "Не удалось сохранить настройки.",
       accountTitle: "Аккаунт",
-      accountDescription: "Здесь находятся необратимые действия с аккаунтом.",
       accountWarning:
         "Удаление аккаунта удалит профиль, историю цикла, чек-ины и все связанные данные.",
       deleteAccountIdle: "Удалить аккаунт и данные",
@@ -571,16 +566,12 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Это действие необратимо. Аккаунт, история цикла, настройки, чек-ины и все связанные данные будут удалены без возможности восстановления.",
       deleteDialogCancel: "Отмена",
       deleteDialogConfirm: "Удалить навсегда",
-      integrationTitle: "Интеграция с Telegram",
-      integrationDescription: "Показывает аккаунт Telegram, привязанный к приложению.",
       telegramAccount: "Аккаунт Telegram",
       telegramAccountFallback: "аккаунт пока недоступен",
       languageTitle: "Язык",
       importantNoticeTitle: "Важное уведомление",
-      importantNoticeDescription:
-        "Этот текст повторяет project disclaimer и должен оставаться видимым в продукте.",
       importantNotice:
-        "femi не является медицинским приложением и не дает медицинских рекомендаций, диагнозов или назначений лечения.",
+        "femi не является медицинским приложением и не даёт медицинских советов, диагнозов или назначений лечения. Прогнозы приблизительны и не предназначены для контрацепции или диагностики — по медицинским вопросам обращайтесь к специалисту.",
       aboutButton: "О приложении",
       aboutTitle: "О femi",
       aboutBody:
@@ -589,7 +580,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     theme: {
       title: "Оформление",
-      description: "Переключайтесь между светлой и тёмной темой или следуйте системным настройкам.",
       light: "Бумага",
       dark: "Чернила",
       system: "Система"
@@ -631,6 +621,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthHint: "Rango común: de 2 a 10 días",
       submitIdle: "Guardar configuración",
       submitPending: "Guardando…",
+      disclaimerContinue: "Continuar",
       saveError: "No se pudo guardar la configuración inicial."
     },
     today: {
@@ -816,16 +807,12 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       savePending: "Guardando ajustes…",
       saveSuccess: "Ajustes guardados.",
       saveError: "No se pudieron guardar los ajustes.",
-      integrationTitle: "Integración con Telegram",
-      integrationDescription: "Muestra la cuenta de Telegram vinculada a esta app.",
       telegramAccount: "Cuenta de Telegram",
       telegramAccountFallback: "la cuenta todavía no está disponible",
       languageTitle: "Idioma",
       importantNoticeTitle: "Aviso importante",
-      importantNoticeDescription:
-        "Este texto coincide con el disclaimer del proyecto y debe permanecer visible en el producto.",
       importantNotice:
-        "femi no es una aplicación médica y no ofrece recomendaciones médicas, diagnóstico ni tratamiento.",
+        "femi no es una aplicación médica y no ofrece asesoramiento médico, diagnóstico ni tratamiento. Las predicciones son estimaciones y no deben usarse como método anticonceptivo ni para diagnosticar ninguna afección; consulta a un profesional de la salud para tomar decisiones médicas.",
       aboutButton: "Acerca de la app",
       aboutTitle: "Acerca de femi",
       aboutBody:
@@ -834,7 +821,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     theme: {
       title: "Apariencia",
-      description: "Cambia entre los temas claro y oscuro, o sigue la preferencia del sistema.",
       light: "Papel",
       dark: "Tinta",
       system: "Sistema"
@@ -876,6 +862,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthHint: "Faixa comum: de 2 a 10 dias",
       submitIdle: "Salvar configuração",
       submitPending: "Salvando…",
+      disclaimerContinue: "Continuar",
       saveError: "Não foi possível salvar a configuração inicial."
     },
     today: {
@@ -1068,8 +1055,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPosture: "Postura de dados",
       dataPostureValue:
         "Sem anúncios, sem venda de dados pessoais e sem compartilhamento com terceiros não relacionados.",
-      integrationTitle: "Integração com Telegram",
-      integrationDescription: "Mostra a conta do Telegram vinculada a este app.",
       aboutButton: "Sobre o app",
       aboutTitle: "Sobre o femi",
       aboutBody:
@@ -1092,14 +1077,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       languageDescription:
         "O app detecta automaticamente o idioma do Telegram ou do navegador, mas a usuária pode alterar aqui.",
       importantNoticeTitle: "Aviso importante",
-      importantNoticeDescription:
-        "Este texto espelha o disclaimer do projeto e deve permanecer visível no produto.",
       importantNotice:
-        "femi não é um aplicativo médico e não fornece aconselhamento médico, diagnóstico ou recomendações de tratamento."
+        "femi não é um aplicativo médico e não fornece aconselhamento médico, diagnóstico ou tratamento. As previsões são estimativas e não devem ser usadas para contracepção ou para diagnosticar qualquer condição — consulte um profissional de saúde para decisões médicas."
     },
     theme: {
       title: "Aparência",
-      description: "Alterne entre os temas claro e escuro, ou siga a preferência do sistema.",
       light: "Papel",
       dark: "Tinta",
       system: "Sistema"
@@ -1141,6 +1123,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthHint: "Yaygın aralık: 2 ila 10 gün",
       submitIdle: "Kurulumu kaydet",
       submitPending: "Kaydediliyor…",
+      disclaimerContinue: "Devam et",
       saveError: "İlk kurulum kaydedilemedi."
     },
     today: {
@@ -1329,8 +1312,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       coreModelValue: "Reklamsız ve temel işlevler için abonelik engeli yok.",
       dataPosture: "Veri yaklaşımı",
       dataPostureValue: "Reklam yok, kişisel veri satışı yok, alakasız üçüncü taraf paylaşımı yok.",
-      integrationTitle: "Telegram entegrasyonu",
-      integrationDescription: "Bu uygulamaya bağlı Telegram hesabını gösterir.",
       aboutButton: "Uygulama hakkında",
       aboutTitle: "femi hakkında",
       aboutBody:
@@ -1353,14 +1334,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       languageDescription:
         "Uygulama Telegram veya tarayıcı dilini otomatik algılar, ancak kullanıcı burada değiştirebilir.",
       importantNoticeTitle: "Önemli uyarı",
-      importantNoticeDescription:
-        "Bu metin proje disclaimer'ı ile uyumludur ve üründe görünür kalmalıdır.",
       importantNotice:
-        "femi tıbbi bir uygulama değildir ve tıbbi tavsiye, teşhis veya tedavi önerisi sunmaz."
+        "femi tıbbi bir uygulama değildir ve tıbbi tavsiye, teşhis veya tedavi sağlamaz. Tahminler yalnızca öngörüdür; doğum kontrolü veya herhangi bir durumu teşhis etmek için kullanılmamalıdır — tıbbi kararlar için bir sağlık uzmanına danışın."
     },
     theme: {
       title: "Görünüm",
-      description: "Açık ve koyu temalar arasında geçiş yapın veya sistem tercihinizi kullanın.",
       light: "Kağıt",
       dark: "Mürekkep",
       system: "Sistem"
@@ -1402,6 +1380,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthHint: "Поширений діапазон: від 2 до 10 днів",
       submitIdle: "Зберегти налаштування",
       submitPending: "Зберігаємо…",
+      disclaimerContinue: "Продовжити",
       saveError: "Не вдалося зберегти початкове налаштування."
     },
     today: {
@@ -1592,8 +1571,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPosture: "Підхід до даних",
       dataPostureValue:
         "Без реклами, без продажу персональних даних і без передачі не пов'язаним третім сторонам.",
-      integrationTitle: "Інтеграція з Telegram",
-      integrationDescription: "Показує акаунт Telegram, прив'язаний до застосунку.",
       aboutButton: "Про застосунок",
       aboutTitle: "Про femi",
       aboutBody:
@@ -1616,15 +1593,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       languageDescription:
         "Застосунок автоматично визначає мову Telegram або браузера, але користувачка може змінити її тут.",
       importantNoticeTitle: "Важливе повідомлення",
-      importantNoticeDescription:
-        "Цей текст повторює project disclaimer і має залишатися видимим у продукті.",
       importantNotice:
-        "femi не є медичним застосунком і не надає медичних рекомендацій, діагнозів або призначень лікування."
+        "femi не є медичним застосунком і не надає медичних порад, діагнозів чи призначень лікування. Прогнози є приблизними й не призначені для контрацепції або діагностики — з медичних питань звертайтеся до фахівця."
     },
     theme: {
       title: "Оформлення",
-      description:
-        "Перемикайтеся між світлою та темною темами або дотримуйтеся системних налаштувань.",
       light: "Папір",
       dark: "Чорнило",
       system: "Система"
@@ -1666,6 +1639,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthHint: "النطاق الشائع: من 2 إلى 10 أيام",
       submitIdle: "حفظ الإعداد",
       submitPending: "جارٍ الحفظ…",
+      disclaimerContinue: "متابعة",
       saveError: "تعذر حفظ الإعداد الأولي."
     },
     today: {
@@ -1851,8 +1825,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       dataPosture: "نهج البيانات",
       dataPostureValue:
         "لا إعلانات، لا بيع للبيانات الشخصية، ولا مشاركة مع أطراف ثالثة غير مرتبطة.",
-      integrationTitle: "تكامل Telegram",
-      integrationDescription: "يعرض حساب Telegram المرتبط بهذا التطبيق.",
       aboutButton: "حول التطبيق",
       aboutTitle: "حول femi",
       aboutBody:
@@ -1875,13 +1847,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       languageDescription:
         "يكتشف التطبيق لغة Telegram أو المتصفح تلقائيًا، لكن يمكن للمستخدمة تغييرها هنا.",
       importantNoticeTitle: "تنبيه مهم",
-      importantNoticeDescription:
-        "يتطابق هذا النص مع disclaimer الخاص بالمشروع ويجب أن يبقى ظاهرًا داخل المنتج.",
-      importantNotice: "femi ليس تطبيقًا طبيًا ولا يقدم نصائح طبية أو تشخيصًا أو توصيات علاجية."
+      importantNotice:
+        "femi ليس تطبيقًا طبيًا ولا يقدّم نصائح طبية أو تشخيصًا أو علاجًا. التوقعات تقديرية ولا ينبغي استخدامها لمنع الحمل أو لتشخيص أي حالة — استشر أخصائي رعاية صحية لاتخاذ القرارات الطبية."
     },
     theme: {
       title: "المظهر",
-      description: "بدّل بين الوضع الفاتح والداكن، أو اتبع تفضيلات النظام.",
       light: "ورق",
       dark: "حبر",
       system: "النظام"
