@@ -214,8 +214,9 @@ export function OnboardingGate() {
             </div>
           </header>
 
-          <div className="calendar-toolbar">
+          <div className="calendar-nav">
             <button
+              aria-label={messages.calendar.previousMonth}
               className="secondary-button"
               disabled={!previewMonth || previewMonth <= minMonth}
               onClick={() => {
@@ -223,10 +224,13 @@ export function OnboardingGate() {
               }}
               type="button"
             >
-              {messages.calendar.previousMonth}
+              ‹
             </button>
-            <strong>{formatIsoMonthForDisplay(previewMonth, language)}</strong>
+            <strong className="calendar-range">
+              {formatIsoMonthForDisplay(previewMonth, language)}
+            </strong>
             <button
+              aria-label={messages.calendar.nextMonth}
               className="secondary-button"
               disabled={!previewMonth || previewMonth >= maxMonth}
               onClick={() => {
@@ -234,7 +238,7 @@ export function OnboardingGate() {
               }}
               type="button"
             >
-              {messages.calendar.nextMonth}
+              ›
             </button>
           </div>
 

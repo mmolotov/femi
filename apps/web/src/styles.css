@@ -331,6 +331,13 @@ select {
   gap: 1.5rem;
 }
 
+/* Grid items default to min-width: auto, which lets a wide child push a panel
+   past the viewport on narrow screens. Allow panels to shrink to their track. */
+/* stylelint-disable-next-line no-descending-specificity */
+.content > * {
+  min-width: 0;
+}
+
 .status-banner {
   align-items: center;
   background: var(--bg-elevated);
@@ -973,28 +980,6 @@ select {
    Calendar
    ========================================================================= */
 
-.calendar-toolbar {
-  align-items: center;
-  background: var(--bg-canvas);
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  display: flex;
-  gap: 0.75rem;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding: 0.4rem 0.55rem 0.4rem 1.5rem;
-}
-
-.calendar-toolbar strong {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  font-variation-settings:
-    "opsz" 72,
-    "wght" 400;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
 .calendar-legend {
   color: var(--ink-secondary);
   display: flex;
@@ -1092,8 +1077,12 @@ select {
 }
 
 .onboarding-calendar-grid .calendar-day {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.7rem;
   cursor: default;
-  min-height: 4.5rem;
+  gap: 0;
+  min-height: 0;
+  padding: 0.35rem 0.45rem;
 }
 
 .calendar-day.today {
@@ -1162,6 +1151,26 @@ select {
 
 [data-theme="dark"] .calendar-day.logged .calendar-day-flow {
   color: var(--flow);
+}
+
+/* Onboarding preview: square, number-only cells matching the Calendar route */
+.onboarding-calendar-grid .calendar-day-placeholder {
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.onboarding-calendar-grid .calendar-day-number {
+  font-size: 0.95rem;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.onboarding-calendar-grid .calendar-day-flow {
+  display: none;
+}
+
+.onboarding-calendar-grid .calendar-day.logged::after {
+  content: none;
 }
 
 .calendar-day-symptoms {
@@ -1666,10 +1675,6 @@ select {
   .day-details-header {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .calendar-toolbar {
-    padding: 0.35rem 0.45rem 0.35rem 1rem;
   }
 
   .calendar-grid {
