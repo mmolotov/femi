@@ -6,8 +6,3 @@ pnpm-lock.yaml
 .claude
 playwright-report
 test-results
-evidence/.evidence
-evidence/.svelte-kit
-evidence/build
-evidence/static/data
-evidence/sources/*/connection.yaml

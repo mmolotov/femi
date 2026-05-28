@@ -36,13 +36,11 @@
     "dev:web": "pnpm --filter @femi/web dev",
     "dev:server": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev",
     "dev:worker": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev:worker",
-    "evidence:dev": "pnpm --dir evidence run dev",
-    "evidence:sources": "pnpm --dir evidence run sources",
-    "evidence:build": "pnpm evidence:sources && pnpm --dir evidence run build",
-    "evidence:preview": "pnpm --dir evidence run preview",
+    "dev:monitoring": "pnpm --filter @femi/shared build && pnpm --filter @femi/db build && pnpm --parallel --filter @femi/shared --filter @femi/db --filter @femi/server run dev:monitoring",
+    "dev:all": "bash scripts/dev.sh",
     "typecheck": "pnpm --filter @femi/shared typecheck && pnpm --filter @femi/db typecheck && pnpm --filter @femi/server typecheck && pnpm --filter @femi/web typecheck",
-    "lint": "eslint . --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map' --ignore-pattern 'evidence/.evidence/**' --ignore-pattern 'evidence/.svelte-kit/**' --ignore-pattern 'evidence/build/**' --ignore-pattern 'evidence/static/data/**'",
-    "lint:fix": "eslint . --fix --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map' --ignore-pattern 'evidence/.evidence/**' --ignore-pattern 'evidence/.svelte-kit/**' --ignore-pattern 'evidence/build/**' --ignore-pattern 'evidence/static/data/**'",
+    "lint": "eslint . --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
+    "lint:fix": "eslint . --fix --ignore-pattern '**/dist/**' --ignore-pattern '**/*.d.ts' --ignore-pattern '**/*.d.ts.map'",
     "lint:styles": "stylelint 'apps/web/src/**/*.css'",
     "lint:styles:fix": "stylelint 'apps/web/src/**/*.css' --fix",
     "format": "prettier . --write",
@@ -53,6 +51,10 @@
     "test:e2e": "playwright test",
     "analyze": "knip --treat-config-hints-as-errors",
     "validate": "pnpm format:check && pnpm lint && pnpm lint:styles && pnpm typecheck && pnpm test:coverage && pnpm analyze && pnpm build",
-    "db:migrate": "pnpm --filter @femi/db migrate"
+    "db:migrate": "pnpm --filter @femi/db migrate",
+    "stack:up": "bash scripts/stack-up.sh",
+    "stack:down": "bash scripts/stack-down.sh",
+    "db:up": "bash scripts/db-up.sh",
+    "db:down": "bash scripts/db-down.sh"
   }
 }

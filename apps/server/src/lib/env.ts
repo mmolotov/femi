@@ -25,7 +25,21 @@ const envSchema = z.object({
   BOT_TOKEN: z.string().min(1),
   TELEGRAM_BOT_SECRET_TOKEN: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
   TELEGRAM_INIT_DATA_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
-  WORKER_TICK_MS: z.coerce.number().int().positive().default(60000)
+  WORKER_TICK_MS: z.coerce.number().int().positive().default(60000),
+  // Read-only connection used by the monitoring scheduler to run metric queries.
+  // Falls back to DATABASE_URL when unset (fine for local dev).
+  MONITORING_DATABASE_URL: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+  MONITORING_ENABLED: z.preprocess(
+    (value) => (typeof value === "string" ? value.toLowerCase() !== "false" : value),
+    z.boolean().default(true)
+  ),
+  // Internal monitoring dashboard server. Binds to localhost by default; TASK-36.3
+  // wires it into the deployment so it stays off the public internet.
+  MONITORING_PORT: z.coerce.number().int().positive().default(3002),
+  MONITORING_HOST: z.string().default("127.0.0.1"),
+  // Snapshots older than this are pruned by the worker (the latest per metric is
+  // always kept regardless of age).
+  MONITORING_RETENTION_DAYS: z.coerce.number().int().positive().default(30)
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

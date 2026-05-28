@@ -1,10 +1,8 @@
 name: Security Audit
 
 # Cooldown (pnpm minimumReleaseAge + Dependabot cooldown) only delays *new*
-# versions. This job catches advisories disclosed against versions already in
-# the lockfile. It is intentionally non-blocking: the report is surfaced as a
-# step annotation without failing required checks, so the existing transitive
-# backlog (mostly from the `evidence` workspace) does not gate every PR.
+# versions. This scheduled job catches advisories disclosed against versions
+# already in the lockfile and fails when any moderate+ advisory is present.
 
 on:
   schedule:
@@ -39,6 +37,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Audit dependencies (report, non-blocking)
-        continue-on-error: true
+      - name: Audit dependencies
         run: pnpm audit --audit-level=moderate

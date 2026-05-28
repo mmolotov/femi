@@ -16,11 +16,7 @@ export default defineConfig(
       "**/coverage/**",
       "**/node_modules/**",
       "**/playwright-report/**",
-      "**/test-results/**",
-      "evidence/.evidence/**",
-      "evidence/.svelte-kit/**",
-      "evidence/build/**",
-      "evidence/static/data/**"
+      "**/test-results/**"
     ],
     linterOptions: {
       reportUnusedDisableDirectives: "error"

@@ -1,5 +1,4 @@
 packages:
-  - evidence
   - apps/*
   - packages/*
 
@@ -22,3 +21,4 @@ overrides:
   "fast-uri@<3.1.2": ">=3.1.2" # GHSA-q3j6-qgpj-74h6, GHSA-v39h-62p7-jpjc (via fastify)
   "ws@>=8.0.0 <8.20.1": ">=8.20.1" # GHSA-58qx-3vcg-4xpx
   "brace-expansion@>=5.0.0 <5.0.6": ">=5.0.6" # GHSA-jxxr-4gwj-5jf2 (ReDoS)
+  "postcss@<8.5.10": ">=8.5.10" # GHSA-qx2v-qp2m-jg93 (via stylelint)

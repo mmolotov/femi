@@ -1,10 +1,18 @@
-import { createDatabaseConnection } from "@femi/db";
+import { createDatabaseConnection, createReadOnlyPool } from "@femi/db";
 
 import { getEnv } from "../lib/env.js";
 import { createStructuredLogger } from "../lib/structured-log.js";
+import { runMonitoringTick } from "../monitoring/index.js";
+import { pruneSnapshots } from "../monitoring/retention.js";
 
 const env = getEnv();
-const { pool } = createDatabaseConnection(env.DATABASE_URL);
+const { db, pool } = createDatabaseConnection(env.DATABASE_URL);
+// Metric queries run on a read-only connection so monitoring can never mutate
+// product data; snapshot writes use the writable `db` above. Only opened when
+// monitoring is enabled.
+const readPool = env.MONITORING_ENABLED
+  ? createReadOnlyPool(env.MONITORING_DATABASE_URL ?? env.DATABASE_URL)
+  : null;
 const logger = createStructuredLogger("worker", env.LOG_LEVEL);
 
 const tick = async () => {
@@ -18,6 +26,34 @@ const tick = async () => {
   } finally {
     client.release();
   }
+
+  if (readPool) {
+    const result = await runMonitoringTick(db, readPool);
+    if (result.ran.length > 0 || result.failed.length > 0) {
+      logger.info("monitoring tick", {
+        ran: result.ran,
+        failed: result.failed,
+        skipped: result.skipped.length
+      });
+    }
+    if (result.errors.length > 0) {
+      logger.error("monitoring metrics failed", {
+        errors: result.errors
+      });
+    }
+
+    // Prune after a collection so the cadence follows real metric runs rather
+    // than every heartbeat; keeps metric_snapshots bounded.
+    if (result.ran.length > 0) {
+      const pruned = await pruneSnapshots(db, env.MONITORING_RETENTION_DAYS);
+      if (pruned > 0) {
+        logger.info("monitoring snapshots pruned", {
+          pruned,
+          retentionDays: env.MONITORING_RETENTION_DAYS
+        });
+      }
+    }
+  }
 };
 
 await tick().catch((error: unknown) => {
@@ -26,12 +62,25 @@ await tick().catch((error: unknown) => {
   });
 });
 
+// Guard against overlapping ticks: if one is still running when the interval
+// fires (slow query / DB stall), skip rather than double-run metrics.
+let ticking = false;
 const timer = setInterval(() => {
-  void tick().catch((error: unknown) => {
-    logger.error("worker tick failed", {
-      error
+  if (ticking) {
+    logger.warn("worker tick still running; skipping this interval");
+    return;
+  }
+
+  ticking = true;
+  void tick()
+    .catch((error: unknown) => {
+      logger.error("worker tick failed", {
+        error
+      });
+    })
+    .finally(() => {
+      ticking = false;
     });
-  });
 }, env.WORKER_TICK_MS);
 
 const shutdown = async (signal: string) => {
@@ -39,7 +88,11 @@ const shutdown = async (signal: string) => {
   logger.info("worker shutdown", {
     signal
   });
-  await pool.end();
+  const closing = [pool.end()];
+  if (readPool) {
+    closing.push(readPool.end());
+  }
+  await Promise.allSettled(closing);
   process.exit(0);
 };
 
