@@ -16,6 +16,9 @@ services:
   server:
     environment:
       NODE_ENV: production
+      # Behind Caddy/Cloudflare: trust the proxy so request.ip and the
+      # CF-Connecting-IP rate-limit key reflect the real client.
+      TRUST_PROXY: "true"
     networks:
       - default
       - edge

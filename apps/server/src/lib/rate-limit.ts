@@ -6,15 +6,16 @@ import type { AppEnv } from "./env.js";
 export const API_RATE_LIMIT_MAX = 100;
 export const API_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
-function rateLimitKey(request: FastifyRequest): string {
-  // Behind Cloudflare the real visitor IP is in CF-Connecting-IP, which clients
-  // cannot forge (Cloudflare overwrites it). Keying on it avoids both bucketing
-  // every user under the proxy IP and X-Forwarded-For spoofing. Falls back to
-  // the connection IP for any non-proxied path.
-  const cfConnectingIp = request.headers["cf-connecting-ip"];
+function rateLimitKey(request: FastifyRequest, env: AppEnv): string {
+  // Trust Cloudflare's CF-Connecting-IP only when we are explicitly behind a
+  // trusted proxy; otherwise a direct client could forge the header to rotate
+  // its bucket. With TRUST_PROXY off, fall back to the connection IP.
+  if (env.TRUST_PROXY) {
+    const cfConnectingIp = request.headers["cf-connecting-ip"];
 
-  if (typeof cfConnectingIp === "string" && cfConnectingIp.length > 0) {
-    return cfConnectingIp;
+    if (typeof cfConnectingIp === "string" && cfConnectingIp.length > 0) {
+      return cfConnectingIp;
+    }
   }
 
   return request.ip;
@@ -30,7 +31,7 @@ export async function registerRateLimit(app: FastifyInstance, env: AppEnv): Prom
   await app.register(fastifyRateLimit, {
     global: enableGlobalLimit,
     hook: "preHandler",
-    keyGenerator: rateLimitKey,
+    keyGenerator: (request) => rateLimitKey(request, env),
     max: API_RATE_LIMIT_MAX,
     timeWindow: API_RATE_LIMIT_WINDOW_MS
   });

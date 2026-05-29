@@ -32,7 +32,7 @@ export async function createAppContext(): Promise<AppContext> {
   });
 
   await app.register(cors, {
-    origin: true
+    origin: env.WEB_APP_URL
   });
   await registerRateLimit(app, env);
 

@@ -21,6 +21,7 @@ const { AuthContextErrorMock, resolveAuthenticatedUserMock } = vi.hoisted(() => 
 
 vi.mock("../lib/auth-context.js", () => ({
   AuthContextError: AuthContextErrorMock,
+  getVerifiedTelegramUserId: () => "10001",
   resolveAuthenticatedUser: resolveAuthenticatedUserMock
 }));
 

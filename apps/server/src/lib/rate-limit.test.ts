@@ -78,29 +78,40 @@ describe("registerRateLimit", () => {
     });
   });
 
-  it("keys rate limiting on CF-Connecting-IP with a connection-IP fallback", async () => {
-    const app = {
-      log: {
-        info: vi.fn()
-      },
-      register: vi.fn().mockResolvedValue(undefined)
-    } as unknown as {
-      log: {
-        info: ReturnType<typeof vi.fn>;
+  it("trusts CF-Connecting-IP only when behind a trusted proxy", async () => {
+    const captureKeyGenerator = async (env: AppEnv) => {
+      const app = {
+        log: {
+          info: vi.fn()
+        },
+        register: vi.fn().mockResolvedValue(undefined)
+      } as unknown as {
+        log: {
+          info: ReturnType<typeof vi.fn>;
+        };
+        register: ReturnType<typeof vi.fn>;
       };
-      register: ReturnType<typeof vi.fn>;
+
+      await registerRateLimit(app as never, env);
+
+      const [, options] = app.register.mock.calls[0] as [
+        unknown,
+        { keyGenerator: (request: { headers: Record<string, string>; ip: string }) => string }
+      ];
+
+      return options.keyGenerator;
     };
 
-    await registerRateLimit(app as never, createEnv());
+    const trusted = await captureKeyGenerator(createEnv({ TRUST_PROXY: true }));
+    expect(trusted({ headers: { "cf-connecting-ip": "203.0.113.7" }, ip: "10.0.0.1" })).toBe(
+      "203.0.113.7"
+    );
+    expect(trusted({ headers: {}, ip: "10.0.0.1" })).toBe("10.0.0.1");
 
-    const [, options] = app.register.mock.calls[0] as [
-      unknown,
-      { keyGenerator: (request: { headers: Record<string, string>; ip: string }) => string }
-    ];
-
-    expect(
-      options.keyGenerator({ headers: { "cf-connecting-ip": "203.0.113.7" }, ip: "10.0.0.1" })
-    ).toBe("203.0.113.7");
-    expect(options.keyGenerator({ headers: {}, ip: "10.0.0.1" })).toBe("10.0.0.1");
+    // Without a trusted proxy the client-supplied header is ignored.
+    const untrusted = await captureKeyGenerator(createEnv({ TRUST_PROXY: false }));
+    expect(untrusted({ headers: { "cf-connecting-ip": "203.0.113.7" }, ip: "10.0.0.1" })).toBe(
+      "10.0.0.1"
+    );
   });
 });

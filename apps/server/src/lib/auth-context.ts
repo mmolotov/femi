@@ -80,6 +80,16 @@ function parseTelegramUserId(initDataRaw: string, env: AppEnv): bigint {
   return BigInt(telegramUser.id);
 }
 
+// HMAC-verified Telegram user id for rate-limit keying (no DB lookup). Returns
+// null instead of throwing so it can be used as a non-fatal key generator.
+export function getVerifiedTelegramUserId(request: FastifyRequest, env: AppEnv): string | null {
+  try {
+    return parseTelegramUserId(readTelegramInitDataHeader(request), env).toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function resolveAuthenticatedUser(
   request: FastifyRequest,
   db: Database,

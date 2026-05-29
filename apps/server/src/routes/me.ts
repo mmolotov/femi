@@ -9,7 +9,11 @@ import {
 import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
-import { AuthContextError, resolveAuthenticatedUser } from "../lib/auth-context.js";
+import {
+  AuthContextError,
+  getVerifiedTelegramUserId,
+  resolveAuthenticatedUser
+} from "../lib/auth-context.js";
 import type { AppEnv } from "../lib/env.js";
 import { API_RATE_LIMIT_WINDOW_MS } from "../lib/rate-limit.js";
 
@@ -105,9 +109,12 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
     "/api/me",
     {
       // Stricter cap on this destructive endpoint. On by default; only an
-      // explicit RATE_LIMIT_ENABLED=false (e.g. local dev) skips it.
+      // explicit RATE_LIMIT_ENABLED=false (e.g. local dev) skips it. Keyed on
+      // the HMAC-verified Telegram user so the cap is per-account: unspoofable
+      // and unaffected by shared egress IPs (falls back to IP pre-auth).
       preHandler: deps.env.RATE_LIMIT_ENABLED
         ? app.rateLimit({
+            keyGenerator: (request) => getVerifiedTelegramUserId(request, deps.env) ?? request.ip,
             max: 10,
             timeWindow: API_RATE_LIMIT_WINDOW_MS
           })
