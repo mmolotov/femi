@@ -18,6 +18,8 @@ test.describe("settings and account", () => {
     const ink = page.getByRole("radio", { name: /^ink$/i });
     await ink.click();
     await expect(ink).toHaveAttribute("aria-checked", "true");
+    // The theme must actually be applied to the document, not just the radio state.
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   });
 
   test("switches the language to Russian", async ({ page }) => {

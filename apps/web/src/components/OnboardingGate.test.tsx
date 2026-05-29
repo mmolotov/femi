@@ -48,6 +48,9 @@ describe("OnboardingGate", () => {
       </I18nProvider>
     );
 
+    // Dismiss the disclaimer gate before interacting with the onboarding form.
+    fireEvent.click(screen.getByRole("button", { name: /^continue$/i }));
+
     fireEvent.change(screen.getByLabelText(/usual cycle length/i), {
       target: { value: "30" }
     });
@@ -106,6 +109,9 @@ describe("OnboardingGate", () => {
         <OnboardingGate />
       </I18nProvider>
     );
+
+    // Dismiss the disclaimer gate before interacting with the onboarding form.
+    fireEvent.click(getByRole("button", { name: /^continue$/i }));
 
     const cycleLengthInput = getByLabelText(/usual cycle length/i);
 

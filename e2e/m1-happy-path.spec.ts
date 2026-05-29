@@ -39,6 +39,16 @@ test("completes the M1 browser-demo happy path", async ({ page }) => {
 
   await page.getByRole("link", { name: /^history$/i }).click();
   await expect(page.getByRole("heading", { name: /^history$/i })).toBeVisible();
-  // The cycle summary stays visible regardless of collapse state and reflects onboarding.
-  await expect(page.getByText(/period length 6/i)).toBeVisible();
+
+  // Expand the current cycle's phases and confirm the saved check-in (mood 4)
+  // round-tripped into History — not a settings-derived value.
+  const phaseSummaries = page
+    .locator("details.history-card")
+    .first()
+    .locator("details.history-phase-card > summary");
+  const phaseCount = await phaseSummaries.count();
+  for (let index = 0; index < phaseCount; index += 1) {
+    await phaseSummaries.nth(index).click();
+  }
+  await expect(page.getByText(/mood 4/i).first()).toBeVisible();
 });

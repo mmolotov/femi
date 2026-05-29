@@ -52,7 +52,15 @@ const sdkMocks = vi.hoisted(() => {
 
 vi.mock("@telegram-apps/sdk-react", () => sdkMocks);
 
-import { initializeTelegramRuntime } from "./telegram";
+import { closeTelegramApp, initializeTelegramRuntime } from "./telegram";
+
+type TelegramWindowLike = Window & {
+  Telegram?: { WebApp?: { initData?: string; close?: () => void } };
+};
+
+function setTelegramWebApp(webApp: { initData?: string; close?: () => void }): void {
+  (window as TelegramWindowLike).Telegram = { WebApp: webApp };
+}
 
 describe("initializeTelegramRuntime", () => {
   beforeEach(() => {
@@ -100,5 +108,30 @@ describe("initializeTelegramRuntime", () => {
     });
 
     expect(sdkMocks.init).not.toHaveBeenCalled();
+  });
+});
+
+describe("closeTelegramApp", () => {
+  afterEach(() => {
+    delete (window as TelegramWindowLike).Telegram;
+    window.history.replaceState({}, "", "/");
+  });
+
+  it("closes the mini app when running inside Telegram", () => {
+    const close = vi.fn();
+    setTelegramWebApp({ close, initData: "stub" });
+
+    expect(closeTelegramApp()).toBe(true);
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns false in a plain browser without attempting to close", () => {
+    expect(closeTelegramApp()).toBe(false);
+  });
+
+  it("returns false when the Telegram runtime exposes no close method", () => {
+    setTelegramWebApp({ initData: "stub" });
+
+    expect(closeTelegramApp()).toBe(false);
   });
 });

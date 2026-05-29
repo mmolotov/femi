@@ -38,11 +38,14 @@ test.describe("today check-in", () => {
 
   test("navigates to another date via the week strip", async ({ page }) => {
     const weekStrip = page.getByRole("region", { name: /week/i });
-    const monday = weekStrip.getByRole("button").filter({ hasText: "Mon" });
+    // Today (2026-05-28) is a logged period day from onboarding; navigating to an
+    // earlier, non-period day must select it AND load its data (Mark period day).
+    const monday = weekStrip.getByRole("button", { name: /5\/25\/2026/ });
 
     await monday.click();
 
     await expect(monday).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: /mark period day/i })).toBeVisible();
   });
 
   test("edits a saved check-in and clears a numeric field", async ({ page }) => {
@@ -53,8 +56,8 @@ test.describe("today check-in", () => {
 
     // Navigate away and back so the form refetches the persisted entry.
     const weekStrip = page.getByRole("region", { name: /week/i });
-    await weekStrip.getByRole("button").filter({ hasText: "Mon" }).click();
-    await weekStrip.getByRole("button", { name: /today/i }).click();
+    await weekStrip.getByRole("button", { name: /5\/25\/2026/ }).click();
+    await weekStrip.getByRole("button", { name: /5\/28\/2026/ }).click();
     await expect(page.getByRole("combobox", { name: /^mood$/i })).toHaveValue("4");
 
     // Clearing a previously-saved numeric field must save without error.
