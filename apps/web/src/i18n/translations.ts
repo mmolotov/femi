@@ -571,7 +571,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       languageTitle: "Язык",
       importantNoticeTitle: "Важное уведомление",
       importantNotice:
-        "femi не является медицинским приложением и не даёт медицинских советов, диагнозов или назначений лечения. Прогнозы приблизительны и не предназначены для контрацепции или диагностики — по медицинским вопросам обращайтесь к специалисту.",
+        "femi не является медицинским приложением и не даёт медицинских советов, диагнозов или лечения. Прогнозы приблизительны и не предназначены для контрацепции или диагностики — по медицинским вопросам обращайтесь к специалисту.",
       aboutButton: "О приложении",
       aboutTitle: "О femi",
       aboutBody:
@@ -812,7 +812,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       languageTitle: "Idioma",
       importantNoticeTitle: "Aviso importante",
       importantNotice:
-        "femi no es una aplicación médica y no ofrece asesoramiento médico, diagnóstico ni tratamiento. Las predicciones son estimaciones y no deben usarse como método anticonceptivo ni para diagnosticar ninguna afección; consulta a un profesional de la salud para tomar decisiones médicas.",
+        "femi no es una aplicación médica y no ofrece asesoramiento médico, diagnóstico ni tratamiento. Las predicciones son estimaciones y no deben usarse como método anticonceptivo ni para diagnosticar ninguna afección — consulta a un profesional de la salud para tomar decisiones médicas.",
       aboutButton: "Acerca de la app",
       aboutTitle: "Acerca de femi",
       aboutBody:
@@ -1594,7 +1594,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Застосунок автоматично визначає мову Telegram або браузера, але користувачка може змінити її тут.",
       importantNoticeTitle: "Важливе повідомлення",
       importantNotice:
-        "femi не є медичним застосунком і не надає медичних порад, діагнозів чи призначень лікування. Прогнози є приблизними й не призначені для контрацепції або діагностики — з медичних питань звертайтеся до фахівця."
+        "femi не є медичним застосунком і не надає медичних порад, діагнозів чи лікування. Прогнози є приблизними й не призначені для контрацепції або діагностики — з медичних питань звертайтеся до фахівця."
     },
     theme: {
       title: "Оформлення",
@@ -1848,7 +1848,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "يكتشف التطبيق لغة Telegram أو المتصفح تلقائيًا، لكن يمكن للمستخدمة تغييرها هنا.",
       importantNoticeTitle: "تنبيه مهم",
       importantNotice:
-        "femi ليس تطبيقًا طبيًا ولا يقدّم نصائح طبية أو تشخيصًا أو علاجًا. التوقعات تقديرية ولا ينبغي استخدامها لمنع الحمل أو لتشخيص أي حالة — استشر أخصائي رعاية صحية لاتخاذ القرارات الطبية."
+        "femi ليس تطبيقًا طبيًا ولا يقدّم نصائح طبية أو تشخيصًا أو علاجًا. التوقعات تقديرية ولا ينبغي استخدامها لمنع الحمل أو لتشخيص أي حالة — استشري أخصائية رعاية صحية لاتخاذ القرارات الطبية."
     },
     theme: {
       title: "المظهر",
