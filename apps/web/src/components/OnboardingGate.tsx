@@ -79,6 +79,7 @@ export function OnboardingGate() {
   const disclaimerBodyId = useId();
   const continueButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
   const today = getIsoDateInTimeZone(new Date(), browserTimeZone);
   const minDate = "2020-01-01";
   const minMonth = "2020-01";
@@ -132,6 +133,8 @@ export function OnboardingGate() {
 
   const handleDisclaimerContinue = () => {
     setIsDisclaimerOpen(false);
+    // Move focus to the now-revealed onboarding heading instead of losing it.
+    headingRef.current?.focus();
   };
 
   const handleDisclaimerClose = () => {
@@ -152,8 +155,12 @@ export function OnboardingGate() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        // Escape acknowledges the notice like Continue; it never exits the app
+        // (only the explicit Close button does), and the backdrop is inert, so
+        // dismissing the notice is always a deliberate action.
         event.preventDefault();
         setIsDisclaimerOpen(false);
+        headingRef.current?.focus();
         return;
       }
 
@@ -193,7 +200,9 @@ export function OnboardingGate() {
     <section className="panel onboarding-panel">
       <header className="panel-header">
         <div>
-          <h2>{messages.onboarding.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1}>
+            {messages.onboarding.title}
+          </h2>
           <p>{messages.onboarding.description}</p>
         </div>
       </header>
@@ -365,15 +374,12 @@ export function OnboardingGate() {
       </form>
 
       {isDisclaimerOpen ? (
-        <div className="dialog-backdrop" onClick={handleDisclaimerContinue}>
+        <div className="dialog-backdrop">
           <div
             aria-describedby={disclaimerBodyId}
             aria-labelledby={disclaimerTitleId}
             aria-modal="true"
             className="dialog-card"
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
             role="dialog"
           >
             <h3 id={disclaimerTitleId}>{messages.settings.importantNoticeTitle}</h3>
