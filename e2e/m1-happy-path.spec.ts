@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test("completes the M1 browser-demo happy path", async ({ page }) => {
   await page.goto("/?app_demo=1");
