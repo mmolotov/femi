@@ -403,13 +403,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       },
       conceptionProbabilityFallback: "неизвестна",
       forecastLabel: "Ближайший прогноз",
-      periodActionsTitle: "Действия по менструации",
-      periodActionsDescription:
-        "Используйте самые короткие действия, чтобы зафиксировать текущее состояние.",
-      startPeriod: "Отметить начало менструации",
-      endPeriod: "Отметить конец менструации",
-      startPeriodError: "Не удалось отметить начало менструации.",
-      endPeriodError: "Не удалось отметить конец менструации.",
       saveStateIdle: "Сохранить чек-ин",
       saveStatePending: "Сохраняем чек-ин…",
       saveSuccess: "Запись за выбранный день сохранена.",
@@ -476,8 +469,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       tapToMark: "Выберите прошлую или текущую дату, затем отметьте её ниже.",
       flowIntensityLabel: "Интенсивность",
       flowIntensityPlaceholder: "Не указано",
-      startPeriod: "Начать здесь",
-      endPeriod: "Закончить здесь",
       savePeriodDay: "Сохранить день менструации",
       savePending: "Сохраняем запись о дне…",
       saveSuccess: "День менструации сохранен.",
@@ -485,8 +476,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removePeriodDay: "Убрать день менструации",
       removeSuccess: "День менструации удален.",
       removeError: "Не удалось удалить день менструации.",
-      startSuccess: "Начало менструации сохранено.",
-      endSuccess: "Конец менструации сохранен.",
       tagsSuffix: "симптомы",
       projectionMonth: "Месяц",
       projectionYear: "Год",
@@ -607,7 +596,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         calendar: "Calendario",
         history: "Historial",
         settings: "Ajustes"
-      }
+      },
+      signedOutTitle: "Cuenta eliminada",
+      signedOutBody:
+        "Tu cuenta y los datos relacionados se eliminaron. Vuelve a abrir la app desde Telegram para empezar de nuevo."
     },
     onboarding: {
       title: "Una configuración breve antes del primer registro",
@@ -626,7 +618,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     today: {
       title: "Hoy",
-      description: "La primera pantalla está reservada para el flujo diario más corto.",
       cycleDayLabel: "Día actual del ciclo",
       cycleDayFallback: "todavía no hay suficientes datos",
       phaseLabel: "Fase",
@@ -680,13 +671,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       },
       conceptionProbabilityFallback: "desconocida",
       forecastLabel: "Próxima previsión",
-      periodActionsTitle: "Acciones del período",
-      periodActionsDescription:
-        "Usa las acciones más cortas posibles para registrar el estado del período de hoy.",
-      startPeriod: "Registrar inicio del período",
-      endPeriod: "Registrar fin del período",
-      startPeriodError: "No se pudo registrar el inicio del período.",
-      endPeriodError: "No se pudo registrar el fin del período.",
       saveStateIdle: "Guardar check-in de hoy",
       saveStatePending: "Guardando check-in…",
       saveSuccess: "La entrada de hoy se guardó.",
@@ -718,7 +702,22 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         sticky: "Pegajoso",
         creamy: "Cremoso",
         watery: "Acuoso"
-      }
+      },
+      removePeriodDay: "Quitar día de período",
+      removePeriodDayPending: "Quitando día de período…",
+      removePeriodDaySuccess: "Día de período eliminado.",
+      removePeriodDayError: "No se pudo eliminar el día de período.",
+      dayDetailsTitle: "Detalles del día",
+      dayDetailsDescription:
+        "Selecciona una fecha en el calendario para actualizar el registro y los detalles de período de ese día.",
+      selectedDateToday: "Hoy",
+      selectedDateFromCalendar: "Seleccionado en el calendario",
+      selectedDateCheckinDescription:
+        "El registro de abajo siempre se aplica a la fecha seleccionada.",
+      selectedDatePeriodDescription:
+        "Las acciones de período de abajo también se aplican a la fecha seleccionada.",
+      futureCheckinLocked:
+        "Las fechas futuras se pueden revisar, pero el registro queda bloqueado hasta que llegue ese día."
     },
     calendar: {
       title: "Calendario",
@@ -739,8 +738,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       tapToMark: "Toca cualquier fecha sin marcar para registrar un día de período al instante.",
       flowIntensityLabel: "Intensidad",
       flowIntensityPlaceholder: "Sin indicar",
-      startPeriod: "Iniciar período aquí",
-      endPeriod: "Finalizar período aquí",
       savePeriodDay: "Guardar día de período",
       savePending: "Guardando registro del período…",
       saveSuccess: "Día de período guardado.",
@@ -748,9 +745,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removePeriodDay: "Quitar día de período",
       removeSuccess: "Día de período eliminado.",
       removeError: "No se pudo eliminar el día de período.",
-      startSuccess: "Inicio del período guardado.",
-      endSuccess: "Fin del período guardado.",
-      tagsSuffix: "síntomas"
+      tagsSuffix: "síntomas",
+      selectedDateEmpty: "Este día aún no está marcado como día de período.",
+      selectedDatePredicted:
+        "Este día todavía forma parte del pronóstico, por lo que permanece de solo lectura por ahora.",
+      futureDateReadOnly: "Las fechas futuras se muestran solo como pronóstico.",
+      projectionMonth: "Mes",
+      projectionYear: "Año",
+      previousYear: "Año anterior",
+      nextYear: "Año siguiente",
+      legendOvulation: "Ovulación",
+      bulkEditEnter: "Editar días de período",
+      bulkEditSave: "Guardar cambios",
+      bulkEditSavePending: "Guardando cambios…",
+      bulkEditCancel: "Cancelar",
+      bulkEditHint: "Toca un día pasado o de hoy para marcarlo como día de período.",
+      bulkEditSaveSuccess: "Días de período actualizados.",
+      bulkEditSaveError: "Algunos cambios no se pudieron guardar.",
+      bulkEditFutureLocked: "Las fechas futuras permanecen de solo lectura.",
+      backToToday: "Volver a hoy"
     },
     history: {
       title: "Historial",
@@ -795,9 +808,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       }
     },
     settings: {
-      title: "Ajustes",
-      description:
-        "Esta página fija desde el inicio la postura no médica y de privacidad del producto.",
       preferencesTitle: "Preferencias de seguimiento",
       preferencesDescription:
         "Estos valores alimentan el primer modelo de predicción y la base del seguimiento del ciclo.",
@@ -817,13 +827,35 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       aboutTitle: "Acerca de femi",
       aboutBody:
         "femi es una app de seguimiento personal, no una aplicación médica. La funcionalidad básica es sin anuncios y sin suscripción. No mostramos anuncios, no vendemos datos personales ni los compartimos con terceros ajenos.",
-      aboutClose: "Cerrar"
+      aboutClose: "Cerrar",
+      accountTitle: "Cuenta",
+      accountWarning:
+        "Eliminar la cuenta quita tu perfil, el historial de ciclos, los registros y todos los datos relacionados.",
+      deleteAccountIdle: "Eliminar cuenta y datos",
+      deletePending: "Eliminando cuenta…",
+      deleteError: "No se pudo eliminar la cuenta.",
+      deleteDialogTitle: "¿Eliminar la cuenta y todos los datos?",
+      deleteDialogDescription:
+        "Esta acción es permanente. Tu cuenta, el historial de ciclos, los ajustes, los registros y todos los datos relacionados se eliminarán y no se podrán restaurar.",
+      deleteDialogCancel: "Cancelar",
+      deleteDialogConfirm: "Eliminar definitivamente"
     },
     theme: {
       title: "Apariencia",
       light: "Papel",
       dark: "Tinta",
       system: "Sistema"
+    },
+    week: {
+      stripLabel: "Semana",
+      previousWeek: "Semana anterior",
+      nextWeek: "Semana siguiente",
+      openCalendar: "Abrir calendario completo",
+      backToToday: "Volver a hoy",
+      periodMarker: "día de período",
+      predictedMarker: "período previsto",
+      ovulationMarker: "ovulación",
+      todayMarker: "hoy"
     }
   },
   pt: {
@@ -848,7 +880,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         calendar: "Calendário",
         history: "Histórico",
         settings: "Configurações"
-      }
+      },
+      signedOutTitle: "Conta excluída",
+      signedOutBody:
+        "Sua conta e os dados relacionados foram removidos. Reabra o app pelo Telegram para começar de novo."
     },
     onboarding: {
       title: "Uma configuração rápida antes do primeiro registro",
@@ -867,7 +902,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     today: {
       title: "Hoje",
-      description: "A primeira tela fica reservada para o fluxo diário mais curto.",
       cycleDayLabel: "Dia atual do ciclo",
       cycleDayFallback: "ainda não há dados suficientes",
       phaseLabel: "Fase",
@@ -919,13 +953,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       },
       conceptionProbabilityFallback: "desconhecida",
       forecastLabel: "Próxima previsão",
-      periodActionsTitle: "Ações de menstruação",
-      periodActionsDescription:
-        "Use as ações mais curtas possíveis para registrar o estado menstrual de hoje.",
-      startPeriod: "Registrar início da menstruação",
-      endPeriod: "Registrar fim da menstruação",
-      startPeriodError: "Não foi possível registrar o início da menstruação.",
-      endPeriodError: "Não foi possível registrar o fim da menstruação.",
       saveStateIdle: "Salvar check-in de hoje",
       saveStatePending: "Salvando check-in…",
       saveSuccess: "A entrada de hoje foi salva.",
@@ -957,7 +984,21 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         sticky: "Pegajoso",
         creamy: "Cremoso",
         watery: "Aquoso"
-      }
+      },
+      removePeriodDay: "Remover dia de menstruação",
+      removePeriodDayPending: "Removendo dia de menstruação…",
+      removePeriodDaySuccess: "Dia de menstruação removido.",
+      removePeriodDayError: "Não foi possível remover o dia de menstruação.",
+      dayDetailsTitle: "Detalhes do dia",
+      dayDetailsDescription:
+        "Selecione uma data no calendário para atualizar o check-in e os detalhes de menstruação desse dia.",
+      selectedDateToday: "Hoje",
+      selectedDateFromCalendar: "Selecionado no calendário",
+      selectedDateCheckinDescription: "O check-in abaixo sempre se aplica à data selecionada.",
+      selectedDatePeriodDescription:
+        "As ações de menstruação abaixo também se aplicam à data selecionada.",
+      futureCheckinLocked:
+        "Datas futuras podem ser revisadas, mas o check-in permanece bloqueado até aquele dia chegar."
     },
     calendar: {
       title: "Calendário",
@@ -978,8 +1019,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Toque em qualquer data ainda não marcada para registrar um dia menstrual na hora.",
       flowIntensityLabel: "Intensidade",
       flowIntensityPlaceholder: "Não definido",
-      startPeriod: "Iniciar menstruação aqui",
-      endPeriod: "Encerrar menstruação aqui",
       savePeriodDay: "Salvar dia menstrual",
       savePending: "Salvando registro menstrual…",
       saveSuccess: "Dia menstrual salvo.",
@@ -987,9 +1026,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removePeriodDay: "Remover dia menstrual",
       removeSuccess: "Dia menstrual removido.",
       removeError: "Não foi possível remover o dia menstrual.",
-      startSuccess: "Início da menstruação salvo.",
-      endSuccess: "Fim da menstruação salvo.",
-      tagsSuffix: "sintomas"
+      tagsSuffix: "sintomas",
+      selectedDateEmpty: "Este dia ainda não está marcado como dia de menstruação.",
+      selectedDatePredicted:
+        "Este dia ainda faz parte da previsão, então permanece somente leitura por enquanto.",
+      futureDateReadOnly: "Datas futuras são mostradas apenas como previsão.",
+      projectionMonth: "Mês",
+      projectionYear: "Ano",
+      previousYear: "Ano anterior",
+      nextYear: "Próximo ano",
+      legendOvulation: "Ovulação",
+      bulkEditEnter: "Editar dias de menstruação",
+      bulkEditSave: "Salvar alterações",
+      bulkEditSavePending: "Salvando alterações…",
+      bulkEditCancel: "Cancelar",
+      bulkEditHint: "Toque em um dia passado ou hoje para alternar como dia de menstruação.",
+      bulkEditSaveSuccess: "Dias de menstruação atualizados.",
+      bulkEditSaveError: "Algumas alterações não puderam ser salvas.",
+      bulkEditFutureLocked: "Datas futuras permanecem somente leitura.",
+      backToToday: "Voltar para hoje"
     },
     history: {
       title: "Histórico",
@@ -1034,57 +1089,54 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       }
     },
     settings: {
-      title: "Configurações",
-      description:
-        "Esta página consolida desde o início a postura não médica e de privacidade do produto.",
       preferencesTitle: "Preferências de rastreamento",
       preferencesDescription:
         "Esses valores alimentam o primeiro modelo de previsão e a base do rastreamento do ciclo.",
       cycleLengthLabel: "Duração do ciclo (dias)",
       periodLengthLabel: "Duração da menstruação (dias)",
-      timezoneLabel: "Fuso horário",
-      remindersEnabledLabel: "Lembretes ativados",
       saveIdle: "Salvar configurações",
       savePending: "Salvando configurações…",
       saveSuccess: "Configurações salvas.",
       saveError: "Não foi possível salvar as configurações.",
-      productType: "Tipo de produto",
-      productTypeValue: "Aplicativo de rastreamento pessoal, não um aplicativo médico.",
-      coreModel: "Modelo principal",
-      coreModelValue: "Sem anúncios e sem paywall por assinatura no básico.",
-      dataPosture: "Postura de dados",
-      dataPostureValue:
-        "Sem anúncios, sem venda de dados pessoais e sem compartilhamento com terceiros não relacionados.",
       aboutButton: "Sobre o app",
       aboutTitle: "Sobre o femi",
       aboutBody:
         "O femi é um app de rastreamento pessoal, não uma aplicação médica. A funcionalidade básica é sem anúncios e sem assinatura. Não exibimos anúncios, não vendemos dados pessoais nem os compartilhamos com terceiros não relacionados.",
       aboutClose: "Fechar",
-      environment: "Ambiente de execução",
-      environmentTelegram: "Telegram Mini App",
-      environmentBrowser: "Prévia no navegador",
-      sessionStatus: "Status da sessão",
-      sessionAuthenticating: "autorizando com o Telegram",
-      sessionAuthenticated: "autenticada",
-      sessionPreview: "modo de prévia, sem init data do Telegram",
-      sessionError: "falha na auth do Telegram",
       telegramAccount: "Conta do Telegram",
       telegramAccountFallback: "conta ainda indisponível",
-      telegramLanguage: "Idioma do Telegram",
-      telegramLanguageFallback: "não informado",
-      authErrorLabel: "Erro de auth",
       languageTitle: "Idioma",
-      languageDescription:
-        "O app detecta automaticamente o idioma do Telegram ou do navegador, mas a usuária pode alterar aqui.",
       importantNoticeTitle: "Aviso importante",
       importantNotice:
-        "femi não é um aplicativo médico e não fornece aconselhamento médico, diagnóstico ou tratamento. As previsões são estimativas e não devem ser usadas para contracepção ou para diagnosticar qualquer condição — consulte um profissional de saúde para decisões médicas."
+        "femi não é um aplicativo médico e não fornece aconselhamento médico, diagnóstico ou tratamento. As previsões são estimativas e não devem ser usadas para contracepção ou para diagnosticar qualquer condição — consulte um profissional de saúde para decisões médicas.",
+      accountTitle: "Conta",
+      accountWarning:
+        "Excluir a conta remove seu perfil, o histórico de ciclos, os check-ins e todos os dados relacionados.",
+      deleteAccountIdle: "Excluir conta e dados",
+      deletePending: "Excluindo conta…",
+      deleteError: "Não foi possível excluir a conta.",
+      deleteDialogTitle: "Excluir conta e todos os dados?",
+      deleteDialogDescription:
+        "Esta ação é permanente. Sua conta, o histórico de ciclos, as configurações, os check-ins e todos os dados relacionados serão excluídos e não poderão ser restaurados.",
+      deleteDialogCancel: "Cancelar",
+      deleteDialogConfirm: "Excluir permanentemente"
     },
     theme: {
       title: "Aparência",
       light: "Papel",
       dark: "Tinta",
       system: "Sistema"
+    },
+    week: {
+      stripLabel: "Semana",
+      previousWeek: "Semana anterior",
+      nextWeek: "Próxima semana",
+      openCalendar: "Abrir calendário completo",
+      backToToday: "Voltar para hoje",
+      periodMarker: "dia de menstruação",
+      predictedMarker: "menstruação prevista",
+      ovulationMarker: "ovulação",
+      todayMarker: "hoje"
     }
   },
   tr: {
@@ -1109,7 +1161,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         calendar: "Takvim",
         history: "Geçmiş",
         settings: "Ayarlar"
-      }
+      },
+      signedOutTitle: "Hesap silindi",
+      signedOutBody:
+        "Hesabınız ve ilgili veriler kaldırıldı. Yeniden başlamak için uygulamayı Telegram'dan tekrar açın."
     },
     onboarding: {
       title: "İlk kayıt öncesi kısa kurulum",
@@ -1128,7 +1183,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     today: {
       title: "Bugün",
-      description: "İlk ekran en kısa günlük akış için ayrıldı.",
       cycleDayLabel: "Güncel döngü günü",
       cycleDayFallback: "henüz yeterli veri yok",
       phaseLabel: "Faz",
@@ -1179,13 +1233,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       },
       conceptionProbabilityFallback: "bilinmiyor",
       forecastLabel: "Yaklaşan tahmin",
-      periodActionsTitle: "Adet işlemleri",
-      periodActionsDescription:
-        "Bugünkü adet durumunu kaydetmek için mümkün olan en kısa işlemleri kullanın.",
-      startPeriod: "Adet başlangıcını kaydet",
-      endPeriod: "Adet bitişini kaydet",
-      startPeriodError: "Adet başlangıcı kaydedilemedi.",
-      endPeriodError: "Adet bitişi kaydedilemedi.",
       saveStateIdle: "Bugünkü check-in'i kaydet",
       saveStatePending: "Check-in kaydediliyor…",
       saveSuccess: "Bugünkü kayıt kaydedildi.",
@@ -1217,7 +1264,20 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         sticky: "Yapışkan",
         creamy: "Kremimsi",
         watery: "Sulu"
-      }
+      },
+      removePeriodDay: "Adet gününü kaldır",
+      removePeriodDayPending: "Adet günü kaldırılıyor…",
+      removePeriodDaySuccess: "Adet günü kaldırıldı.",
+      removePeriodDayError: "Adet günü kaldırılamadı.",
+      dayDetailsTitle: "Gün ayrıntıları",
+      dayDetailsDescription:
+        "O güne ait check-in ve adet ayrıntılarını güncellemek için takvimde bir tarih seçin.",
+      selectedDateToday: "Bugün",
+      selectedDateFromCalendar: "Takvimden seçildi",
+      selectedDateCheckinDescription: "Aşağıdaki check-in her zaman seçili tarihe uygulanır.",
+      selectedDatePeriodDescription: "Aşağıdaki adet işlemleri de seçili tarihe uygulanır.",
+      futureCheckinLocked:
+        "Gelecek tarihler görüntülenebilir, ancak check-in o gün gelene kadar kilitli kalır."
     },
     calendar: {
       title: "Takvim",
@@ -1237,8 +1297,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       tapToMark: "Henüz işaretlenmemiş herhangi bir tarihe dokunarak adet gününü anında kaydedin.",
       flowIntensityLabel: "Yoğunluk",
       flowIntensityPlaceholder: "Ayarlanmadı",
-      startPeriod: "Adeti burada başlat",
-      endPeriod: "Adeti burada bitir",
       savePeriodDay: "Adet gününü kaydet",
       savePending: "Adet kaydı kaydediliyor…",
       saveSuccess: "Adet günü kaydedildi.",
@@ -1246,9 +1304,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removePeriodDay: "Adet gününü kaldır",
       removeSuccess: "Adet günü kaldırıldı.",
       removeError: "Adet günü kaldırılamadı.",
-      startSuccess: "Adet başlangıcı kaydedildi.",
-      endSuccess: "Adet bitişi kaydedildi.",
-      tagsSuffix: "semptom"
+      tagsSuffix: "semptom",
+      selectedDateEmpty: "Bu gün henüz adet günü olarak işaretlenmedi.",
+      selectedDatePredicted:
+        "Bu gün hâlâ tahminin parçası, bu yüzden şimdilik salt okunur kalıyor.",
+      futureDateReadOnly: "Gelecek tarihler yalnızca tahmin olarak gösterilir.",
+      projectionMonth: "Ay",
+      projectionYear: "Yıl",
+      previousYear: "Önceki yıl",
+      nextYear: "Sonraki yıl",
+      legendOvulation: "Yumurtlama",
+      bulkEditEnter: "Adet günlerini düzenle",
+      bulkEditSave: "Değişiklikleri kaydet",
+      bulkEditSavePending: "Değişiklikler kaydediliyor…",
+      bulkEditCancel: "İptal",
+      bulkEditHint: "Geçmiş bir günü veya bugünü adet günü olarak değiştirmek için dokunun.",
+      bulkEditSaveSuccess: "Adet günleri güncellendi.",
+      bulkEditSaveError: "Bazı değişiklikler kaydedilemedi.",
+      bulkEditFutureLocked: "Gelecek tarihler salt okunur kalır.",
+      backToToday: "Bugüne dön"
     },
     history: {
       title: "Geçmiş",
@@ -1293,55 +1367,54 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       }
     },
     settings: {
-      title: "Ayarlar",
-      description: "Bu sayfa ürünün tıbbi olmayan ve gizlilik duruşunu en baştan sabitler.",
       preferencesTitle: "Takip tercihleri",
       preferencesDescription:
         "Bu değerler ilk tahmin modelini ve döngü takibinin başlangıç temelini belirler.",
       cycleLengthLabel: "Döngü süresi (gün)",
       periodLengthLabel: "Adet süresi (gün)",
-      timezoneLabel: "Saat dilimi",
-      remindersEnabledLabel: "Hatırlatıcılar açık",
       saveIdle: "Ayarları kaydet",
       savePending: "Ayarlar kaydediliyor…",
       saveSuccess: "Ayarlar kaydedildi.",
       saveError: "Ayarlar kaydedilemedi.",
-      productType: "Ürün türü",
-      productTypeValue: "Kişisel takip uygulaması, tıbbi uygulama değil.",
-      coreModel: "Temel model",
-      coreModelValue: "Reklamsız ve temel işlevler için abonelik engeli yok.",
-      dataPosture: "Veri yaklaşımı",
-      dataPostureValue: "Reklam yok, kişisel veri satışı yok, alakasız üçüncü taraf paylaşımı yok.",
       aboutButton: "Uygulama hakkında",
       aboutTitle: "femi hakkında",
       aboutBody:
         "femi kişisel bir döngü takip uygulamasıdır, tıbbi bir uygulama değildir. Temel işlevsellik reklamsızdır ve abonelik gerektirmez. Reklam göstermeyiz, kişisel verileri satmayız ve ilgisiz üçüncü taraflarla paylaşmayız.",
       aboutClose: "Kapat",
-      environment: "Çalışma ortamı",
-      environmentTelegram: "Telegram Mini App",
-      environmentBrowser: "Tarayıcı önizlemesi",
-      sessionStatus: "Oturum durumu",
-      sessionAuthenticating: "Telegram ile yetkilendiriliyor",
-      sessionAuthenticated: "kimlik doğrulandı",
-      sessionPreview: "önizleme modu, Telegram init data yok",
-      sessionError: "Telegram auth başarısız",
       telegramAccount: "Telegram hesabı",
       telegramAccountFallback: "hesap henüz kullanılamıyor",
-      telegramLanguage: "Telegram dili",
-      telegramLanguageFallback: "sağlanmadı",
-      authErrorLabel: "Auth hatası",
       languageTitle: "Dil",
-      languageDescription:
-        "Uygulama Telegram veya tarayıcı dilini otomatik algılar, ancak kullanıcı burada değiştirebilir.",
       importantNoticeTitle: "Önemli uyarı",
       importantNotice:
-        "femi tıbbi bir uygulama değildir ve tıbbi tavsiye, teşhis veya tedavi sağlamaz. Tahminler yalnızca öngörüdür; doğum kontrolü veya herhangi bir durumu teşhis etmek için kullanılmamalıdır — tıbbi kararlar için bir sağlık uzmanına danışın."
+        "femi tıbbi bir uygulama değildir ve tıbbi tavsiye, teşhis veya tedavi sağlamaz. Tahminler yalnızca öngörüdür; doğum kontrolü veya herhangi bir durumu teşhis etmek için kullanılmamalıdır — tıbbi kararlar için bir sağlık uzmanına danışın.",
+      accountTitle: "Hesap",
+      accountWarning:
+        "Hesabı silmek profilinizi, döngü geçmişinizi, check-in'lerinizi ve ilgili tüm verileri kaldırır.",
+      deleteAccountIdle: "Hesabı ve verileri sil",
+      deletePending: "Hesap siliniyor…",
+      deleteError: "Hesap silinemedi.",
+      deleteDialogTitle: "Hesap ve tüm veriler silinsin mi?",
+      deleteDialogDescription:
+        "Bu işlem kalıcıdır. Hesabınız, döngü geçmişiniz, ayarlarınız, check-in'leriniz ve ilgili tüm veriler silinecek ve geri yüklenemez.",
+      deleteDialogCancel: "İptal",
+      deleteDialogConfirm: "Kalıcı olarak sil"
     },
     theme: {
       title: "Görünüm",
       light: "Kağıt",
       dark: "Mürekkep",
       system: "Sistem"
+    },
+    week: {
+      stripLabel: "Hafta",
+      previousWeek: "Önceki hafta",
+      nextWeek: "Sonraki hafta",
+      openCalendar: "Tam takvimi aç",
+      backToToday: "Bugüne dön",
+      periodMarker: "adet günü",
+      predictedMarker: "tahmini adet",
+      ovulationMarker: "yumurtlama",
+      todayMarker: "bugün"
     }
   },
   uk: {
@@ -1366,7 +1439,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         calendar: "Календар",
         history: "Історія",
         settings: "Налаштування"
-      }
+      },
+      signedOutTitle: "Обліковий запис видалено",
+      signedOutBody:
+        "Ваш обліковий запис і пов'язані дані видалено. Відкрийте застосунок у Telegram знову, щоб почати заново."
     },
     onboarding: {
       title: "Коротке налаштування перед першим записом",
@@ -1385,7 +1461,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     today: {
       title: "Сьогодні",
-      description: "Перший екран відведено під найкоротший щоденний сценарій.",
       cycleDayLabel: "Поточний день циклу",
       cycleDayFallback: "поки недостатньо даних",
       phaseLabel: "Фаза",
@@ -1437,12 +1512,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       },
       conceptionProbabilityFallback: "невідома",
       forecastLabel: "Найближчий прогноз",
-      periodActionsTitle: "Дії щодо менструації",
-      periodActionsDescription: "Використовуйте найкоротші дії, щоб зафіксувати сьогоднішній стан.",
-      startPeriod: "Позначити початок менструації",
-      endPeriod: "Позначити завершення менструації",
-      startPeriodError: "Не вдалося позначити початок менструації.",
-      endPeriodError: "Не вдалося позначити завершення менструації.",
       saveStateIdle: "Зберегти запис за сьогодні",
       saveStatePending: "Зберігаємо чек-ін…",
       saveSuccess: "Запис за сьогодні збережено.",
@@ -1474,7 +1543,20 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         sticky: "Липкі",
         creamy: "Кремові",
         watery: "Водянисті"
-      }
+      },
+      removePeriodDay: "Прибрати день менструації",
+      removePeriodDayPending: "Прибираємо день менструації…",
+      removePeriodDaySuccess: "День менструації прибрано.",
+      removePeriodDayError: "Не вдалося прибрати день менструації.",
+      dayDetailsTitle: "Деталі дня",
+      dayDetailsDescription:
+        "Виберіть дату в календарі, щоб оновити чек-ін і деталі менструації за цей день.",
+      selectedDateToday: "Сьогодні",
+      selectedDateFromCalendar: "Вибрано в календарі",
+      selectedDateCheckinDescription: "Чек-ін нижче завжди стосується вибраної дати.",
+      selectedDatePeriodDescription: "Дії з менструацією нижче також стосуються вибраної дати.",
+      futureCheckinLocked:
+        "Майбутні дати можна переглядати, але чек-ін залишається заблокованим, доки не настане той день."
     },
     calendar: {
       title: "Календар",
@@ -1494,8 +1576,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       tapToMark: "Натисніть на будь-яку непозначену дату, щоб одразу записати день менструації.",
       flowIntensityLabel: "Інтенсивність",
       flowIntensityPlaceholder: "Не вказано",
-      startPeriod: "Почати тут",
-      endPeriod: "Завершити тут",
       savePeriodDay: "Зберегти день менструації",
       savePending: "Зберігаємо запис про день…",
       saveSuccess: "День менструації збережено.",
@@ -1503,9 +1583,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removePeriodDay: "Прибрати день менструації",
       removeSuccess: "День менструації видалено.",
       removeError: "Не вдалося видалити день менструації.",
-      startSuccess: "Початок менструації збережено.",
-      endSuccess: "Завершення менструації збережено.",
-      tagsSuffix: "симптоми"
+      tagsSuffix: "симптоми",
+      selectedDateEmpty: "Цей день ще не позначено як день менструації.",
+      selectedDatePredicted:
+        "Цей день усе ще є частиною прогнозу, тож наразі залишається лише для читання.",
+      futureDateReadOnly: "Майбутні дати показано лише як прогноз.",
+      projectionMonth: "Місяць",
+      projectionYear: "Рік",
+      previousYear: "Попередній рік",
+      nextYear: "Наступний рік",
+      legendOvulation: "Овуляція",
+      bulkEditEnter: "Редагувати дні менструації",
+      bulkEditSave: "Зберегти зміни",
+      bulkEditSavePending: "Зберігаємо зміни…",
+      bulkEditCancel: "Скасувати",
+      bulkEditHint: "Торкніться минулого дня або сьогодні, щоб позначити як день менструації.",
+      bulkEditSaveSuccess: "Дні менструації оновлено.",
+      bulkEditSaveError: "Деякі зміни не вдалося зберегти.",
+      bulkEditFutureLocked: "Майбутні дати залишаються лише для читання.",
+      backToToday: "Повернутися до сьогодні"
     },
     history: {
       title: "Історія",
@@ -1550,57 +1646,54 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       }
     },
     settings: {
-      title: "Налаштування",
-      description:
-        "Ця сторінка з самого початку закріплює немедичний і приватний характер продукту.",
       preferencesTitle: "Параметри трекінгу",
       preferencesDescription:
         "Ці значення використовуються для першого прогнозу та базового налаштування трекінгу циклу.",
       cycleLengthLabel: "Тривалість циклу (дні)",
       periodLengthLabel: "Тривалість менструації (дні)",
-      timezoneLabel: "Часовий пояс",
-      remindersEnabledLabel: "Нагадування увімкнені",
       saveIdle: "Зберегти налаштування",
       savePending: "Зберігаємо налаштування…",
       saveSuccess: "Налаштування збережено.",
       saveError: "Не вдалося зберегти налаштування.",
-      productType: "Тип продукту",
-      productTypeValue: "Застосунок для особистого трекінгу, а не медичний застосунок.",
-      coreModel: "Базова модель",
-      coreModelValue: "Без реклами та без підписки, що блокує базовий функціонал.",
-      dataPosture: "Підхід до даних",
-      dataPostureValue:
-        "Без реклами, без продажу персональних даних і без передачі не пов'язаним третім сторонам.",
       aboutButton: "Про застосунок",
       aboutTitle: "Про femi",
       aboutBody:
         "femi — застосунок для особистого трекінгу, а не медичний застосунок. Базовий функціонал без реклами та без підписки. Ми не показуємо рекламу, не продаємо персональні дані й не передаємо їх стороннім третім особам.",
       aboutClose: "Закрити",
-      environment: "Середовище запуску",
-      environmentTelegram: "Telegram Mini App",
-      environmentBrowser: "Прев'ю у браузері",
-      sessionStatus: "Статус сесії",
-      sessionAuthenticating: "авторизація через Telegram",
-      sessionAuthenticated: "автентифікацію виконано",
-      sessionPreview: "режим прев'ю, без Telegram init data",
-      sessionError: "помилка Telegram auth",
       telegramAccount: "Акаунт Telegram",
       telegramAccountFallback: "акаунт поки недоступний",
-      telegramLanguage: "Мова Telegram",
-      telegramLanguageFallback: "не передано",
-      authErrorLabel: "Помилка auth",
       languageTitle: "Мова",
-      languageDescription:
-        "Застосунок автоматично визначає мову Telegram або браузера, але користувачка може змінити її тут.",
       importantNoticeTitle: "Важливе повідомлення",
       importantNotice:
-        "femi не є медичним застосунком і не надає медичних порад, діагнозів чи лікування. Прогнози є приблизними й не призначені для контрацепції або діагностики — з медичних питань звертайтеся до фахівця."
+        "femi не є медичним застосунком і не надає медичних порад, діагнозів чи лікування. Прогнози є приблизними й не призначені для контрацепції або діагностики — з медичних питань звертайтеся до фахівця.",
+      accountTitle: "Обліковий запис",
+      accountWarning:
+        "Видалення облікового запису прибирає ваш профіль, історію циклів, чек-іни та всі пов'язані дані.",
+      deleteAccountIdle: "Видалити обліковий запис і дані",
+      deletePending: "Видаляємо обліковий запис…",
+      deleteError: "Не вдалося видалити обліковий запис.",
+      deleteDialogTitle: "Видалити обліковий запис і всі дані?",
+      deleteDialogDescription:
+        "Ця дія незворотна. Ваш обліковий запис, історію циклів, налаштування, чек-іни та всі пов'язані дані буде видалено без можливості відновлення.",
+      deleteDialogCancel: "Скасувати",
+      deleteDialogConfirm: "Видалити назавжди"
     },
     theme: {
       title: "Оформлення",
       light: "Папір",
       dark: "Чорнило",
       system: "Система"
+    },
+    week: {
+      stripLabel: "Тиждень",
+      previousWeek: "Попередній тиждень",
+      nextWeek: "Наступний тиждень",
+      openCalendar: "Відкрити повний календар",
+      backToToday: "Повернутися до сьогодні",
+      periodMarker: "день менструації",
+      predictedMarker: "прогнозована менструація",
+      ovulationMarker: "овуляція",
+      todayMarker: "сьогодні"
     }
   },
   ar: {
@@ -1625,7 +1718,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         calendar: "التقويم",
         history: "السجل",
         settings: "الإعدادات"
-      }
+      },
+      signedOutTitle: "تم حذف الحساب",
+      signedOutBody:
+        "تم حذف حسابك والبيانات المرتبطة به. أعيدي فتح التطبيق من Telegram للبدء من جديد."
     },
     onboarding: {
       title: "إعداد قصير قبل أول تسجيل",
@@ -1644,7 +1740,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
     },
     today: {
       title: "اليوم",
-      description: "تم تخصيص الشاشة الأولى لأقصر تدفق يومي ممكن.",
       cycleDayLabel: "اليوم الحالي من الدورة",
       cycleDayFallback: "لا توجد بيانات كافية بعد",
       phaseLabel: "المرحلة",
@@ -1695,12 +1790,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       },
       conceptionProbabilityFallback: "غير معروف",
       forecastLabel: "التوقع القادم",
-      periodActionsTitle: "إجراءات الحيض",
-      periodActionsDescription: "استخدمي أقصر الإجراءات الممكنة لتسجيل حالة الحيض اليوم.",
-      startPeriod: "تسجيل بداية الحيض",
-      endPeriod: "تسجيل نهاية الحيض",
-      startPeriodError: "تعذر تسجيل بداية الحيض.",
-      endPeriodError: "تعذر تسجيل نهاية الحيض.",
       saveStateIdle: "حفظ متابعة اليوم",
       saveStatePending: "جارٍ حفظ المتابعة…",
       saveSuccess: "تم حفظ إدخال اليوم.",
@@ -1730,7 +1819,19 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         sticky: "لزجة",
         creamy: "كريمية",
         watery: "مائية"
-      }
+      },
+      removePeriodDay: "إزالة يوم الدورة",
+      removePeriodDayPending: "جارٍ إزالة يوم الدورة…",
+      removePeriodDaySuccess: "تمت إزالة يوم الدورة.",
+      removePeriodDayError: "تعذّرت إزالة يوم الدورة.",
+      dayDetailsTitle: "تفاصيل اليوم",
+      dayDetailsDescription: "اختاري تاريخًا في التقويم لتحديث التسجيل وتفاصيل الدورة لذلك اليوم.",
+      selectedDateToday: "اليوم",
+      selectedDateFromCalendar: "محدد من التقويم",
+      selectedDateCheckinDescription: "ينطبق التسجيل أدناه دائمًا على التاريخ المحدد.",
+      selectedDatePeriodDescription: "تنطبق إجراءات الدورة أدناه أيضًا على التاريخ المحدد.",
+      futureCheckinLocked:
+        "يمكن مراجعة التواريخ المستقبلية، لكن يبقى التسجيل مقفلًا حتى يحين ذلك اليوم."
     },
     calendar: {
       title: "التقويم",
@@ -1750,8 +1851,6 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       tapToMark: "اضغطي على أي تاريخ غير محدد لتسجيل يوم حيض فورًا.",
       flowIntensityLabel: "الشدة",
       flowIntensityPlaceholder: "غير مضبوط",
-      startPeriod: "ابدئي الحيض هنا",
-      endPeriod: "أنهي الحيض هنا",
       savePeriodDay: "حفظ يوم الحيض",
       savePending: "جارٍ حفظ سجل الحيض…",
       saveSuccess: "تم حفظ يوم الحيض.",
@@ -1759,9 +1858,25 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       removePeriodDay: "إزالة يوم الحيض",
       removeSuccess: "تمت إزالة يوم الحيض.",
       removeError: "تعذر إزالة يوم الحيض.",
-      startSuccess: "تم حفظ بداية الحيض.",
-      endSuccess: "تم حفظ نهاية الحيض.",
-      tagsSuffix: "أعراض"
+      tagsSuffix: "أعراض",
+      selectedDateEmpty: "لم يُحدَّد هذا اليوم بعد كيوم دورة.",
+      selectedDatePredicted:
+        "لا يزال هذا اليوم جزءًا من التوقعات، لذا يبقى للقراءة فقط في الوقت الحالي.",
+      futureDateReadOnly: "تُعرض التواريخ المستقبلية كتوقعات فقط.",
+      projectionMonth: "شهر",
+      projectionYear: "سنة",
+      previousYear: "السنة السابقة",
+      nextYear: "السنة التالية",
+      legendOvulation: "الإباضة",
+      bulkEditEnter: "تعديل أيام الدورة",
+      bulkEditSave: "حفظ التغييرات",
+      bulkEditSavePending: "جارٍ حفظ التغييرات…",
+      bulkEditCancel: "إلغاء",
+      bulkEditHint: "اضغطي على يوم سابق أو اليوم لتبديله كيوم دورة.",
+      bulkEditSaveSuccess: "تم تحديث أيام الدورة.",
+      bulkEditSaveError: "تعذّر حفظ بعض التغييرات.",
+      bulkEditFutureLocked: "تبقى التواريخ المستقبلية للقراءة فقط.",
+      backToToday: "العودة إلى اليوم"
     },
     history: {
       title: "السجل",
@@ -1806,55 +1921,53 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       }
     },
     settings: {
-      title: "الإعدادات",
-      description: "تثبت هذه الصفحة منذ البداية موقف المنتج غير الطبي ونهجه في الخصوصية.",
       preferencesTitle: "تفضيلات التتبع",
       preferencesDescription: "تغذي هذه القيم أول نموذج للتوقع وخط الأساس لتتبع الدورة.",
       cycleLengthLabel: "طول الدورة (بالأيام)",
       periodLengthLabel: "طول الحيض (بالأيام)",
-      timezoneLabel: "المنطقة الزمنية",
-      remindersEnabledLabel: "التذكيرات مفعلة",
       saveIdle: "حفظ الإعدادات",
       savePending: "جارٍ حفظ الإعدادات…",
       saveSuccess: "تم حفظ الإعدادات.",
       saveError: "تعذر حفظ الإعدادات.",
-      productType: "نوع المنتج",
-      productTypeValue: "تطبيق تتبع شخصي وليس تطبيقًا طبيًا.",
-      coreModel: "النموذج الأساسي",
-      coreModelValue: "من دون إعلانات ومن دون حجب الوظائف الأساسية خلف اشتراك.",
-      dataPosture: "نهج البيانات",
-      dataPostureValue:
-        "لا إعلانات، لا بيع للبيانات الشخصية، ولا مشاركة مع أطراف ثالثة غير مرتبطة.",
       aboutButton: "حول التطبيق",
       aboutTitle: "حول femi",
       aboutBody:
         "femi تطبيق لتتبع الدورة الشخصية، وليس تطبيقًا طبيًا. الوظائف الأساسية بدون إعلانات وبدون اشتراك. نحن لا نعرض إعلانات ولا نبيع البيانات الشخصية ولا نشاركها مع أطراف ثالثة غير ذات صلة.",
       aboutClose: "إغلاق",
-      environment: "بيئة التشغيل",
-      environmentTelegram: "Telegram Mini App",
-      environmentBrowser: "معاينة المتصفح",
-      sessionStatus: "حالة الجلسة",
-      sessionAuthenticating: "جارٍ التفويض عبر Telegram",
-      sessionAuthenticated: "تمت المصادقة",
-      sessionPreview: "وضع المعاينة، لا توجد Telegram init data",
-      sessionError: "فشل Telegram auth",
       telegramAccount: "حساب Telegram",
       telegramAccountFallback: "الحساب غير متاح بعد",
-      telegramLanguage: "لغة Telegram",
-      telegramLanguageFallback: "غير متوفرة",
-      authErrorLabel: "خطأ auth",
       languageTitle: "اللغة",
-      languageDescription:
-        "يكتشف التطبيق لغة Telegram أو المتصفح تلقائيًا، لكن يمكن للمستخدمة تغييرها هنا.",
       importantNoticeTitle: "تنبيه مهم",
       importantNotice:
-        "femi ليس تطبيقًا طبيًا ولا يقدّم نصائح طبية أو تشخيصًا أو علاجًا. التوقعات تقديرية ولا ينبغي استخدامها لمنع الحمل أو لتشخيص أي حالة — استشري أخصائية رعاية صحية لاتخاذ القرارات الطبية."
+        "femi ليس تطبيقًا طبيًا ولا يقدّم نصائح طبية أو تشخيصًا أو علاجًا. التوقعات تقديرية ولا ينبغي استخدامها لمنع الحمل أو لتشخيص أي حالة — استشري أخصائية رعاية صحية لاتخاذ القرارات الطبية.",
+      accountTitle: "الحساب",
+      accountWarning:
+        "حذف الحساب يزيل ملفك الشخصي وسجل الدورات والتسجيلات وجميع البيانات المرتبطة.",
+      deleteAccountIdle: "حذف الحساب والبيانات",
+      deletePending: "جارٍ حذف الحساب…",
+      deleteError: "تعذّر حذف الحساب.",
+      deleteDialogTitle: "حذف الحساب وجميع البيانات؟",
+      deleteDialogDescription:
+        "هذا الإجراء دائم. سيتم حذف حسابك وسجل الدورات والإعدادات والتسجيلات وجميع البيانات المرتبطة دون إمكانية استعادتها.",
+      deleteDialogCancel: "إلغاء",
+      deleteDialogConfirm: "حذف نهائيًا"
     },
     theme: {
       title: "المظهر",
       light: "ورق",
       dark: "حبر",
       system: "النظام"
+    },
+    week: {
+      stripLabel: "الأسبوع",
+      previousWeek: "الأسبوع السابق",
+      nextWeek: "الأسبوع التالي",
+      openCalendar: "فتح التقويم الكامل",
+      backToToday: "العودة إلى اليوم",
+      periodMarker: "يوم الدورة",
+      predictedMarker: "دورة متوقعة",
+      ovulationMarker: "الإباضة",
+      todayMarker: "اليوم"
     }
   }
 };
