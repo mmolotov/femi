@@ -21,10 +21,10 @@ function rateLimitKey(request: FastifyRequest): string {
 }
 
 export async function registerRateLimit(app: FastifyInstance, env: AppEnv): Promise<void> {
-  const enableGlobalLimit = env.NODE_ENV !== "development";
+  const enableGlobalLimit = env.RATE_LIMIT_ENABLED;
 
   if (!enableGlobalLimit) {
-    app.log.info("Skipping global API rate limit in development.");
+    app.log.info("Skipping API rate limiting (RATE_LIMIT_ENABLED=false).");
   }
 
   await app.register(fastifyRateLimit, {

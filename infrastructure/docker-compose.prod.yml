@@ -14,9 +14,19 @@ services:
       - caddy_ingress_network=${EDGE_NETWORK_NAME:-edge}
 
   server:
+    environment:
+      NODE_ENV: production
     networks:
       - default
       - edge
+
+  worker:
+    environment:
+      NODE_ENV: production
+
+  monitoring:
+    environment:
+      NODE_ENV: production
 
 networks:
   edge:

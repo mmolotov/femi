@@ -15,6 +15,7 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     MONITORING_RETENTION_DAYS: 30,
     NODE_ENV: "development",
     PORT: 3001,
+    RATE_LIMIT_ENABLED: true,
     TELEGRAM_BOT_SECRET_TOKEN: "secret",
     TELEGRAM_INIT_DATA_EXPIRES_IN: 3600,
     TELEGRAM_WEBHOOK_URL: undefined,
@@ -26,7 +27,7 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
 }
 
 describe("registerRateLimit", () => {
-  it("registers the limiter without a global hook in development", async () => {
+  it("registers without a global hook when rate limiting is disabled", async () => {
     const app = {
       log: {
         info: vi.fn()
@@ -39,7 +40,7 @@ describe("registerRateLimit", () => {
       register: ReturnType<typeof vi.fn>;
     };
 
-    await registerRateLimit(app as never, createEnv({ NODE_ENV: "development" }));
+    await registerRateLimit(app as never, createEnv({ RATE_LIMIT_ENABLED: false }));
 
     expect(app.register).toHaveBeenCalledWith(expect.any(Function), {
       global: false,
@@ -48,10 +49,12 @@ describe("registerRateLimit", () => {
       max: API_RATE_LIMIT_MAX,
       timeWindow: API_RATE_LIMIT_WINDOW_MS
     });
-    expect(app.log.info).toHaveBeenCalledWith("Skipping global API rate limit in development.");
+    expect(app.log.info).toHaveBeenCalledWith(
+      "Skipping API rate limiting (RATE_LIMIT_ENABLED=false)."
+    );
   });
 
-  it("registers the limiter outside development", async () => {
+  it("registers a global limiter when rate limiting is enabled", async () => {
     const app = {
       log: {
         info: vi.fn()
@@ -64,7 +67,7 @@ describe("registerRateLimit", () => {
       register: ReturnType<typeof vi.fn>;
     };
 
-    await registerRateLimit(app as never, createEnv({ NODE_ENV: "production" }));
+    await registerRateLimit(app as never, createEnv({ RATE_LIMIT_ENABLED: true }));
 
     expect(app.register).toHaveBeenCalledWith(expect.any(Function), {
       global: true,
@@ -88,7 +91,7 @@ describe("registerRateLimit", () => {
       register: ReturnType<typeof vi.fn>;
     };
 
-    await registerRateLimit(app as never, createEnv({ NODE_ENV: "production" }));
+    await registerRateLimit(app as never, createEnv());
 
     const [, options] = app.register.mock.calls[0] as [
       unknown,

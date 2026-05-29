@@ -24,6 +24,12 @@ const envSchema = z.object({
     (value) => (typeof value === "string" ? value.toLowerCase() === "true" : value),
     z.boolean().default(false)
   ),
+  // Rate limiting is on by default in every environment; disable it only via an
+  // explicit opt-out (e.g. local development), never implicitly through NODE_ENV.
+  RATE_LIMIT_ENABLED: z.preprocess(
+    (value) => (typeof value === "string" ? value.toLowerCase() !== "false" : value),
+    z.boolean().default(true)
+  ),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   WEB_APP_URL: z.string().url().default("http://localhost"),
   TELEGRAM_WEBHOOK_URL: z.preprocess(emptyStringToUndefined, z.string().url().optional()),

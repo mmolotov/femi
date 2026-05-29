@@ -19,6 +19,7 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     MONITORING_RETENTION_DAYS: 30,
     NODE_ENV: "development",
     PORT: 3001,
+    RATE_LIMIT_ENABLED: true,
     TELEGRAM_BOT_SECRET_TOKEN: "secret",
     TELEGRAM_INIT_DATA_EXPIRES_IN: 3600,
     TELEGRAM_WEBHOOK_URL: undefined,

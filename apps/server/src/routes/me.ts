@@ -104,15 +104,14 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
   app.delete(
     "/api/me",
     {
-      // Stricter cap on this destructive endpoint, skipped in development like
-      // the global limiter so repeated local testing isn't blocked.
-      preHandler:
-        deps.env.NODE_ENV === "development"
-          ? undefined
-          : app.rateLimit({
-              max: 10,
-              timeWindow: API_RATE_LIMIT_WINDOW_MS
-            })
+      // Stricter cap on this destructive endpoint. On by default; only an
+      // explicit RATE_LIMIT_ENABLED=false (e.g. local dev) skips it.
+      preHandler: deps.env.RATE_LIMIT_ENABLED
+        ? app.rateLimit({
+            max: 10,
+            timeWindow: API_RATE_LIMIT_WINDOW_MS
+          })
+        : undefined
     },
     async (request, reply) => {
       try {
