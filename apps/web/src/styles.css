@@ -2217,3 +2217,53 @@ select {
     font-size: 0.92rem;
   }
 }
+
+.feedback-block {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-raised);
+}
+
+.feedback-block > summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 3vw, 1.6rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  padding: 1.5rem 1.75rem;
+}
+
+.feedback-body {
+  padding: 0 1.75rem 1.75rem;
+}
+
+.feedback-description {
+  color: var(--ink-secondary);
+  margin: 0 0 0.75rem;
+}
+
+.feedback-textarea {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  color: inherit;
+  font: inherit;
+  padding: 0.75rem 1rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.feedback-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin: 0.5rem 0;
+}
+
+.feedback-counter {
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
+}

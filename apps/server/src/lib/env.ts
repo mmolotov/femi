@@ -36,6 +36,11 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   BOT_TOKEN: z.string().min(1),
   TELEGRAM_BOT_SECRET_TOKEN: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+  // Telegram chat id that receives feedback submitted from Settings (usually the
+  // developer's own user id). Optional: when unset the feedback endpoint replies
+  // 503 instead of sending. The bot must have been started by that chat at least
+  // once, or Telegram refuses to deliver bot-initiated messages.
+  FEEDBACK_CHAT_ID: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
   TELEGRAM_INIT_DATA_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
   WORKER_TICK_MS: z.coerce.number().int().positive().default(60000),
   // Read-only connection used by the monitoring scheduler to run metric queries.

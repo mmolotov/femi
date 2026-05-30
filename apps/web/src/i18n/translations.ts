@@ -279,7 +279,15 @@ export const baseMessages = {
     aboutTitle: "About femi",
     aboutBody:
       "femi is a personal cycle tracking app, not a medical application. Baseline functionality is ad-free with no subscription gate. We don't show ads, sell personal data, or share it with unrelated third parties.",
-    aboutClose: "Close"
+    aboutClose: "Close",
+    feedbackTitle: "Send feedback",
+    feedbackDescription:
+      "Share a problem or an idea — your message goes straight to the developer.",
+    feedbackPlaceholder: "Your message…",
+    feedbackSubmitIdle: "Send",
+    feedbackSubmitPending: "Sending…",
+    feedbackSuccess: "Thanks! Your message was sent.",
+    feedbackError: "Your message could not be sent. Please try again later."
   },
   theme: {
     title: "Appearance",
@@ -565,7 +573,14 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       aboutTitle: "О femi",
       aboutBody:
         "femi — приложение для личного трекинга, а не медицинское приложение. Базовый функционал без рекламы и без подписки. Мы не показываем рекламу, не продаём персональные данные и не передаём их посторонним третьим лицам.",
-      aboutClose: "Закрыть"
+      aboutClose: "Закрыть",
+      feedbackTitle: "Обратная связь",
+      feedbackDescription: "Расскажите о проблеме или идее — сообщение придёт прямо разработчику.",
+      feedbackPlaceholder: "Ваше сообщение…",
+      feedbackSubmitIdle: "Отправить",
+      feedbackSubmitPending: "Отправка…",
+      feedbackSuccess: "Спасибо! Сообщение отправлено.",
+      feedbackError: "Не удалось отправить сообщение. Попробуйте позже."
     },
     theme: {
       title: "Оформление",
@@ -838,7 +853,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       deleteDialogDescription:
         "Esta acción es permanente. Tu cuenta, el historial de ciclos, los ajustes, los registros y todos los datos relacionados se eliminarán y no se podrán restaurar.",
       deleteDialogCancel: "Cancelar",
-      deleteDialogConfirm: "Eliminar definitivamente"
+      deleteDialogConfirm: "Eliminar definitivamente",
+      feedbackTitle: "Enviar comentarios",
+      feedbackDescription:
+        "Cuéntanos un problema o una idea — tu mensaje llega directamente al desarrollador.",
+      feedbackPlaceholder: "Tu mensaje…",
+      feedbackSubmitIdle: "Enviar",
+      feedbackSubmitPending: "Enviando…",
+      feedbackSuccess: "¡Gracias! Tu mensaje se envió.",
+      feedbackError: "No se pudo enviar tu mensaje. Inténtalo más tarde."
     },
     theme: {
       title: "Apariencia",
@@ -1119,7 +1142,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       deleteDialogDescription:
         "Esta ação é permanente. Sua conta, o histórico de ciclos, as configurações, os check-ins e todos os dados relacionados serão excluídos e não poderão ser restaurados.",
       deleteDialogCancel: "Cancelar",
-      deleteDialogConfirm: "Excluir permanentemente"
+      deleteDialogConfirm: "Excluir permanentemente",
+      feedbackTitle: "Enviar feedback",
+      feedbackDescription:
+        "Conte um problema ou uma ideia — sua mensagem vai direto para o desenvolvedor.",
+      feedbackPlaceholder: "Sua mensagem…",
+      feedbackSubmitIdle: "Enviar",
+      feedbackSubmitPending: "Enviando…",
+      feedbackSuccess: "Obrigado! Sua mensagem foi enviada.",
+      feedbackError: "Não foi possível enviar sua mensagem. Tente novamente mais tarde."
     },
     theme: {
       title: "Aparência",
@@ -1397,7 +1428,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       deleteDialogDescription:
         "Bu işlem kalıcıdır. Hesabınız, döngü geçmişiniz, ayarlarınız, check-in'leriniz ve ilgili tüm veriler silinecek ve geri yüklenemez.",
       deleteDialogCancel: "İptal",
-      deleteDialogConfirm: "Kalıcı olarak sil"
+      deleteDialogConfirm: "Kalıcı olarak sil",
+      feedbackTitle: "Geri bildirim gönder",
+      feedbackDescription:
+        "Bir sorunu veya fikri paylaşın — mesajınız doğrudan geliştiriciye ulaşır.",
+      feedbackPlaceholder: "Mesajınız…",
+      feedbackSubmitIdle: "Gönder",
+      feedbackSubmitPending: "Gönderiliyor…",
+      feedbackSuccess: "Teşekkürler! Mesajınız gönderildi.",
+      feedbackError: "Mesajınız gönderilemedi. Lütfen daha sonra tekrar deneyin."
     },
     theme: {
       title: "Görünüm",
@@ -1676,7 +1715,15 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       deleteDialogDescription:
         "Ця дія незворотна. Ваш обліковий запис, історію циклів, налаштування, чек-іни та всі пов'язані дані буде видалено без можливості відновлення.",
       deleteDialogCancel: "Скасувати",
-      deleteDialogConfirm: "Видалити назавжди"
+      deleteDialogConfirm: "Видалити назавжди",
+      feedbackTitle: "Зворотний зв'язок",
+      feedbackDescription:
+        "Розкажіть про проблему чи ідею — повідомлення надійде прямо розробнику.",
+      feedbackPlaceholder: "Ваше повідомлення…",
+      feedbackSubmitIdle: "Надіслати",
+      feedbackSubmitPending: "Надсилання…",
+      feedbackSuccess: "Дякуємо! Повідомлення надіслано.",
+      feedbackError: "Не вдалося надіслати повідомлення. Спробуйте пізніше."
     },
     theme: {
       title: "Оформлення",
@@ -1950,7 +1997,14 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       deleteDialogDescription:
         "هذا الإجراء دائم. سيتم حذف حسابك وسجل الدورات والإعدادات والتسجيلات وجميع البيانات المرتبطة دون إمكانية استعادتها.",
       deleteDialogCancel: "إلغاء",
-      deleteDialogConfirm: "حذف نهائيًا"
+      deleteDialogConfirm: "حذف نهائيًا",
+      feedbackTitle: "إرسال ملاحظات",
+      feedbackDescription: "شاركينا مشكلة أو فكرة — تصل رسالتك مباشرة إلى المطوّر.",
+      feedbackPlaceholder: "رسالتك…",
+      feedbackSubmitIdle: "إرسال",
+      feedbackSubmitPending: "جارٍ الإرسال…",
+      feedbackSuccess: "شكرًا! تم إرسال رسالتك.",
+      feedbackError: "تعذّر إرسال رسالتك. حاولي مرة أخرى لاحقًا."
     },
     theme: {
       title: "المظهر",

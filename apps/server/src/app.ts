@@ -8,6 +8,7 @@ import { getEnv, type AppEnv } from "./lib/env.js";
 import { registerRateLimit } from "./lib/rate-limit.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerCycleRoutes } from "./routes/cycle.js";
+import { registerFeedbackRoutes } from "./routes/feedback.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerMeRoutes } from "./routes/me.js";
 import { registerTelegramRoutes } from "./routes/telegram.js";
@@ -51,6 +52,11 @@ export async function createAppContext(): Promise<AppContext> {
   });
   await registerTelegramRoutes(app, {
     bot,
+    env
+  });
+  await registerFeedbackRoutes(app, {
+    bot,
+    db: db.db,
     env
   });
 

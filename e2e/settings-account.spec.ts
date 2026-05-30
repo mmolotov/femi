@@ -61,4 +61,21 @@ test.describe("settings and account", () => {
       page.getByRole("heading", { name: /a short setup before the first entry/i })
     ).toBeVisible();
   });
+
+  test("expands the feedback block, submits a message, and shows success", async ({ page }) => {
+    const feedback = page.locator("details.feedback-block");
+    const textarea = feedback.getByRole("textbox", { name: /send feedback/i });
+    const sendButton = feedback.getByRole("button", { name: /^send$/i });
+
+    // Send must be disabled until the user types a non-empty message.
+    await feedback.locator("> summary").click();
+    await expect(sendButton).toBeDisabled();
+
+    await textarea.fill("Calendar overflows on iPhone SE.");
+    await expect(sendButton).toBeEnabled();
+    await sendButton.click();
+
+    await expect(feedback.getByText(/your message was sent/i)).toBeVisible();
+    await expect(textarea).toHaveValue("");
+  });
 });
