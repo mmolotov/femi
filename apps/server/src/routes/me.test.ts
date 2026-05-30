@@ -244,7 +244,7 @@ describe("me routes", () => {
       env: { RATE_LIMIT_ENABLED: true } as never
     });
 
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 30; index += 1) {
       const response = await app.inject({
         headers: {
           "x-telegram-init-data": "stub"
@@ -303,7 +303,7 @@ describe("me routes", () => {
       env: { RATE_LIMIT_ENABLED: false } as never
     });
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 31; index += 1) {
       const response = await app.inject({
         headers: {
           "x-telegram-init-data": "stub"
