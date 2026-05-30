@@ -356,6 +356,7 @@ select {
   font-variation-settings:
     "opsz" 30,
     "wght" 500;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
@@ -411,6 +412,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 400;
+  font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.1;
   margin: 0 0 0.45rem;
@@ -881,6 +883,12 @@ select {
   font-variation-settings:
     "opsz" 40,
     "wght" 430;
+
+  /* Round font-weight to a standard step (400) so non-variable fallback fonts
+     used for scripts without Figtree coverage (e.g. Cyrillic, Arabic) don't
+     round 430 up to medium/bold on iOS/Android. Figtree itself still renders
+     at 430 via the wght variation axis above. */
+  font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.1;
   margin: 0;
@@ -914,6 +922,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 500;
+  font-weight: 500;
   margin: 0 0 0.3rem;
 }
 
@@ -1372,6 +1381,7 @@ select {
   font-variation-settings:
     "opsz" 72,
     "wght" 400;
+  font-weight: 400;
 }
 
 .forecast-card small {
@@ -1429,6 +1439,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 500;
+  font-weight: 500;
 }
 
 .history-section + .history-section {
@@ -1502,6 +1513,7 @@ select {
   font-variation-settings:
     "opsz" 72,
     "wght" 400;
+  font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.1;
 }
@@ -1541,6 +1553,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 500;
+  font-weight: 500;
   margin: 0 0 0.3rem;
 }
 
@@ -2218,29 +2231,22 @@ select {
   }
 }
 
-.feedback-block {
-  background: var(--bg-elevated);
-  border: 1px solid var(--rule);
-  border-radius: 1.5rem;
-  box-shadow: var(--shadow-raised);
-}
-
 .feedback-block > summary {
   cursor: pointer;
-  font-family: var(--font-display);
-  font-size: clamp(1.25rem, 3vw, 1.6rem);
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  padding: 1.5rem 1.75rem;
+  list-style: none;
 }
 
-.feedback-body {
-  padding: 0 1.75rem 1.75rem;
+.feedback-block > summary::-webkit-details-marker {
+  display: none;
+}
+
+.feedback-block .panel-header {
+  margin-bottom: 0;
 }
 
 .feedback-description {
   color: var(--ink-secondary);
-  margin: 0 0 0.75rem;
+  margin: 1.5rem 0 1rem;
 }
 
 .feedback-textarea {
@@ -2260,7 +2266,6 @@ select {
   flex-wrap: wrap;
   gap: 0.75rem;
   justify-content: space-between;
-  margin: 0.5rem 0;
 }
 
 .feedback-counter {

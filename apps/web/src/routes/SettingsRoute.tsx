@@ -319,74 +319,78 @@ export function SettingsRoute() {
         </div>
       </Panel>
 
-      <details className="feedback-block">
-        <summary className="feedback-summary">{messages.settings.feedbackTitle}</summary>
-        <div className="feedback-body">
-          <p className="feedback-description">{messages.settings.feedbackDescription}</p>
-          <form
-            className="stack-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!api || !canSendFeedback || feedbackStatus === "pending") {
-                return;
-              }
-
-              setFeedbackStatus("pending");
-              setFeedbackError(null);
-
-              void api
-                .sendFeedback(feedbackText.trim())
-                .then(() => {
-                  setFeedbackText("");
-                  setFeedbackStatus("success");
-                })
-                .catch((error) => {
-                  setFeedbackError(
-                    error instanceof Error ? error.message : messages.settings.feedbackError
-                  );
-                  setFeedbackStatus("error");
-                });
-            }}
-          >
-            <textarea
-              aria-label={messages.settings.feedbackTitle}
-              className="feedback-textarea"
-              maxLength={feedbackMessageMaxLength}
-              onChange={(event) => {
-                setFeedbackText(event.target.value);
-                if (feedbackStatus === "success" || feedbackStatus === "error") {
-                  setFeedbackStatus("idle");
-                  setFeedbackError(null);
-                }
-              }}
-              placeholder={messages.settings.feedbackPlaceholder}
-              rows={4}
-              value={feedbackText}
-            />
-            <div className="feedback-meta">
-              <span aria-live="polite" className="feedback-counter">
-                {feedbackText.length}/{feedbackMessageMaxLength}
-              </span>
-              {feedbackStatus === "success" ? (
-                <span className="inline-success">{messages.settings.feedbackSuccess}</span>
-              ) : null}
-              {feedbackStatus === "error" ? (
-                <span className="inline-error">
-                  {feedbackError ?? messages.settings.feedbackError}
-                </span>
-              ) : null}
+      <details className="panel feedback-block">
+        <summary>
+          <div className="panel-header">
+            <div>
+              <h2>{messages.settings.feedbackTitle}</h2>
             </div>
-            <button
-              className="primary-button"
-              disabled={!canSendFeedback || feedbackStatus === "pending"}
-              type="submit"
-            >
-              {feedbackStatus === "pending"
-                ? messages.settings.feedbackSubmitPending
-                : messages.settings.feedbackSubmitIdle}
-            </button>
-          </form>
-        </div>
+          </div>
+        </summary>
+        <p className="feedback-description">{messages.settings.feedbackDescription}</p>
+        <form
+          className="stack-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!api || !canSendFeedback || feedbackStatus === "pending") {
+              return;
+            }
+
+            setFeedbackStatus("pending");
+            setFeedbackError(null);
+
+            void api
+              .sendFeedback(feedbackText.trim())
+              .then(() => {
+                setFeedbackText("");
+                setFeedbackStatus("success");
+              })
+              .catch((error) => {
+                setFeedbackError(
+                  error instanceof Error ? error.message : messages.settings.feedbackError
+                );
+                setFeedbackStatus("error");
+              });
+          }}
+        >
+          <textarea
+            aria-label={messages.settings.feedbackTitle}
+            className="feedback-textarea"
+            maxLength={feedbackMessageMaxLength}
+            onChange={(event) => {
+              setFeedbackText(event.target.value);
+              if (feedbackStatus === "success" || feedbackStatus === "error") {
+                setFeedbackStatus("idle");
+                setFeedbackError(null);
+              }
+            }}
+            placeholder={messages.settings.feedbackPlaceholder}
+            rows={4}
+            value={feedbackText}
+          />
+          <div className="feedback-meta">
+            <span aria-live="polite" className="feedback-counter">
+              {feedbackText.length}/{feedbackMessageMaxLength}
+            </span>
+            {feedbackStatus === "success" ? (
+              <span className="inline-success">{messages.settings.feedbackSuccess}</span>
+            ) : null}
+            {feedbackStatus === "error" ? (
+              <span className="inline-error">
+                {feedbackError ?? messages.settings.feedbackError}
+              </span>
+            ) : null}
+          </div>
+          <button
+            className="primary-button"
+            disabled={!canSendFeedback || feedbackStatus === "pending"}
+            type="submit"
+          >
+            {feedbackStatus === "pending"
+              ? messages.settings.feedbackSubmitPending
+              : messages.settings.feedbackSubmitIdle}
+          </button>
+        </form>
       </details>
 
       <div className="about-app-row">

@@ -1431,7 +1431,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       deleteDialogConfirm: "Kalıcı olarak sil",
       feedbackTitle: "Geri bildirim gönder",
       feedbackDescription:
-        "Bir sorunu veya fikri paylaşın — mesajınız doğrudan geliştiriciye ulaşır.",
+        "Bir sorun veya fikir paylaşın — mesajınız doğrudan geliştiriciye ulaşır.",
       feedbackPlaceholder: "Mesajınız…",
       feedbackSubmitIdle: "Gönder",
       feedbackSubmitPending: "Gönderiliyor…",
