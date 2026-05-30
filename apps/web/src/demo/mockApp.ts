@@ -693,6 +693,10 @@ export function createDemoApiClient(): ApiClient {
         entry: demoState.checkins[date]
       };
     },
+    async sendFeedback(): Promise<void> {
+      // Demo/preview mode has no backend; the form reports success without
+      // attempting a real network call so the UI flow stays exercisable.
+    },
     async startPeriod(input): Promise<PeriodLogResponse> {
       const response = upsertPeriodLog(input.date, input.flowIntensity, input.note);
       syncCyclesFromPeriodLogs();

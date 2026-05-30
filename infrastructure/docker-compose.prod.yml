@@ -14,9 +14,22 @@ services:
       - caddy_ingress_network=${EDGE_NETWORK_NAME:-edge}
 
   server:
+    environment:
+      NODE_ENV: production
+      # Behind Caddy/Cloudflare: trust the proxy so request.ip and the
+      # CF-Connecting-IP rate-limit key reflect the real client.
+      TRUST_PROXY: "true"
     networks:
       - default
       - edge
+
+  worker:
+    environment:
+      NODE_ENV: production
+
+  monitoring:
+    environment:
+      NODE_ENV: production
 
 networks:
   edge:

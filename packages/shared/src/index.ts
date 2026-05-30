@@ -126,6 +126,11 @@ export const telegramAuthRequestSchema = z.object({
   initDataRaw: z.string().min(1)
 });
 
+export const feedbackMessageMaxLength = 2000;
+export const feedbackRequestSchema = z.object({
+  message: z.string().trim().min(1).max(feedbackMessageMaxLength)
+});
+
 export const telegramUserSchema = z.object({
   id: z.string().uuid(),
   telegramUserId: z.string(),
@@ -735,6 +740,7 @@ export type DailyCheckinEntry = z.infer<typeof dailyCheckinEntrySchema>;
 export type DailyCheckinRequest = z.infer<typeof dailyCheckinRequestSchema>;
 export type DailyCheckinResponse = z.infer<typeof dailyCheckinResponseSchema>;
 export type Discharge = z.infer<typeof dischargeSchema>;
+export type FeedbackRequest = z.infer<typeof feedbackRequestSchema>;
 export type FlowIntensity = z.infer<typeof flowIntensitySchema>;
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
 export type HistoryCycle = z.infer<typeof historyCycleSchema>;

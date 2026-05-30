@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 
 import { AppDataProvider, useAppData } from "./data/AppDataProvider";
@@ -43,6 +43,16 @@ function AppShell() {
   const { messages } = useI18n();
   const { error, me, status } = useAppData();
   const session = useSession();
+
+  const showOnboarding = status === "ready" && me != null && !me.settings.onboardingCompleted;
+
+  // Onboarding is a long, scrollable form; reset scroll when it gives way to the app.
+  useEffect(() => {
+    if (!showOnboarding) {
+      window.scrollTo(0, 0);
+    }
+  }, [showOnboarding]);
+
   const tabs: Tab[] = [
     { to: "/", label: messages.app.tabs.today, end: true },
     { to: "/history", label: messages.app.tabs.history },
@@ -83,25 +93,27 @@ function AppShell() {
           <span>{error ?? messages.app.syncErrorBody}</span>
         </section>
       ) : null}
-      <nav className="tab-bar" aria-label={messages.app.primaryNavLabel}>
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.to}
-            className={({ isActive }) => (isActive ? "tab-link active" : "tab-link")}
-            end={tab.end}
-            to={{
-              pathname: tab.to,
-              search: location.search
-            }}
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
+      {showOnboarding ? null : (
+        <nav className="tab-bar" aria-label={messages.app.primaryNavLabel}>
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.to}
+              className={({ isActive }) => (isActive ? "tab-link active" : "tab-link")}
+              end={tab.end}
+              to={{
+                pathname: tab.to,
+                search: location.search
+              }}
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
 
       <main className="content">
         <Suspense fallback={<section className="status-banner">{messages.app.loading}</section>}>
-          {status === "ready" && me && !me.settings.onboardingCompleted ? (
+          {showOnboarding ? (
             <OnboardingGate />
           ) : (
             <Routes>

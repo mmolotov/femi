@@ -326,7 +326,6 @@ select {
    ========================================================================= */
 
 .content {
-  counter-reset: panel-counter;
   display: grid;
   gap: 1.5rem;
 }
@@ -357,6 +356,7 @@ select {
   font-variation-settings:
     "opsz" 30,
     "wght" 500;
+  font-weight: 500;
   letter-spacing: -0.01em;
 }
 
@@ -389,21 +389,8 @@ select {
   border: 1px solid var(--rule);
   border-radius: 1.5rem;
   box-shadow: var(--shadow-raised);
-  counter-increment: panel-counter;
   padding: 1.75rem;
   position: relative;
-}
-
-.panel::before {
-  color: var(--ink-quaternary);
-  content: counter(panel-counter, decimal-leading-zero);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  position: absolute;
-  right: 1.5rem;
-  top: 1.5rem;
 }
 
 .panel-header {
@@ -412,7 +399,6 @@ select {
   gap: 1rem;
   justify-content: space-between;
   margin-bottom: 1.5rem;
-  padding-right: 3rem;
 }
 
 .panel-header > div:first-child {
@@ -426,6 +412,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 400;
+  font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.1;
   margin: 0 0 0.45rem;
@@ -853,6 +840,11 @@ select {
   width: 0.45rem;
 }
 
+.account-settings {
+  display: grid;
+  gap: 1.25rem;
+}
+
 .account-danger-card {
   background: var(--danger-soft);
   border: 1px solid var(--danger);
@@ -891,6 +883,12 @@ select {
   font-variation-settings:
     "opsz" 40,
     "wght" 430;
+
+  /* Round font-weight to a standard step (400) so non-variable fallback fonts
+     used for scripts without Figtree coverage (e.g. Cyrillic, Arabic) don't
+     round 430 up to medium/bold on iOS/Android. Figtree itself still renders
+     at 430 via the wght variation axis above. */
+  font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.1;
   margin: 0;
@@ -916,7 +914,6 @@ select {
 
 .onboarding-preview .panel-header {
   margin-bottom: 0;
-  padding-right: 0;
 }
 
 .onboarding-preview h3 {
@@ -925,11 +922,8 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 500;
+  font-weight: 500;
   margin: 0 0 0.3rem;
-}
-
-.onboarding-panel::before {
-  content: none;
 }
 
 /* =========================================================================
@@ -1387,6 +1381,7 @@ select {
   font-variation-settings:
     "opsz" 72,
     "wght" 400;
+  font-weight: 400;
 }
 
 .forecast-card small {
@@ -1444,6 +1439,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 500;
+  font-weight: 500;
 }
 
 .history-section + .history-section {
@@ -1517,6 +1513,7 @@ select {
   font-variation-settings:
     "opsz" 72,
     "wght" 400;
+  font-weight: 400;
   letter-spacing: -0.015em;
   line-height: 1.1;
 }
@@ -1556,6 +1553,7 @@ select {
   font-variation-settings:
     "opsz" 48,
     "wght" 500;
+  font-weight: 500;
   margin: 0 0 0.3rem;
 }
 
@@ -1609,16 +1607,6 @@ select {
    RTL corrections
    ========================================================================= */
 
-[dir="rtl"] .panel::before {
-  left: 1.5rem;
-  right: auto;
-}
-
-[dir="rtl"] .panel-header {
-  padding-left: 3rem;
-  padding-right: 0;
-}
-
 [dir="rtl"] .status-banner {
   border-left: 1px solid var(--rule);
   border-radius: 1rem 0.25rem 0.25rem 1rem;
@@ -1661,15 +1649,6 @@ select {
 
   .panel {
     padding: 1.35rem 1.15rem;
-  }
-
-  .panel::before {
-    right: 1.15rem;
-    top: 1.15rem;
-  }
-
-  .panel-header {
-    padding-right: 2.25rem;
   }
 
   .day-details-header {
@@ -2250,4 +2229,46 @@ select {
   .day-summary-value {
     font-size: 0.92rem;
   }
+}
+
+.feedback-block > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.feedback-block > summary::-webkit-details-marker {
+  display: none;
+}
+
+.feedback-block .panel-header {
+  margin-bottom: 0;
+}
+
+.feedback-description {
+  color: var(--ink-secondary);
+  margin: 1.5rem 0 1rem;
+}
+
+.feedback-textarea {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  color: inherit;
+  font: inherit;
+  padding: 0.75rem 1rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.feedback-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.feedback-counter {
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
 }

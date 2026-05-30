@@ -223,7 +223,7 @@ describe("SettingsRoute", () => {
     expect(screen.getByRole("button", { name: "Сохранить настройки" })).toBeInTheDocument();
   });
 
-  it("shows only the linked account in the Telegram integration panel", () => {
+  it("shows only the linked Telegram account in the account panel", () => {
     render(
       <MemoryRouter>
         <I18nProvider>

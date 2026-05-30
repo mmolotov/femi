@@ -15,9 +15,11 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
     MONITORING_RETENTION_DAYS: 30,
     NODE_ENV: "development",
     PORT: 3001,
+    RATE_LIMIT_ENABLED: true,
     TELEGRAM_BOT_SECRET_TOKEN: "secret",
     TELEGRAM_INIT_DATA_EXPIRES_IN: 3600,
     TELEGRAM_WEBHOOK_URL: undefined,
+    TRUST_PROXY: false,
     WEB_APP_URL: "http://localhost:5173",
     WORKER_TICK_MS: 60000,
     ...overrides
@@ -25,7 +27,7 @@ function createEnv(overrides: Partial<AppEnv> = {}): AppEnv {
 }
 
 describe("registerRateLimit", () => {
-  it("registers the limiter without a global hook in development", async () => {
+  it("registers without a global hook when rate limiting is disabled", async () => {
     const app = {
       log: {
         info: vi.fn()
@@ -38,18 +40,21 @@ describe("registerRateLimit", () => {
       register: ReturnType<typeof vi.fn>;
     };
 
-    await registerRateLimit(app as never, createEnv({ NODE_ENV: "development" }));
+    await registerRateLimit(app as never, createEnv({ RATE_LIMIT_ENABLED: false }));
 
     expect(app.register).toHaveBeenCalledWith(expect.any(Function), {
       global: false,
       hook: "preHandler",
+      keyGenerator: expect.any(Function),
       max: API_RATE_LIMIT_MAX,
       timeWindow: API_RATE_LIMIT_WINDOW_MS
     });
-    expect(app.log.info).toHaveBeenCalledWith("Skipping global API rate limit in development.");
+    expect(app.log.info).toHaveBeenCalledWith(
+      "Skipping API rate limiting (RATE_LIMIT_ENABLED=false)."
+    );
   });
 
-  it("registers the limiter outside development", async () => {
+  it("registers a global limiter when rate limiting is enabled", async () => {
     const app = {
       log: {
         info: vi.fn()
@@ -62,13 +67,51 @@ describe("registerRateLimit", () => {
       register: ReturnType<typeof vi.fn>;
     };
 
-    await registerRateLimit(app as never, createEnv({ NODE_ENV: "production" }));
+    await registerRateLimit(app as never, createEnv({ RATE_LIMIT_ENABLED: true }));
 
     expect(app.register).toHaveBeenCalledWith(expect.any(Function), {
       global: true,
       hook: "preHandler",
+      keyGenerator: expect.any(Function),
       max: API_RATE_LIMIT_MAX,
       timeWindow: API_RATE_LIMIT_WINDOW_MS
     });
+  });
+
+  it("trusts CF-Connecting-IP only when behind a trusted proxy", async () => {
+    const captureKeyGenerator = async (env: AppEnv) => {
+      const app = {
+        log: {
+          info: vi.fn()
+        },
+        register: vi.fn().mockResolvedValue(undefined)
+      } as unknown as {
+        log: {
+          info: ReturnType<typeof vi.fn>;
+        };
+        register: ReturnType<typeof vi.fn>;
+      };
+
+      await registerRateLimit(app as never, env);
+
+      const [, options] = app.register.mock.calls[0] as [
+        unknown,
+        { keyGenerator: (request: { headers: Record<string, string>; ip: string }) => string }
+      ];
+
+      return options.keyGenerator;
+    };
+
+    const trusted = await captureKeyGenerator(createEnv({ TRUST_PROXY: true }));
+    expect(trusted({ headers: { "cf-connecting-ip": "203.0.113.7" }, ip: "10.0.0.1" })).toBe(
+      "203.0.113.7"
+    );
+    expect(trusted({ headers: {}, ip: "10.0.0.1" })).toBe("10.0.0.1");
+
+    // Without a trusted proxy the client-supplied header is ignored.
+    const untrusted = await captureKeyGenerator(createEnv({ TRUST_PROXY: false }));
+    expect(untrusted({ headers: { "cf-connecting-ip": "203.0.113.7" }, ip: "10.0.0.1" })).toBe(
+      "10.0.0.1"
+    );
   });
 });

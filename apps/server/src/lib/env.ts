@@ -18,12 +18,29 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   HOST: z.string().default("0.0.0.0"),
   PORT: z.coerce.number().int().positive().default(3001),
+  // Enable when the server runs behind a trusted reverse proxy (Caddy/Cloudflare)
+  // so request.ip reflects the forwarded client instead of the proxy address.
+  TRUST_PROXY: z.preprocess(
+    (value) => (typeof value === "string" ? value.toLowerCase() === "true" : value),
+    z.boolean().default(false)
+  ),
+  // Rate limiting is on by default in every environment; disable it only via an
+  // explicit opt-out (e.g. local development), never implicitly through NODE_ENV.
+  RATE_LIMIT_ENABLED: z.preprocess(
+    (value) => (typeof value === "string" ? value.toLowerCase() !== "false" : value),
+    z.boolean().default(true)
+  ),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   WEB_APP_URL: z.string().url().default("http://localhost"),
   TELEGRAM_WEBHOOK_URL: z.preprocess(emptyStringToUndefined, z.string().url().optional()),
   DATABASE_URL: z.string().min(1),
   BOT_TOKEN: z.string().min(1),
   TELEGRAM_BOT_SECRET_TOKEN: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
+  // Telegram chat id that receives feedback submitted from Settings (usually the
+  // developer's own user id). Optional: when unset the feedback endpoint replies
+  // 503 instead of sending. The bot must have been started by that chat at least
+  // once, or Telegram refuses to deliver bot-initiated messages.
+  FEEDBACK_CHAT_ID: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
   TELEGRAM_INIT_DATA_EXPIRES_IN: z.coerce.number().int().positive().default(3600),
   WORKER_TICK_MS: z.coerce.number().int().positive().default(60000),
   // Read-only connection used by the monitoring scheduler to run metric queries.

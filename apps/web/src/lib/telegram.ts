@@ -34,6 +34,7 @@ type TelegramWindow = Window & {
       initDataUnsafe?: {
         user?: unknown;
       };
+      close?: () => void;
     };
   };
 };
@@ -59,6 +60,18 @@ function hasTelegramRuntime(): boolean {
   const hasInitUser = Boolean(webApp?.initDataUnsafe?.user);
 
   return search.includes("tgWebAppPlatform=") || hasInitData || hasInitUser;
+}
+
+export function closeTelegramApp(): boolean {
+  const telegramWindow = readTelegramWindow();
+  const close = telegramWindow?.Telegram?.WebApp?.close;
+
+  if (hasTelegramRuntime() && typeof close === "function") {
+    close();
+    return true;
+  }
+
+  return false;
 }
 
 async function waitForViewportMount(): Promise<boolean> {

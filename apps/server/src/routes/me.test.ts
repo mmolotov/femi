@@ -21,6 +21,7 @@ const { AuthContextErrorMock, resolveAuthenticatedUserMock } = vi.hoisted(() => 
 
 vi.mock("../lib/auth-context.js", () => ({
   AuthContextError: AuthContextErrorMock,
+  getVerifiedTelegramUserId: () => "10001",
   resolveAuthenticatedUser: resolveAuthenticatedUserMock
 }));
 
@@ -240,7 +241,7 @@ describe("me routes", () => {
       db: {
         delete: deleteMock
       } as never,
-      env: {} as never
+      env: { RATE_LIMIT_ENABLED: true } as never
     });
 
     for (let index = 0; index < 10; index += 1) {
@@ -266,6 +267,54 @@ describe("me routes", () => {
     });
 
     expect(blockedResponse.statusCode).toBe(429);
+  });
+
+  it("does not rate limit account deletion when rate limiting is disabled", async () => {
+    const returningMock = vi
+      .fn()
+      .mockResolvedValue([{ id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0" }]);
+    const deleteMock = vi.fn(() => ({
+      where: vi.fn(() => ({ returning: returningMock }))
+    }));
+
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 29,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {
+        delete: deleteMock
+      } as never,
+      env: { RATE_LIMIT_ENABLED: false } as never
+    });
+
+    for (let index = 0; index < 11; index += 1) {
+      const response = await app.inject({
+        headers: {
+          "x-telegram-init-data": "stub"
+        },
+        method: "DELETE",
+        remoteAddress: "127.0.0.1",
+        url: "/api/me"
+      });
+
+      expect(response.statusCode).toBe(204);
+    }
   });
 
   it("updates settings and marks onboarding complete", async () => {

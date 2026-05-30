@@ -6,7 +6,7 @@ import {
   getIsoDateInTimeZone
 } from "@femi/shared";
 import { periodLengthRange } from "@femi/shared";
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { useAppData } from "../data/AppDataProvider";
 import { useI18n } from "../i18n/I18nProvider";
@@ -16,6 +16,7 @@ import {
   getCalendarWeekdayLabels
 } from "../lib/date";
 import { isNumberInRange, parseIntegerInput } from "../lib/numberInput";
+import { closeTelegramApp } from "../lib/telegram";
 
 function formatMonth(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -73,6 +74,12 @@ export function OnboardingGate() {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(true);
+  const disclaimerTitleId = useId();
+  const disclaimerBodyId = useId();
+  const continueButtonRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
   const today = getIsoDateInTimeZone(new Date(), browserTimeZone);
   const minDate = "2020-01-01";
   const minMonth = "2020-01";
@@ -124,11 +131,78 @@ export function OnboardingGate() {
   const weekdayLabels = useMemo(() => getCalendarWeekdayLabels(language), [language]);
   const leadingEmptyDays = useMemo(() => getCalendarLeadingEmptyDays(previewMonth), [previewMonth]);
 
+  const handleDisclaimerContinue = () => {
+    setIsDisclaimerOpen(false);
+    // Move focus to the now-revealed onboarding heading instead of losing it.
+    headingRef.current?.focus();
+  };
+
+  const handleDisclaimerClose = () => {
+    // Inside Telegram this closes the mini app; in a browser it just dismisses.
+    if (!closeTelegramApp()) {
+      setIsDisclaimerOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isDisclaimerOpen) {
+      return;
+    }
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      continueButtonRef.current?.focus();
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        // Escape acknowledges the notice like Continue; it never exits the app
+        // (only the explicit Close button does), and the backdrop is inert, so
+        // dismissing the notice is always a deliberate action.
+        event.preventDefault();
+        setIsDisclaimerOpen(false);
+        headingRef.current?.focus();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const focusableElements = [continueButtonRef.current, closeButtonRef.current].filter(
+        (element): element is HTMLButtonElement => element !== null
+      );
+
+      if (focusableElements.length === 0) {
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isDisclaimerOpen]);
+
   return (
     <section className="panel onboarding-panel">
       <header className="panel-header">
         <div>
-          <h2>{messages.onboarding.title}</h2>
+          <h2 ref={headingRef} tabIndex={-1}>
+            {messages.onboarding.title}
+          </h2>
           <p>{messages.onboarding.description}</p>
         </div>
       </header>
@@ -298,6 +372,39 @@ export function OnboardingGate() {
           {isSaving ? messages.onboarding.submitPending : messages.onboarding.submitIdle}
         </button>
       </form>
+
+      {isDisclaimerOpen ? (
+        <div className="dialog-backdrop">
+          <div
+            aria-describedby={disclaimerBodyId}
+            aria-labelledby={disclaimerTitleId}
+            aria-modal="true"
+            className="dialog-card"
+            role="dialog"
+          >
+            <h3 id={disclaimerTitleId}>{messages.settings.importantNoticeTitle}</h3>
+            <p id={disclaimerBodyId}>{messages.settings.importantNotice}</p>
+            <div className="action-row">
+              <button
+                className="secondary-button"
+                onClick={handleDisclaimerClose}
+                ref={closeButtonRef}
+                type="button"
+              >
+                {messages.settings.aboutClose}
+              </button>
+              <button
+                className="primary-button"
+                onClick={handleDisclaimerContinue}
+                ref={continueButtonRef}
+                type="button"
+              >
+                {messages.onboarding.disclaimerContinue}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

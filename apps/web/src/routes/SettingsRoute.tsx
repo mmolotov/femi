@@ -1,4 +1,4 @@
-import { cycleLengthRange, periodLengthRange } from "@femi/shared";
+import { cycleLengthRange, feedbackMessageMaxLength, periodLengthRange } from "@femi/shared";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { Panel } from "../components/Panel";
@@ -11,7 +11,7 @@ import { type ThemeChoice, useTheme } from "../theme/ThemeProvider";
 
 export function SettingsRoute() {
   const { language, languages, messages, setLanguage } = useI18n();
-  const { deleteAccount, me, updateSettings } = useAppData();
+  const { api, deleteAccount, me, updateSettings } = useAppData();
   const session = useSession();
   const { choice: themeChoice, setChoice: setThemeChoice } = useTheme();
   const themeOptions: Array<{ value: ThemeChoice; label: string }> = [
@@ -38,6 +38,11 @@ export function SettingsRoute() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<"idle" | "pending" | "success" | "error">(
+    "idle"
+  );
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const deleteDialogTitleId = useId();
   const deleteDialogDescriptionId = useId();
   const deleteDialogErrorId = useId();
@@ -166,6 +171,9 @@ export function SettingsRoute() {
   const canSave =
     isNumberInRange(parsedCycleLengthDays, cycleLengthRange) &&
     isNumberInRange(parsedPeriodLengthDays, periodLengthRange);
+  const feedbackTrimmedLength = feedbackText.trim().length;
+  const canSendFeedback =
+    api !== null && feedbackTrimmedLength > 0 && feedbackText.length <= feedbackMessageMaxLength;
 
   const telegramAccountLabel =
     (session.user?.username ??
@@ -174,6 +182,10 @@ export function SettingsRoute() {
 
   return (
     <>
+      <Panel title={messages.settings.importantNoticeTitle}>
+        <p className="notice">{messages.settings.importantNotice}</p>
+      </Panel>
+
       <Panel
         description={messages.settings.preferencesDescription}
         title={messages.settings.preferencesTitle}
@@ -244,7 +256,7 @@ export function SettingsRoute() {
         </form>
       </Panel>
 
-      <Panel description={messages.theme.description} title={messages.theme.title}>
+      <Panel title={messages.theme.title}>
         <div className="appearance-controls">
           <div className="theme-segment" role="radiogroup" aria-label={messages.theme.title}>
             {themeOptions.map((option) => (
@@ -281,45 +293,105 @@ export function SettingsRoute() {
         </div>
       </Panel>
 
-      <Panel
-        description={messages.settings.integrationDescription}
-        title={messages.settings.integrationTitle}
-      >
-        <dl className="details-list">
-          <div>
-            <dt>{messages.settings.telegramAccount}</dt>
-            <dd>{telegramAccountLabel}</dd>
+      <Panel title={messages.settings.accountTitle}>
+        <div className="account-settings">
+          <dl className="details-list">
+            <div>
+              <dt>{messages.settings.telegramAccount}</dt>
+              <dd>{telegramAccountLabel}</dd>
+            </div>
+          </dl>
+          <div className="account-danger-card">
+            <p className="notice">{messages.settings.accountWarning}</p>
+            <button
+              className="destructive-button"
+              onClick={() => {
+                lastFocusedElementRef.current =
+                  document.activeElement instanceof HTMLElement ? document.activeElement : null;
+                setDeleteError(null);
+                setIsDeleteDialogOpen(true);
+              }}
+              type="button"
+            >
+              {messages.settings.deleteAccountIdle}
+            </button>
           </div>
-        </dl>
-      </Panel>
-
-      <Panel
-        description={messages.settings.accountDescription}
-        title={messages.settings.accountTitle}
-      >
-        <div className="account-danger-card">
-          <p className="notice">{messages.settings.accountWarning}</p>
-          <button
-            className="destructive-button"
-            onClick={() => {
-              lastFocusedElementRef.current =
-                document.activeElement instanceof HTMLElement ? document.activeElement : null;
-              setDeleteError(null);
-              setIsDeleteDialogOpen(true);
-            }}
-            type="button"
-          >
-            {messages.settings.deleteAccountIdle}
-          </button>
         </div>
       </Panel>
 
-      <Panel
-        description={messages.settings.importantNoticeDescription}
-        title={messages.settings.importantNoticeTitle}
-      >
-        <p className="notice">{messages.settings.importantNotice}</p>
-      </Panel>
+      <details className="panel feedback-block">
+        <summary>
+          <div className="panel-header">
+            <div>
+              <h2>{messages.settings.feedbackTitle}</h2>
+            </div>
+          </div>
+        </summary>
+        <p className="feedback-description">{messages.settings.feedbackDescription}</p>
+        <form
+          className="stack-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!api || !canSendFeedback || feedbackStatus === "pending") {
+              return;
+            }
+
+            setFeedbackStatus("pending");
+            setFeedbackError(null);
+
+            void api
+              .sendFeedback(feedbackText.trim())
+              .then(() => {
+                setFeedbackText("");
+                setFeedbackStatus("success");
+              })
+              .catch((error) => {
+                setFeedbackError(
+                  error instanceof Error ? error.message : messages.settings.feedbackError
+                );
+                setFeedbackStatus("error");
+              });
+          }}
+        >
+          <textarea
+            aria-label={messages.settings.feedbackTitle}
+            className="feedback-textarea"
+            maxLength={feedbackMessageMaxLength}
+            onChange={(event) => {
+              setFeedbackText(event.target.value);
+              if (feedbackStatus === "success" || feedbackStatus === "error") {
+                setFeedbackStatus("idle");
+                setFeedbackError(null);
+              }
+            }}
+            placeholder={messages.settings.feedbackPlaceholder}
+            rows={4}
+            value={feedbackText}
+          />
+          <div className="feedback-meta">
+            <span aria-live="polite" className="feedback-counter">
+              {feedbackText.length}/{feedbackMessageMaxLength}
+            </span>
+            {feedbackStatus === "success" ? (
+              <span className="inline-success">{messages.settings.feedbackSuccess}</span>
+            ) : null}
+            {feedbackStatus === "error" ? (
+              <span className="inline-error">
+                {feedbackError ?? messages.settings.feedbackError}
+              </span>
+            ) : null}
+          </div>
+          <button
+            className="primary-button"
+            disabled={!canSendFeedback || feedbackStatus === "pending"}
+            type="submit"
+          >
+            {feedbackStatus === "pending"
+              ? messages.settings.feedbackSubmitPending
+              : messages.settings.feedbackSubmitIdle}
+          </button>
+        </form>
+      </details>
 
       <div className="about-app-row">
         <button

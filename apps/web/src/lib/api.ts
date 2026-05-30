@@ -35,6 +35,7 @@ type ApiClient = {
   getMe(): Promise<MeResponse>;
   logPeriod(input: PeriodLogRequest): Promise<PeriodLogResponse>;
   saveCheckin(date: string, input: DailyCheckinRequest): Promise<DailyCheckinResponse>;
+  sendFeedback(message: string): Promise<void>;
   startPeriod(input: {
     date: string;
     flowIntensity?: PeriodLogRequest["flowIntensity"];
@@ -209,6 +210,22 @@ export function createApiClient(initDataRaw: string): ApiClient {
         },
         (payload) => dailyCheckinResponseSchema.parse(payload)
       );
+    },
+    async sendFeedback(message) {
+      const response = await fetch("/api/feedback", {
+        body: JSON.stringify({ message }),
+        headers: {
+          "content-type": "application/json",
+          [telegramInitDataHeader]: initDataRaw
+        },
+        method: "POST"
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          await readErrorMessage(response, `Request failed with status ${response.status}.`)
+        );
+      }
     },
     async startPeriod(input) {
       return requestJson(
