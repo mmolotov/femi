@@ -241,7 +241,7 @@ describe("feedback routes", () => {
       env: { FEEDBACK_CHAT_ID: "999888777", RATE_LIMIT_ENABLED: true } as never
     });
 
-    for (let index = 0; index < 5; index += 1) {
+    for (let index = 0; index < 20; index += 1) {
       const response = await app.inject({
         body: { message: `try ${index}` },
         headers: {
@@ -282,7 +282,7 @@ describe("feedback routes", () => {
       env: { FEEDBACK_CHAT_ID: "999888777", RATE_LIMIT_ENABLED: false } as never
     });
 
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 21; index += 1) {
       const response = await app.inject({
         body: { message: `try ${index}` },
         headers: {
@@ -297,6 +297,6 @@ describe("feedback routes", () => {
       expect(response.statusCode).toBe(204);
     }
 
-    expect(sendMessageMock).toHaveBeenCalledTimes(6);
+    expect(sendMessageMock).toHaveBeenCalledTimes(21);
   });
 });

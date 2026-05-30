@@ -115,7 +115,7 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
       preHandler: deps.env.RATE_LIMIT_ENABLED
         ? app.rateLimit({
             keyGenerator: (request) => getVerifiedTelegramUserId(request, deps.env) ?? request.ip,
-            max: 10,
+            max: 30,
             timeWindow: API_RATE_LIMIT_WINDOW_MS
           })
         : undefined

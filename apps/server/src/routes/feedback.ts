@@ -19,7 +19,7 @@ type FeedbackRouteDeps = {
 
 // Tighter than the global limit: this relays straight into the developer's DMs,
 // so cap submissions per account to blunt spam.
-const FEEDBACK_RATE_LIMIT_MAX = 5;
+const FEEDBACK_RATE_LIMIT_MAX = 20;
 
 function formatFeedbackMessage(
   user: {
