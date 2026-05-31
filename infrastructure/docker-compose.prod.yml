@@ -30,11 +30,20 @@ services:
   monitoring:
     environment:
       NODE_ENV: production
+    # Join the shared monitoring network so the infra cloudflared can reach
+    # this dashboard by container name. The dashboard is still not on edge,
+    # so the only public path is via Cloudflare Tunnel + Access.
+    networks:
+      - default
+      - monitoring
 
 networks:
   edge:
     external: true
     name: ${EDGE_NETWORK_NAME:-edge}
+  monitoring:
+    external: true
+    name: ${MONITORING_NETWORK_NAME:-monitoring}
 
 volumes:
   postgres_data:
