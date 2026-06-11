@@ -18,6 +18,10 @@ import {
 import { isNumberInRange, parseIntegerInput } from "../lib/numberInput";
 import { closeTelegramApp } from "../lib/telegram";
 
+function formatRangeHint(template: string, range: { max: number; min: number }): string {
+  return template.replace("{min}", String(range.min)).replace("{max}", String(range.max));
+}
+
 function formatMonth(date: Date): string {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
@@ -94,9 +98,13 @@ export function OnboardingGate() {
   const previewPeriodLengthDays = hasValidPeriodLength
     ? parsedPeriodLengthDays
     : (me?.settings.periodLengthDays ?? 5);
+  // The period can't run longer than the cycle itself.
+  const periodExceedsCycle =
+    hasValidCycleLength && hasValidPeriodLength && parsedPeriodLengthDays > parsedCycleLengthDays;
   const canSubmit =
     hasValidCycleLength &&
     hasValidPeriodLength &&
+    !periodExceedsCycle &&
     latestPeriodStart >= minDate &&
     latestPeriodStart <= today;
 
@@ -237,8 +245,8 @@ export function OnboardingGate() {
         <label className="field">
           <span>{messages.onboarding.cycleLengthLabel}</span>
           <input
-            max={45}
-            min={20}
+            max={cycleLengthRange.max}
+            min={cycleLengthRange.min}
             onChange={(event) => {
               setCycleLengthInput(event.target.value);
             }}
@@ -246,14 +254,14 @@ export function OnboardingGate() {
             type="number"
             value={cycleLengthInput}
           />
-          <small>{messages.onboarding.cycleLengthHint}</small>
+          <small>{formatRangeHint(messages.onboarding.cycleLengthHint, cycleLengthRange)}</small>
         </label>
 
         <label className="field">
           <span>{messages.onboarding.periodLengthLabel}</span>
           <input
-            max={10}
-            min={2}
+            max={periodLengthRange.max}
+            min={periodLengthRange.min}
             onChange={(event) => {
               setPeriodLengthInput(event.target.value);
             }}
@@ -261,7 +269,7 @@ export function OnboardingGate() {
             type="number"
             value={periodLengthInput}
           />
-          <small>{messages.onboarding.periodLengthHint}</small>
+          <small>{formatRangeHint(messages.onboarding.periodLengthHint, periodLengthRange)}</small>
         </label>
 
         <label className="field">
@@ -366,6 +374,9 @@ export function OnboardingGate() {
           </div>
         </section>
 
+        {periodExceedsCycle ? (
+          <p className="inline-error">{messages.onboarding.periodExceedsCycle}</p>
+        ) : null}
         {error ? <p className="inline-error">{error}</p> : null}
 
         <button className="primary-button" disabled={isSaving || !canSubmit} type="submit">

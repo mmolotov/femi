@@ -3,6 +3,7 @@ import {
   differenceInDays,
   flowIntensityValues,
   getIsoDateInTimeZone,
+  LATE_PERIOD_THRESHOLD_DAYS,
   resolveConceptionProbability,
   resolveCyclePhase,
   resolveOvulationDay,
@@ -251,7 +252,7 @@ function pickTodaySummaryValue(
 }
 
 export function TodayRoute() {
-  const { api, refresh, status, summary } = useAppData();
+  const { api, me, refresh, status, summary } = useAppData();
   const { language, messages } = useI18n();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -431,14 +432,26 @@ export function TodayRoute() {
   );
 
   const selectedPhase: CyclePhase | null = useMemo(() => {
-    if (!summary || selectedCycleDay === null) {
-      return selectedDay?.isLoggedPeriodDay || selectedDay?.isPredictedPeriodDay
-        ? "menstrual"
-        : null;
+    if (!summary) {
+      return selectedDay?.isLoggedPeriodDay ? "menstrual" : null;
     }
 
-    if (selectedDay?.isLoggedPeriodDay || selectedDay?.isPredictedPeriodDay) {
+    // A logged period day is confirmed menstrual. A *predicted* day is only
+    // tentative, so it must not flip the phase: an overdue, still-unlogged cycle
+    // stays luteal instead of jumping to menstrual on the predicted day.
+    if (selectedDay?.isLoggedPeriodDay) {
       return "menstrual";
+    }
+
+    // For today, trust the server's current phase — it uses the real, un-wrapped
+    // cycle day, so a late cycle reads as luteal rather than wrapping back into
+    // an early-cycle menstrual day.
+    if (selectedDate === today) {
+      return summary.currentPhase;
+    }
+
+    if (selectedCycleDay === null) {
+      return null;
     }
 
     return resolveCyclePhase(
@@ -446,7 +459,7 @@ export function TodayRoute() {
       summary.averageCycleLengthDays,
       summary.averagePeriodLengthDays
     );
-  }, [selectedCycleDay, selectedDay, summary]);
+  }, [selectedCycleDay, selectedDate, selectedDay, summary, today]);
 
   const conceptionProbability: ConceptionProbability | null = useMemo(() => {
     if (!summary || selectedCycleDay === null) {
@@ -464,6 +477,15 @@ export function TodayRoute() {
   const nextOvulationDate = resolveNextOvulationDate(today, markerData.ovulationDays);
   const daysToNextPeriod = nextPeriodDate ? differenceInDays(today, nextPeriodDate) : null;
   const daysToOvulation = nextOvulationDate ? differenceInDays(today, nextOvulationDate) : null;
+  // A cycle is "late" once it has run past its average length with no period
+  // logged yet; daysLate counts the days beyond that average.
+  const daysLate =
+    summary && summary.latestPeriodStart !== null
+      ? differenceInDays(summary.latestPeriodStart, today) - summary.averageCycleLengthDays
+      : null;
+  const lateThresholdDays = me?.settings.latePeriodThresholdDays ?? LATE_PERIOD_THRESHOLD_DAYS;
+  const isCycleLate =
+    !!summary && !summary.activePeriod && daysLate !== null && daysLate >= lateThresholdDays;
   const isTodaySelected = selectedDate === today;
 
   const isFutureSelected = differenceInDays(today, selectedDate) > 0;
@@ -650,6 +672,18 @@ export function TodayRoute() {
 
   return (
     <>
+      {isCycleLate ? (
+        <section className="status-banner cycle-late-banner" role="status">
+          <strong>{messages.today.cycleLateTitle}</strong>
+          <span>
+            {interpolate(messages.today.cycleLateBody, {
+              days: daysLate ?? 0,
+              average: summary.averageCycleLengthDays
+            })}
+          </span>
+        </section>
+      ) : null}
+
       <WeekStrip
         copy={weekStripCopy}
         formatDayLabel={formatDayLabel}

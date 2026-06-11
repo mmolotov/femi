@@ -1,0 +1,1 @@
+ALTER TABLE "user_settings" ADD COLUMN "late_period_threshold_days" integer DEFAULT 2 NOT NULL;

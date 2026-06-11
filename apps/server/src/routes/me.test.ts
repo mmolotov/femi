@@ -87,6 +87,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -144,6 +145,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -224,6 +226,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -283,6 +286,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -323,6 +327,7 @@ describe("me routes", () => {
         cycleLengthDays: 30,
         onboardingCompleted: true,
         periodLengthDays: 6,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "Europe/Berlin"
       }
@@ -348,6 +353,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -400,12 +406,55 @@ describe("me routes", () => {
     });
   });
 
+  it("rejects a period longer than the cycle", async () => {
+    app = await createTestApp();
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    await registerMeRoutes(app, {
+      db: {} as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      body: {
+        cycleLengthDays: 10,
+        periodLengthDays: 21
+      },
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "PATCH",
+      url: "/api/me/settings"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().error).toMatch(/cannot exceed cycle length/i);
+  });
+
   it("seeds onboarding period days up to today", async () => {
     const returningMock = vi.fn().mockResolvedValue([
       {
         cycleLengthDays: 30,
         onboardingCompleted: true,
         periodLengthDays: 6,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "Europe/Berlin"
       }
@@ -447,6 +496,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -504,7 +554,7 @@ describe("me routes", () => {
 
     const response = await app.inject({
       body: {
-        cycleLengthDays: 10
+        cycleLengthDays: 9
       },
       method: "PATCH",
       url: "/api/me/settings"
@@ -542,6 +592,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "America/Los_Angeles"
       },
@@ -582,6 +633,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -624,6 +676,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },

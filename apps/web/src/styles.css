@@ -380,6 +380,11 @@ select {
   opacity: 0.85;
 }
 
+.cycle-late-banner {
+  background: var(--sand-soft);
+  border-left-color: var(--sand);
+}
+
 /* =========================================================================
    Panel — the core editorial container
    ========================================================================= */

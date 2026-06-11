@@ -174,6 +174,80 @@ describe("TodayRoute", () => {
     expect(screen.queryByLabelText(/discharge/i)).not.toBeInTheDocument();
   });
 
+  it("shows a delay notice and keeps the phase luteal when the cycle is overdue", async () => {
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi.fn().mockResolvedValue({
+          days: [createCalendarDay("2026-04-03", { isToday: true })],
+          month: "2026-04"
+        }),
+        getCheckin: vi.fn().mockResolvedValue({ entry: null }),
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      // Started 2026-03-01 with a 28-day average, so 2026-04-03 is 5 days late
+      // with no active period — the cycle is overdue but unconfirmed.
+      summary: createSummary("2026-04-03", {
+        activePeriod: false,
+        averageCycleLengthDays: 28,
+        currentCycleDay: 34,
+        currentPhase: "luteal",
+        forecast: [{ periodEnd: "2026-04-07", periodStart: "2026-04-03" }],
+        latestPeriodStart: "2026-03-01",
+        predictedNextPeriodStart: "2026-04-03"
+      })
+    });
+
+    renderToday();
+
+    // Feedback #2: a possible-delay notice is surfaced.
+    expect(await screen.findByText(/your cycle is running long/i)).toBeInTheDocument();
+    // Feedback #1: the phase stays luteal, so the menstrual-only flow selector
+    // is not shown even though today is the (tentative) predicted period start.
+    expect(screen.queryByLabelText(/flow intensity/i)).not.toBeInTheDocument();
+  });
+
+  it("respects a higher late-period threshold from settings", async () => {
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi.fn().mockResolvedValue({
+          days: [createCalendarDay("2026-04-03", { isToday: true })],
+          month: "2026-04"
+        }),
+        getCheckin: vi.fn().mockResolvedValue({ entry: null }),
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      // The same 5-days-late cycle, but the user raised the threshold to 10 days,
+      // so the delay notice should stay hidden.
+      me: { settings: { latePeriodThresholdDays: 10 } },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary("2026-04-03", {
+        activePeriod: false,
+        averageCycleLengthDays: 28,
+        currentCycleDay: 34,
+        currentPhase: "luteal",
+        forecast: [{ periodEnd: "2026-04-07", periodStart: "2026-04-03" }],
+        latestPeriodStart: "2026-03-01",
+        predictedNextPeriodStart: "2026-04-03"
+      })
+    });
+
+    renderToday();
+
+    expect(await screen.findByRole("button", { name: /mark period day/i })).toBeInTheDocument();
+    expect(screen.queryByText(/your cycle is running long/i)).not.toBeInTheDocument();
+  });
+
   it("shows the event name in the summary when ovulation is today", async () => {
     useAppDataMock.mockReturnValue({
       api: {

@@ -1,4 +1,10 @@
-import { cycleLengthRange, feedbackMessageMaxLength, periodLengthRange } from "@femi/shared";
+import {
+  cycleLengthRange,
+  feedbackMessageMaxLength,
+  LATE_PERIOD_THRESHOLD_DAYS,
+  latePeriodThresholdRange,
+  periodLengthRange
+} from "@femi/shared";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { Panel } from "../components/Panel";
@@ -24,6 +30,9 @@ export function SettingsRoute() {
   );
   const [periodLengthInput, setPeriodLengthInput] = useState(
     String(me?.settings.periodLengthDays ?? 5)
+  );
+  const [latePeriodThresholdInput, setLatePeriodThresholdInput] = useState(
+    String(me?.settings.latePeriodThresholdDays ?? LATE_PERIOD_THRESHOLD_DAYS)
   );
   // Timezone and reminders no longer have visible controls, but the values are
   // still persisted so the settings API contract stays intact.
@@ -63,6 +72,7 @@ export function SettingsRoute() {
 
     setCycleLengthInput(String(me.settings.cycleLengthDays));
     setPeriodLengthInput(String(me.settings.periodLengthDays));
+    setLatePeriodThresholdInput(String(me.settings.latePeriodThresholdDays));
     setTimezone(me.settings.timezone);
     setRemindersEnabled(me.settings.remindersEnabled);
   }, [me]);
@@ -168,9 +178,23 @@ export function SettingsRoute() {
 
   const parsedCycleLengthDays = parseIntegerInput(cycleLengthInput);
   const parsedPeriodLengthDays = parseIntegerInput(periodLengthInput);
+  const parsedLatePeriodThresholdDays = parseIntegerInput(latePeriodThresholdInput);
+  const hasValidCycleLength = isNumberInRange(parsedCycleLengthDays, cycleLengthRange);
+  const hasValidPeriodLength = isNumberInRange(parsedPeriodLengthDays, periodLengthRange);
+  const hasValidLatePeriodThreshold = isNumberInRange(
+    parsedLatePeriodThresholdDays,
+    latePeriodThresholdRange
+  );
+  // Neither the period nor the delay threshold may run longer than the cycle.
+  const exceedsCycleLength =
+    hasValidCycleLength &&
+    ((hasValidPeriodLength && parsedPeriodLengthDays > parsedCycleLengthDays) ||
+      (hasValidLatePeriodThreshold && parsedLatePeriodThresholdDays > parsedCycleLengthDays));
   const canSave =
-    isNumberInRange(parsedCycleLengthDays, cycleLengthRange) &&
-    isNumberInRange(parsedPeriodLengthDays, periodLengthRange);
+    hasValidCycleLength &&
+    hasValidPeriodLength &&
+    hasValidLatePeriodThreshold &&
+    !exceedsCycleLength;
   const feedbackTrimmedLength = feedbackText.trim().length;
   const canSendFeedback =
     api !== null && feedbackTrimmedLength > 0 && feedbackText.length <= feedbackMessageMaxLength;
@@ -205,6 +229,7 @@ export function SettingsRoute() {
             void updateSettings({
               cycleLengthDays: parsedCycleLengthDays,
               periodLengthDays: parsedPeriodLengthDays,
+              latePeriodThresholdDays: parsedLatePeriodThresholdDays,
               remindersEnabled,
               timezone
             })
@@ -223,8 +248,8 @@ export function SettingsRoute() {
             <label className="field">
               <span>{messages.settings.cycleLengthLabel}</span>
               <input
-                max={45}
-                min={20}
+                max={cycleLengthRange.max}
+                min={cycleLengthRange.min}
                 onChange={(event) => {
                   setCycleLengthInput(event.target.value);
                 }}
@@ -236,8 +261,8 @@ export function SettingsRoute() {
             <label className="field">
               <span>{messages.settings.periodLengthLabel}</span>
               <input
-                max={10}
-                min={2}
+                max={periodLengthRange.max}
+                min={periodLengthRange.min}
                 onChange={(event) => {
                   setPeriodLengthInput(event.target.value);
                 }}
@@ -245,8 +270,25 @@ export function SettingsRoute() {
                 value={periodLengthInput}
               />
             </label>
+
+            <label className="field">
+              <span>{messages.settings.latePeriodThresholdLabel}</span>
+              <input
+                max={latePeriodThresholdRange.max}
+                min={latePeriodThresholdRange.min}
+                onChange={(event) => {
+                  setLatePeriodThresholdInput(event.target.value);
+                }}
+                type="number"
+                value={latePeriodThresholdInput}
+              />
+              <small>{messages.settings.latePeriodThresholdHint}</small>
+            </label>
           </div>
 
+          {exceedsCycleLength ? (
+            <p className="inline-error">{messages.settings.trackingExceedsCycle}</p>
+          ) : null}
           {saveError ? <p className="inline-error">{saveError}</p> : null}
           {saveSuccess ? <p className="inline-success">{messages.settings.saveSuccess}</p> : null}
 

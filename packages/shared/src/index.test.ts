@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPeriodForecast,
   calendarQuerySchema,
   dailyCheckinRequestSchema,
   healthResponseSchema,
@@ -42,7 +43,7 @@ describe("shared schemas", () => {
 
   it("rejects an invalid cycle length in onboarding", () => {
     const parsed = onboardingSetupRequestSchema.safeParse({
-      cycleLengthDays: 10,
+      cycleLengthDays: 9,
       latestPeriodStart: "2026-03-01",
       periodLengthDays: 5
     });
@@ -126,5 +127,35 @@ describe("shared schemas", () => {
   it("exports the expected symptom tags", () => {
     expect(symptomKeys).toContain("cramps");
     expect(symptomKeys).toContain("pms");
+  });
+});
+
+describe("buildPeriodForecast", () => {
+  it("predicts the next period one average cycle after the latest start", () => {
+    const forecast = buildPeriodForecast({
+      averageCycleLengthDays: 28,
+      averagePeriodLengthDays: 5,
+      fromDate: "2026-01-15",
+      latestCycleStart: "2026-01-01",
+      months: 1
+    });
+
+    expect(forecast[0]).toEqual({ periodStart: "2026-01-29", periodEnd: "2026-02-02" });
+  });
+
+  it("rolls an overdue prediction forward to today instead of into the past", () => {
+    // Cycle started 2026-01-01, averages 28 days, so the next start (2026-01-29)
+    // is already overdue on 2026-01-31. The first window must not land in the
+    // past; it rolls to today so no past day is flagged as a predicted period.
+    const forecast = buildPeriodForecast({
+      averageCycleLengthDays: 28,
+      averagePeriodLengthDays: 5,
+      fromDate: "2026-01-31",
+      latestCycleStart: "2026-01-01",
+      months: 1
+    });
+
+    expect(forecast[0]?.periodStart).toBe("2026-01-31");
+    expect(forecast.every((entry) => entry.periodStart >= "2026-01-31")).toBe(true);
   });
 });

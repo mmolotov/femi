@@ -29,6 +29,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }
@@ -64,6 +65,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }
@@ -109,6 +111,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }
@@ -131,6 +134,40 @@ describe("SettingsRoute", () => {
     });
 
     expect(cycleLengthInput).toHaveValue(null);
+    expect(screen.getByRole("button", { name: /save settings/i })).toBeDisabled();
+    expect(updateSettings).not.toHaveBeenCalled();
+  });
+
+  it("blocks saving when the period is longer than the cycle", () => {
+    const updateSettings = vi.fn().mockResolvedValue(undefined);
+
+    useAppDataMock.mockReturnValue({
+      deleteAccount: vi.fn().mockResolvedValue(undefined),
+      me: {
+        settings: {
+          cycleLengthDays: 28,
+          onboardingCompleted: true,
+          periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
+          remindersEnabled: true,
+          timezone: "UTC"
+        }
+      },
+      updateSettings
+    });
+
+    render(
+      <MemoryRouter>
+        <I18nProvider>
+          <SettingsRoute />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/cycle length/i), { target: { value: "10" } });
+    fireEvent.change(screen.getByLabelText(/period length/i), { target: { value: "21" } });
+
+    expect(screen.getByText(/can't exceed cycle length/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /save settings/i })).toBeDisabled();
     expect(updateSettings).not.toHaveBeenCalled();
   });
@@ -168,6 +205,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }

@@ -58,8 +58,9 @@ export const baseMessages = {
     periodLengthLabel: "Usual period length",
     latestPeriodStartLabel: "Latest period start date",
     latestPeriodStartHint: "This anchors the first 6-month forecast.",
-    cycleLengthHint: "Common range: 20 to 45 days",
-    periodLengthHint: "Common range: 2 to 10 days",
+    cycleLengthHint: "Common range: {min} to {max} days",
+    periodLengthHint: "Common range: {min} to {max} days",
+    periodExceedsCycle: "Period length can't exceed cycle length.",
     submitIdle: "Save setup",
     submitPending: "Saving…",
     disclaimerContinue: "Continue",
@@ -72,6 +73,9 @@ export const baseMessages = {
     phaseLabel: "Phase",
     phaseFallback: "phase unavailable",
     phaseFallbackDescription: "Add period days to make the phase model more reliable.",
+    cycleLateTitle: "Your cycle is running long",
+    cycleLateBody:
+      "It's been {days} day(s) past your average cycle length ({average} days) with no period logged. If your period started, mark it — otherwise this may be a delay.",
     phaseNames: {
       menstrual: "Menstrual",
       follicular: "Follicular",
@@ -254,6 +258,10 @@ export const baseMessages = {
       "These values drive the first prediction model and the onboarding baseline for cycle tracking.",
     cycleLengthLabel: "Cycle length (days)",
     periodLengthLabel: "Period length (days)",
+    latePeriodThresholdLabel: "Delay notice (days)",
+    latePeriodThresholdHint:
+      "Show a delay notice when your period runs this many days late versus your usual cycle.",
+    trackingExceedsCycle: "Period length and delay threshold can't exceed cycle length.",
     saveIdle: "Save settings",
     savePending: "Saving settings…",
     saveSuccess: "Settings saved.",
@@ -347,8 +355,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthLabel: "Обычная длина менструации",
       latestPeriodStartLabel: "Дата начала последней менструации",
       latestPeriodStartHint: "От этой даты строится первый прогноз на 6 месяцев.",
-      cycleLengthHint: "Обычный диапазон: от 20 до 45 дней",
-      periodLengthHint: "Обычный диапазон: от 2 до 10 дней",
+      cycleLengthHint: "Обычный диапазон: от {min} до {max} дней",
+      periodLengthHint: "Обычный диапазон: от {min} до {max} дней",
+      periodExceedsCycle: "Длина менструации не может быть больше длины цикла.",
       submitIdle: "Сохранить настройку",
       submitPending: "Сохраняем…",
       disclaimerContinue: "Продолжить",
@@ -361,6 +370,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Фаза",
       phaseFallback: "фаза недоступна",
       phaseFallbackDescription: "Добавьте дни менструации, чтобы модель фаз работала точнее.",
+      cycleLateTitle: "Цикл длится дольше обычного",
+      cycleLateBody:
+        "Уже на {days} дн. больше средней длины цикла ({average} дн.), а менструация не отмечена. Если она началась — отметьте день; если нет, возможно, у вас задержка.",
       phaseNames: {
         menstrual: "Менструальная",
         follicular: "Фолликулярная",
@@ -548,6 +560,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Эти значения используются для первого прогноза и базовой настройки трекинга цикла.",
       cycleLengthLabel: "Длина цикла (дни)",
       periodLengthLabel: "Длина менструации (дни)",
+      latePeriodThresholdLabel: "Порог задержки (дни)",
+      latePeriodThresholdHint:
+        "Показывать уведомление о задержке, когда менструация опаздывает на столько дней относительно средней длины цикла.",
+      trackingExceedsCycle: "Длина менструации и порог задержки не могут быть больше длины цикла.",
       saveIdle: "Сохранить настройки",
       savePending: "Сохраняем настройки…",
       saveSuccess: "Настройки сохранены.",
@@ -624,8 +640,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthLabel: "Duración habitual del período",
       latestPeriodStartLabel: "Fecha de inicio del último período",
       latestPeriodStartHint: "Desde esta fecha se construye la primera previsión de 6 meses.",
-      cycleLengthHint: "Rango común: de 20 a 45 días",
-      periodLengthHint: "Rango común: de 2 a 10 días",
+      cycleLengthHint: "Rango común: de {min} a {max} días",
+      periodLengthHint: "Rango común: de {min} a {max} días",
+      periodExceedsCycle: "La duración del período no puede superar la duración del ciclo.",
       submitIdle: "Guardar configuración",
       submitPending: "Guardando…",
       disclaimerContinue: "Continuar",
@@ -638,6 +655,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Fase",
       phaseFallback: "fase no disponible",
       phaseFallbackDescription: "Añade días de período para que el modelo de fases sea más fiable.",
+      cycleLateTitle: "Tu ciclo se está alargando",
+      cycleLateBody:
+        "Han pasado {days} día(s) más que la duración media de tu ciclo ({average} días) sin registrar el período. Si ya empezó, márcalo; si no, podría ser un retraso.",
       phaseNames: {
         menstrual: "Menstrual",
         follicular: "Folicular",
@@ -828,6 +848,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Estos valores alimentan el primer modelo de predicción y la base del seguimiento del ciclo.",
       cycleLengthLabel: "Duración del ciclo (días)",
       periodLengthLabel: "Duración del período (días)",
+      latePeriodThresholdLabel: "Aviso de retraso (días)",
+      latePeriodThresholdHint:
+        "Muestra un aviso de retraso cuando tu período se demora estos días respecto a la duración media del ciclo.",
+      trackingExceedsCycle:
+        "La duración del período y el umbral de retraso no pueden superar la duración del ciclo.",
       saveIdle: "Guardar ajustes",
       savePending: "Guardando ajustes…",
       saveSuccess: "Ajustes guardados.",
@@ -916,8 +941,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthLabel: "Duração habitual da menstruação",
       latestPeriodStartLabel: "Data de início da última menstruação",
       latestPeriodStartHint: "A partir desta data é criada a primeira previsão de 6 meses.",
-      cycleLengthHint: "Faixa comum: de 20 a 45 dias",
-      periodLengthHint: "Faixa comum: de 2 a 10 dias",
+      cycleLengthHint: "Faixa comum: de {min} a {max} dias",
+      periodLengthHint: "Faixa comum: de {min} a {max} dias",
+      periodExceedsCycle: "A duração da menstruação não pode exceder a duração do ciclo.",
       submitIdle: "Salvar configuração",
       submitPending: "Salvando…",
       disclaimerContinue: "Continuar",
@@ -931,6 +957,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseFallback: "fase indisponível",
       phaseFallbackDescription:
         "Adicione dias menstruais para tornar o modelo de fases mais confiável.",
+      cycleLateTitle: "Seu ciclo está mais longo que o normal",
+      cycleLateBody:
+        "Já se passaram {days} dia(s) além da duração média do seu ciclo ({average} dias) sem registrar a menstruação. Se ela começou, marque o dia; caso contrário, pode ser um atraso.",
       phaseNames: {
         menstrual: "Menstrual",
         follicular: "Folicular",
@@ -1117,6 +1146,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Esses valores alimentam o primeiro modelo de previsão e a base do rastreamento do ciclo.",
       cycleLengthLabel: "Duração do ciclo (dias)",
       periodLengthLabel: "Duração da menstruação (dias)",
+      latePeriodThresholdLabel: "Aviso de atraso (dias)",
+      latePeriodThresholdHint:
+        "Mostra um aviso de atraso quando a menstruação passa estes dias da duração média do ciclo.",
+      trackingExceedsCycle:
+        "A duração da menstruação e o limite de atraso não podem exceder a duração do ciclo.",
       saveIdle: "Salvar configurações",
       savePending: "Salvando configurações…",
       saveSuccess: "Configurações salvas.",
@@ -1205,8 +1239,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthLabel: "Tipik adet süresi",
       latestPeriodStartLabel: "Son adetin başlangıç tarihi",
       latestPeriodStartHint: "İlk 6 aylık tahmin bu tarihten oluşturulur.",
-      cycleLengthHint: "Yaygın aralık: 20 ila 45 gün",
-      periodLengthHint: "Yaygın aralık: 2 ila 10 gün",
+      cycleLengthHint: "Yaygın aralık: {min} ila {max} gün",
+      periodLengthHint: "Yaygın aralık: {min} ila {max} gün",
+      periodExceedsCycle: "Adet süresi döngü süresini aşamaz.",
       submitIdle: "Kurulumu kaydet",
       submitPending: "Kaydediliyor…",
       disclaimerContinue: "Devam et",
@@ -1219,6 +1254,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Faz",
       phaseFallback: "faz kullanılamıyor",
       phaseFallbackDescription: "Faz modelinin daha doğru çalışması için adet günleri ekleyin.",
+      cycleLateTitle: "Döngün normalden uzun sürüyor",
+      cycleLateBody:
+        "Adet kaydı olmadan ortalama döngü uzunluğunu ({average} gün) {days} gün geçtin. Adetin başladıysa işaretle; başlamadıysa gecikme olabilir.",
       phaseNames: {
         menstrual: "Menstrüel",
         follicular: "Foliküler",
@@ -1403,6 +1441,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Bu değerler ilk tahmin modelini ve döngü takibinin başlangıç temelini belirler.",
       cycleLengthLabel: "Döngü süresi (gün)",
       periodLengthLabel: "Adet süresi (gün)",
+      latePeriodThresholdLabel: "Gecikme uyarısı (gün)",
+      latePeriodThresholdHint:
+        "Adetin ortalama döngü uzunluğunu bu kadar gün geçtiğinde gecikme uyarısı göster.",
+      trackingExceedsCycle: "Adet süresi ve gecikme eşiği döngü süresini aşamaz.",
       saveIdle: "Ayarları kaydet",
       savePending: "Ayarlar kaydediliyor…",
       saveSuccess: "Ayarlar kaydedildi.",
@@ -1491,8 +1533,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthLabel: "Звична тривалість менструації",
       latestPeriodStartLabel: "Дата початку останньої менструації",
       latestPeriodStartHint: "Від цієї дати будується перший прогноз на 6 місяців.",
-      cycleLengthHint: "Поширений діапазон: від 20 до 45 днів",
-      periodLengthHint: "Поширений діапазон: від 2 до 10 днів",
+      cycleLengthHint: "Поширений діапазон: від {min} до {max} днів",
+      periodLengthHint: "Поширений діапазон: від {min} до {max} днів",
+      periodExceedsCycle: "Тривалість менструації не може перевищувати тривалість циклу.",
       submitIdle: "Зберегти налаштування",
       submitPending: "Зберігаємо…",
       disclaimerContinue: "Продовжити",
@@ -1505,6 +1548,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Фаза",
       phaseFallback: "фаза недоступна",
       phaseFallbackDescription: "Додайте дні менструації, щоб модель фаз працювала точніше.",
+      cycleLateTitle: "Цикл триває довше, ніж зазвичай",
+      cycleLateBody:
+        "Уже на {days} дн. більше за середню довжину циклу ({average} дн.), а менструацію не позначено. Якщо вона почалася — позначте день; якщо ні, можливо, у вас затримка.",
       phaseNames: {
         menstrual: "Менструальна",
         follicular: "Фолікулярна",
@@ -1690,6 +1736,11 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
         "Ці значення використовуються для першого прогнозу та базового налаштування трекінгу циклу.",
       cycleLengthLabel: "Тривалість циклу (дні)",
       periodLengthLabel: "Тривалість менструації (дні)",
+      latePeriodThresholdLabel: "Поріг затримки (дні)",
+      latePeriodThresholdHint:
+        "Показувати сповіщення про затримку, коли менструація запізнюється на стільки днів відносно середньої довжини циклу.",
+      trackingExceedsCycle:
+        "Тривалість менструації та поріг затримки не можуть перевищувати тривалість циклу.",
       saveIdle: "Зберегти налаштування",
       savePending: "Зберігаємо налаштування…",
       saveSuccess: "Налаштування збережено.",
@@ -1778,8 +1829,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       periodLengthLabel: "الطول المعتاد للحيض",
       latestPeriodStartLabel: "تاريخ بداية آخر حيض",
       latestPeriodStartHint: "من هذا التاريخ يتم إنشاء أول توقع لمدة 6 أشهر.",
-      cycleLengthHint: "النطاق الشائع: من 20 إلى 45 يومًا",
-      periodLengthHint: "النطاق الشائع: من 2 إلى 10 أيام",
+      cycleLengthHint: "النطاق الشائع: من {min} إلى {max} يومًا",
+      periodLengthHint: "النطاق الشائع: من {min} إلى {max} أيام",
+      periodExceedsCycle: "لا يمكن أن تتجاوز مدة الحيض مدة الدورة.",
       submitIdle: "حفظ الإعداد",
       submitPending: "جارٍ الحفظ…",
       disclaimerContinue: "متابعة",
@@ -1792,6 +1844,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "المرحلة",
       phaseFallback: "المرحلة غير متاحة",
       phaseFallbackDescription: "أضيفي أيام الحيض لكي يعمل نموذج المراحل بدقة أكبر.",
+      cycleLateTitle: "دورتكِ أطول من المعتاد",
+      cycleLateBody:
+        "مرّ {days} يوم بعد متوسط طول دورتكِ ({average} يوم) دون تسجيل الحيض. إذا بدأ الحيض فسجّليه؛ وإلا فقد يكون هناك تأخير.",
       phaseNames: {
         menstrual: "الحيض",
         follicular: "الجريبية",
@@ -1972,6 +2027,10 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       preferencesDescription: "تغذي هذه القيم أول نموذج للتوقع وخط الأساس لتتبع الدورة.",
       cycleLengthLabel: "طول الدورة (بالأيام)",
       periodLengthLabel: "طول الحيض (بالأيام)",
+      latePeriodThresholdLabel: "تنبيه التأخير (أيام)",
+      latePeriodThresholdHint:
+        "إظهار تنبيه التأخير عندما يتأخر الحيض بهذا العدد من الأيام عن متوسط طول الدورة.",
+      trackingExceedsCycle: "لا يمكن أن تتجاوز مدة الحيض وعتبة التأخير مدة الدورة.",
       saveIdle: "حفظ الإعدادات",
       savePending: "جارٍ حفظ الإعدادات…",
       saveSuccess: "تم حفظ الإعدادات.",

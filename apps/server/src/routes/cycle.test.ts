@@ -121,6 +121,10 @@ describe("cycle routes", () => {
 
   it("returns a cycle summary for the authenticated user", async () => {
     app = await createTestApp();
+    // Pin the clock inside the current cycle so the forecast isn't overdue (an
+    // overdue prediction now rolls forward to today rather than staying in the
+    // past), keeping predictedNextPeriodStart deterministic.
+    setMockSystemTime("2026-03-10T12:00:00.000Z");
     resolveAuthenticatedUserMock.mockResolvedValue({
       settings: {
         cycleLengthDays: 28,

@@ -15,6 +15,7 @@ type AuthenticatedUserContext = {
     cycleLengthDays: number;
     onboardingCompleted: boolean;
     periodLengthDays: number;
+    latePeriodThresholdDays: number;
     remindersEnabled: boolean;
     timezone: string;
   };
@@ -106,6 +107,7 @@ export async function resolveAuthenticatedUser(
       lastName: users.lastName,
       onboardingCompleted: userSettings.onboardingCompleted,
       periodLengthDays: userSettings.periodLengthDays,
+      latePeriodThresholdDays: userSettings.latePeriodThresholdDays,
       remindersEnabled: userSettings.remindersEnabled,
       telegramUserId: users.telegramUserId,
       timezone: userSettings.timezone,
@@ -126,6 +128,7 @@ export async function resolveAuthenticatedUser(
       cycleLengthDays: authenticatedUser.cycleLengthDays,
       onboardingCompleted: authenticatedUser.onboardingCompleted,
       periodLengthDays: authenticatedUser.periodLengthDays,
+      latePeriodThresholdDays: authenticatedUser.latePeriodThresholdDays,
       remindersEnabled: authenticatedUser.remindersEnabled,
       timezone: authenticatedUser.timezone
     },

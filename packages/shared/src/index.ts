@@ -5,14 +5,27 @@ const yearMonthPattern = /^\d{4}-\d{2}$/;
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
 export const cycleLengthRange = {
-  max: 45,
-  min: 20
+  max: 90,
+  min: 10
 } as const;
 
 export const periodLengthRange = {
-  max: 10,
-  min: 2
+  max: 21,
+  min: 1
 } as const;
+
+/** Allowed range for the user-configurable late-period notice threshold. */
+export const latePeriodThresholdRange = {
+  max: 14,
+  min: 1
+} as const;
+
+/**
+ * Default for how many days past the average cycle length a cycle may run —
+ * with no period logged — before the app treats it as a possible delay and
+ * surfaces a notice. Users can override this in tracking settings.
+ */
+export const LATE_PERIOD_THRESHOLD_DAYS = 2;
 
 function hasUniqueValues(values: readonly string[]): boolean {
   return new Set(values).size === values.length;
@@ -68,14 +81,26 @@ export const cyclePhaseValues = ["menstrual", "follicular", "ovulatory", "luteal
 export const cycleLengthDaysSchema = z
   .number()
   .int()
-  .min(cycleLengthRange.min, "Cycle length must be at least 20 days.")
-  .max(cycleLengthRange.max, "Cycle length must be at most 45 days.");
+  .min(cycleLengthRange.min, `Cycle length must be at least ${cycleLengthRange.min} days.`)
+  .max(cycleLengthRange.max, `Cycle length must be at most ${cycleLengthRange.max} days.`);
 
 export const periodLengthDaysSchema = z
   .number()
   .int()
-  .min(periodLengthRange.min, "Period length must be at least 2 days.")
-  .max(periodLengthRange.max, "Period length must be at most 10 days.");
+  .min(periodLengthRange.min, `Period length must be at least ${periodLengthRange.min} days.`)
+  .max(periodLengthRange.max, `Period length must be at most ${periodLengthRange.max} days.`);
+
+export const latePeriodThresholdDaysSchema = z
+  .number()
+  .int()
+  .min(
+    latePeriodThresholdRange.min,
+    `Delay notice threshold must be at least ${latePeriodThresholdRange.min} days.`
+  )
+  .max(
+    latePeriodThresholdRange.max,
+    `Delay notice threshold must be at most ${latePeriodThresholdRange.max} days.`
+  );
 
 export const wellbeingScoreSchema = z
   .number()
@@ -147,6 +172,7 @@ export const telegramAuthResponseSchema = z.object({
 export const userSettingsSchema = z.object({
   cycleLengthDays: cycleLengthDaysSchema,
   periodLengthDays: periodLengthDaysSchema,
+  latePeriodThresholdDays: latePeriodThresholdDaysSchema,
   timezone: timezoneSchema,
   remindersEnabled: z.boolean(),
   onboardingCompleted: z.boolean()
@@ -168,6 +194,7 @@ export const updateUserSettingsRequestSchema = z.object({
   cycleLengthDays: cycleLengthDaysSchema.optional(),
   latestPeriodStart: isoDateSchema.optional(),
   periodLengthDays: periodLengthDaysSchema.optional(),
+  latePeriodThresholdDays: latePeriodThresholdDaysSchema.optional(),
   timezone: timezoneSchema.optional(),
   remindersEnabled: z.boolean().optional()
 });
@@ -548,6 +575,14 @@ export function buildPeriodForecast({
   const horizon = addDaysToIsoDate(fromDate, months * 31);
   const forecast: Array<{ periodEnd: string; periodStart: string }> = [];
   let cursor = addDaysToIsoDate(latestCycleStart, averageCycleLengthDays);
+
+  // If the next expected period is already overdue (its predicted start falls
+  // before the forecast origin), roll it forward to `fromDate`. An overdue
+  // period is "expected now", not in the past — so the forecast, and the
+  // calendar/Today markers built from it, never highlight past predicted days.
+  if (differenceInDays(cursor, fromDate) > 0) {
+    cursor = fromDate;
+  }
 
   while (differenceInDays(cursor, horizon) >= 0) {
     forecast.push({
