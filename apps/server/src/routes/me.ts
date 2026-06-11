@@ -199,6 +199,21 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
         updatedAt: new Date()
       };
 
+      // Cross-field rule: neither the period nor the delay threshold can run
+      // longer than the cycle itself. Checked against the merged settings so it
+      // also catches partial updates that touch only one of the fields.
+      if (nextSettings.periodLengthDays > nextSettings.cycleLengthDays) {
+        return reply.code(400).send({
+          error: "Period length cannot exceed cycle length."
+        });
+      }
+
+      if (nextSettings.latePeriodThresholdDays > nextSettings.cycleLengthDays) {
+        return reply.code(400).send({
+          error: "Delay notice threshold cannot exceed cycle length."
+        });
+      }
+
       const updatedSettings = await deps.db.transaction(async (transaction) => {
         const [settings] = await transaction
           .update(userSettings)

@@ -60,6 +60,7 @@ export const baseMessages = {
     latestPeriodStartHint: "This anchors the first 6-month forecast.",
     cycleLengthHint: "Common range: {min} to {max} days",
     periodLengthHint: "Common range: {min} to {max} days",
+    periodExceedsCycle: "Period length can't exceed cycle length.",
     submitIdle: "Save setup",
     submitPending: "Saving…",
     disclaimerContinue: "Continue",
@@ -260,6 +261,7 @@ export const baseMessages = {
     latePeriodThresholdLabel: "Delay notice (days)",
     latePeriodThresholdHint:
       "Show a delay notice when your period runs this many days late versus your usual cycle.",
+    trackingExceedsCycle: "Period length and delay threshold can't exceed cycle length.",
     saveIdle: "Save settings",
     savePending: "Saving settings…",
     saveSuccess: "Settings saved.",
@@ -355,6 +357,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latestPeriodStartHint: "От этой даты строится первый прогноз на 6 месяцев.",
       cycleLengthHint: "Обычный диапазон: от {min} до {max} дней",
       periodLengthHint: "Обычный диапазон: от {min} до {max} дней",
+      periodExceedsCycle: "Длина менструации не может быть больше длины цикла.",
       submitIdle: "Сохранить настройку",
       submitPending: "Сохраняем…",
       disclaimerContinue: "Продолжить",
@@ -560,6 +563,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latePeriodThresholdLabel: "Порог задержки (дни)",
       latePeriodThresholdHint:
         "Показывать уведомление о задержке, когда менструация опаздывает на столько дней относительно средней длины цикла.",
+      trackingExceedsCycle: "Длина менструации и порог задержки не могут быть больше длины цикла.",
       saveIdle: "Сохранить настройки",
       savePending: "Сохраняем настройки…",
       saveSuccess: "Настройки сохранены.",
@@ -638,6 +642,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latestPeriodStartHint: "Desde esta fecha se construye la primera previsión de 6 meses.",
       cycleLengthHint: "Rango común: de {min} a {max} días",
       periodLengthHint: "Rango común: de {min} a {max} días",
+      periodExceedsCycle: "La duración del período no puede superar la duración del ciclo.",
       submitIdle: "Guardar configuración",
       submitPending: "Guardando…",
       disclaimerContinue: "Continuar",
@@ -846,6 +851,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latePeriodThresholdLabel: "Aviso de retraso (días)",
       latePeriodThresholdHint:
         "Muestra un aviso de retraso cuando tu período se demora estos días respecto a la duración media del ciclo.",
+      trackingExceedsCycle:
+        "La duración del período y el umbral de retraso no pueden superar la duración del ciclo.",
       saveIdle: "Guardar ajustes",
       savePending: "Guardando ajustes…",
       saveSuccess: "Ajustes guardados.",
@@ -936,6 +943,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latestPeriodStartHint: "A partir desta data é criada a primeira previsão de 6 meses.",
       cycleLengthHint: "Faixa comum: de {min} a {max} dias",
       periodLengthHint: "Faixa comum: de {min} a {max} dias",
+      periodExceedsCycle: "A duração da menstruação não pode exceder a duração do ciclo.",
       submitIdle: "Salvar configuração",
       submitPending: "Salvando…",
       disclaimerContinue: "Continuar",
@@ -1141,6 +1149,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latePeriodThresholdLabel: "Aviso de atraso (dias)",
       latePeriodThresholdHint:
         "Mostra um aviso de atraso quando a menstruação passa estes dias da duração média do ciclo.",
+      trackingExceedsCycle:
+        "A duração da menstruação e o limite de atraso não podem exceder a duração do ciclo.",
       saveIdle: "Salvar configurações",
       savePending: "Salvando configurações…",
       saveSuccess: "Configurações salvas.",
@@ -1231,6 +1241,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latestPeriodStartHint: "İlk 6 aylık tahmin bu tarihten oluşturulur.",
       cycleLengthHint: "Yaygın aralık: {min} ila {max} gün",
       periodLengthHint: "Yaygın aralık: {min} ila {max} gün",
+      periodExceedsCycle: "Adet süresi döngü süresini aşamaz.",
       submitIdle: "Kurulumu kaydet",
       submitPending: "Kaydediliyor…",
       disclaimerContinue: "Devam et",
@@ -1433,6 +1444,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latePeriodThresholdLabel: "Gecikme uyarısı (gün)",
       latePeriodThresholdHint:
         "Adetin ortalama döngü uzunluğunu bu kadar gün geçtiğinde gecikme uyarısı göster.",
+      trackingExceedsCycle: "Adet süresi ve gecikme eşiği döngü süresini aşamaz.",
       saveIdle: "Ayarları kaydet",
       savePending: "Ayarlar kaydediliyor…",
       saveSuccess: "Ayarlar kaydedildi.",
@@ -1523,6 +1535,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latestPeriodStartHint: "Від цієї дати будується перший прогноз на 6 місяців.",
       cycleLengthHint: "Поширений діапазон: від {min} до {max} днів",
       periodLengthHint: "Поширений діапазон: від {min} до {max} днів",
+      periodExceedsCycle: "Тривалість менструації не може перевищувати тривалість циклу.",
       submitIdle: "Зберегти налаштування",
       submitPending: "Зберігаємо…",
       disclaimerContinue: "Продовжити",
@@ -1726,6 +1739,8 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latePeriodThresholdLabel: "Поріг затримки (дні)",
       latePeriodThresholdHint:
         "Показувати сповіщення про затримку, коли менструація запізнюється на стільки днів відносно середньої довжини циклу.",
+      trackingExceedsCycle:
+        "Тривалість менструації та поріг затримки не можуть перевищувати тривалість циклу.",
       saveIdle: "Зберегти налаштування",
       savePending: "Зберігаємо налаштування…",
       saveSuccess: "Налаштування збережено.",
@@ -1816,6 +1831,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latestPeriodStartHint: "من هذا التاريخ يتم إنشاء أول توقع لمدة 6 أشهر.",
       cycleLengthHint: "النطاق الشائع: من {min} إلى {max} يومًا",
       periodLengthHint: "النطاق الشائع: من {min} إلى {max} أيام",
+      periodExceedsCycle: "لا يمكن أن تتجاوز مدة الحيض مدة الدورة.",
       submitIdle: "حفظ الإعداد",
       submitPending: "جارٍ الحفظ…",
       disclaimerContinue: "متابعة",
@@ -2014,6 +2030,7 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       latePeriodThresholdLabel: "تنبيه التأخير (أيام)",
       latePeriodThresholdHint:
         "إظهار تنبيه التأخير عندما يتأخر الحيض بهذا العدد من الأيام عن متوسط طول الدورة.",
+      trackingExceedsCycle: "لا يمكن أن تتجاوز مدة الحيض وعتبة التأخير مدة الدورة.",
       saveIdle: "حفظ الإعدادات",
       savePending: "جارٍ حفظ الإعدادات…",
       saveSuccess: "تم حفظ الإعدادات.",

@@ -98,9 +98,13 @@ export function OnboardingGate() {
   const previewPeriodLengthDays = hasValidPeriodLength
     ? parsedPeriodLengthDays
     : (me?.settings.periodLengthDays ?? 5);
+  // The period can't run longer than the cycle itself.
+  const periodExceedsCycle =
+    hasValidCycleLength && hasValidPeriodLength && parsedPeriodLengthDays > parsedCycleLengthDays;
   const canSubmit =
     hasValidCycleLength &&
     hasValidPeriodLength &&
+    !periodExceedsCycle &&
     latestPeriodStart >= minDate &&
     latestPeriodStart <= today;
 
@@ -370,6 +374,9 @@ export function OnboardingGate() {
           </div>
         </section>
 
+        {periodExceedsCycle ? (
+          <p className="inline-error">{messages.onboarding.periodExceedsCycle}</p>
+        ) : null}
         {error ? <p className="inline-error">{error}</p> : null}
 
         <button className="primary-button" disabled={isSaving || !canSubmit} type="submit">

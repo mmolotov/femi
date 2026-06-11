@@ -179,10 +179,22 @@ export function SettingsRoute() {
   const parsedCycleLengthDays = parseIntegerInput(cycleLengthInput);
   const parsedPeriodLengthDays = parseIntegerInput(periodLengthInput);
   const parsedLatePeriodThresholdDays = parseIntegerInput(latePeriodThresholdInput);
+  const hasValidCycleLength = isNumberInRange(parsedCycleLengthDays, cycleLengthRange);
+  const hasValidPeriodLength = isNumberInRange(parsedPeriodLengthDays, periodLengthRange);
+  const hasValidLatePeriodThreshold = isNumberInRange(
+    parsedLatePeriodThresholdDays,
+    latePeriodThresholdRange
+  );
+  // Neither the period nor the delay threshold may run longer than the cycle.
+  const exceedsCycleLength =
+    hasValidCycleLength &&
+    ((hasValidPeriodLength && parsedPeriodLengthDays > parsedCycleLengthDays) ||
+      (hasValidLatePeriodThreshold && parsedLatePeriodThresholdDays > parsedCycleLengthDays));
   const canSave =
-    isNumberInRange(parsedCycleLengthDays, cycleLengthRange) &&
-    isNumberInRange(parsedPeriodLengthDays, periodLengthRange) &&
-    isNumberInRange(parsedLatePeriodThresholdDays, latePeriodThresholdRange);
+    hasValidCycleLength &&
+    hasValidPeriodLength &&
+    hasValidLatePeriodThreshold &&
+    !exceedsCycleLength;
   const feedbackTrimmedLength = feedbackText.trim().length;
   const canSendFeedback =
     api !== null && feedbackTrimmedLength > 0 && feedbackText.length <= feedbackMessageMaxLength;
@@ -274,6 +286,9 @@ export function SettingsRoute() {
             </label>
           </div>
 
+          {exceedsCycleLength ? (
+            <p className="inline-error">{messages.settings.trackingExceedsCycle}</p>
+          ) : null}
           {saveError ? <p className="inline-error">{saveError}</p> : null}
           {saveSuccess ? <p className="inline-success">{messages.settings.saveSuccess}</p> : null}
 
