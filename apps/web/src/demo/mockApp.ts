@@ -165,6 +165,7 @@ function createResetState(): DemoState {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -215,6 +216,7 @@ function createPreviewState(): DemoState {
         cycleLengthDays: 28,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },

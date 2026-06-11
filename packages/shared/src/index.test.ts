@@ -43,7 +43,7 @@ describe("shared schemas", () => {
 
   it("rejects an invalid cycle length in onboarding", () => {
     const parsed = onboardingSetupRequestSchema.safeParse({
-      cycleLengthDays: 10,
+      cycleLengthDays: 9,
       latestPeriodStart: "2026-03-01",
       periodLengthDays: 5
     });

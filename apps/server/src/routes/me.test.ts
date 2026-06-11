@@ -87,6 +87,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -144,6 +145,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -224,6 +226,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -283,6 +286,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -323,6 +327,7 @@ describe("me routes", () => {
         cycleLengthDays: 30,
         onboardingCompleted: true,
         periodLengthDays: 6,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "Europe/Berlin"
       }
@@ -348,6 +353,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -406,6 +412,7 @@ describe("me routes", () => {
         cycleLengthDays: 30,
         onboardingCompleted: true,
         periodLengthDays: 6,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "Europe/Berlin"
       }
@@ -447,6 +454,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -504,7 +512,7 @@ describe("me routes", () => {
 
     const response = await app.inject({
       body: {
-        cycleLengthDays: 10
+        cycleLengthDays: 9
       },
       method: "PATCH",
       url: "/api/me/settings"
@@ -542,6 +550,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "America/Los_Angeles"
       },
@@ -582,6 +591,7 @@ describe("me routes", () => {
         cycleLengthDays: 28,
         onboardingCompleted: true,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },
@@ -624,6 +634,7 @@ describe("me routes", () => {
         cycleLengthDays: 29,
         onboardingCompleted: false,
         periodLengthDays: 5,
+        latePeriodThresholdDays: 2,
         remindersEnabled: true,
         timezone: "UTC"
       },

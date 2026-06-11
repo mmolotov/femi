@@ -29,6 +29,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }
@@ -64,6 +65,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }
@@ -109,6 +111,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }
@@ -168,6 +171,7 @@ describe("SettingsRoute", () => {
           cycleLengthDays: 28,
           onboardingCompleted: true,
           periodLengthDays: 5,
+          latePeriodThresholdDays: 2,
           remindersEnabled: true,
           timezone: "UTC"
         }

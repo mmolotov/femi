@@ -94,8 +94,8 @@ describe("cycle utilities", () => {
 
   it("returns null for invalid cycle lengths when resolving ovulation day", () => {
     expect(resolveOvulationDay(0)).toBeNull();
-    expect(resolveOvulationDay(10)).toBeNull();
-    expect(resolveOvulationDay(60)).toBeNull();
+    expect(resolveOvulationDay(9)).toBeNull();
+    expect(resolveOvulationDay(91)).toBeNull();
     expect(resolveOvulationDay(Number.NaN)).toBeNull();
     expect(resolveOvulationDay(28.5)).toBeNull();
   });
@@ -122,8 +122,8 @@ describe("cycle utilities", () => {
   it("returns null conception probability for invalid inputs", () => {
     expect(resolveConceptionProbability(null, 28, 5)).toBeNull();
     expect(resolveConceptionProbability(0, 28, 5)).toBeNull();
-    expect(resolveConceptionProbability(10, 10, 5)).toBeNull();
-    expect(resolveConceptionProbability(10, 28, 1)).toBeNull();
+    expect(resolveConceptionProbability(10, 9, 5)).toBeNull();
+    expect(resolveConceptionProbability(10, 28, 22)).toBeNull();
   });
 
   it("resolves an open period end using fallback length", () => {

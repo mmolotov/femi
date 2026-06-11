@@ -212,6 +212,42 @@ describe("TodayRoute", () => {
     expect(screen.queryByLabelText(/flow intensity/i)).not.toBeInTheDocument();
   });
 
+  it("respects a higher late-period threshold from settings", async () => {
+    useAppDataMock.mockReturnValue({
+      api: {
+        deletePeriodDay: vi.fn(),
+        endPeriod: vi.fn(),
+        getCalendar: vi.fn().mockResolvedValue({
+          days: [createCalendarDay("2026-04-03", { isToday: true })],
+          month: "2026-04"
+        }),
+        getCheckin: vi.fn().mockResolvedValue({ entry: null }),
+        logPeriod: vi.fn(),
+        saveCheckin: vi.fn(),
+        startPeriod: vi.fn()
+      },
+      // The same 5-days-late cycle, but the user raised the threshold to 10 days,
+      // so the delay notice should stay hidden.
+      me: { settings: { latePeriodThresholdDays: 10 } },
+      refresh: vi.fn().mockResolvedValue(undefined),
+      status: "ready",
+      summary: createSummary("2026-04-03", {
+        activePeriod: false,
+        averageCycleLengthDays: 28,
+        currentCycleDay: 34,
+        currentPhase: "luteal",
+        forecast: [{ periodEnd: "2026-04-07", periodStart: "2026-04-03" }],
+        latestPeriodStart: "2026-03-01",
+        predictedNextPeriodStart: "2026-04-03"
+      })
+    });
+
+    renderToday();
+
+    expect(await screen.findByRole("button", { name: /mark period day/i })).toBeInTheDocument();
+    expect(screen.queryByText(/your cycle is running long/i)).not.toBeInTheDocument();
+  });
+
   it("shows the event name in the summary when ovulation is today", async () => {
     useAppDataMock.mockReturnValue({
       api: {

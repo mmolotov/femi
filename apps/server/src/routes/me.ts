@@ -71,6 +71,7 @@ function toSettingsResponse(settings: {
   cycleLengthDays: number;
   onboardingCompleted: boolean;
   periodLengthDays: number;
+  latePeriodThresholdDays: number;
   remindersEnabled: boolean;
   timezone: string;
 }) {
@@ -78,6 +79,7 @@ function toSettingsResponse(settings: {
     cycleLengthDays: settings.cycleLengthDays,
     onboardingCompleted: settings.onboardingCompleted,
     periodLengthDays: settings.periodLengthDays,
+    latePeriodThresholdDays: settings.latePeriodThresholdDays,
     remindersEnabled: settings.remindersEnabled,
     timezone: settings.timezone
   };
@@ -188,6 +190,9 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
           parsedBody.data.latestPeriodStart !== undefined,
         periodLengthDays:
           parsedBody.data.periodLengthDays ?? authenticatedUser.settings.periodLengthDays,
+        latePeriodThresholdDays:
+          parsedBody.data.latePeriodThresholdDays ??
+          authenticatedUser.settings.latePeriodThresholdDays,
         remindersEnabled:
           parsedBody.data.remindersEnabled ?? authenticatedUser.settings.remindersEnabled,
         timezone: effectiveTimezone,
@@ -203,6 +208,7 @@ export async function registerMeRoutes(app: FastifyInstance, deps: MeRouteDeps):
             cycleLengthDays: userSettings.cycleLengthDays,
             onboardingCompleted: userSettings.onboardingCompleted,
             periodLengthDays: userSettings.periodLengthDays,
+            latePeriodThresholdDays: userSettings.latePeriodThresholdDays,
             remindersEnabled: userSettings.remindersEnabled,
             timezone: userSettings.timezone
           });

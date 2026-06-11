@@ -36,6 +36,7 @@ export const userSettings = pgTable("user_settings", {
     .unique(),
   cycleLengthDays: integer("cycle_length_days").default(28).notNull(),
   periodLengthDays: integer("period_length_days").default(5).notNull(),
+  latePeriodThresholdDays: integer("late_period_threshold_days").default(2).notNull(),
   timezone: varchar("timezone", { length: 64 }).default("UTC").notNull(),
   remindersEnabled: boolean("reminders_enabled").default(true).notNull(),
   onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),

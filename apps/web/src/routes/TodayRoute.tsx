@@ -252,7 +252,7 @@ function pickTodaySummaryValue(
 }
 
 export function TodayRoute() {
-  const { api, refresh, status, summary } = useAppData();
+  const { api, me, refresh, status, summary } = useAppData();
   const { language, messages } = useI18n();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -483,11 +483,9 @@ export function TodayRoute() {
     summary && summary.latestPeriodStart !== null
       ? differenceInDays(summary.latestPeriodStart, today) - summary.averageCycleLengthDays
       : null;
+  const lateThresholdDays = me?.settings.latePeriodThresholdDays ?? LATE_PERIOD_THRESHOLD_DAYS;
   const isCycleLate =
-    !!summary &&
-    !summary.activePeriod &&
-    daysLate !== null &&
-    daysLate >= LATE_PERIOD_THRESHOLD_DAYS;
+    !!summary && !summary.activePeriod && daysLate !== null && daysLate >= lateThresholdDays;
   const isTodaySelected = selectedDate === today;
 
   const isFutureSelected = differenceInDays(today, selectedDate) > 0;
