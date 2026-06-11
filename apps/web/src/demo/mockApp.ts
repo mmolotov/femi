@@ -439,14 +439,12 @@ function buildPhaseRanges(
   cycleLengthDays: number,
   periodLengthDays: number
 ): Array<{ endDate: string; phase: CyclePhase; startDate: string }> {
-  const ovulationStartDay = Math.min(
-    cycleLengthDays,
-    Math.max(periodLengthDays + 1, cycleLengthDays - 16)
-  );
-  const ovulationEndDay = Math.min(
-    cycleLengthDays,
-    Math.max(ovulationStartDay, cycleLengthDays - 12)
-  );
+  const cycleEnd = addDaysToIsoDate(cycleStart, cycleLengthDays - 1);
+  // Mirror the server: don't clamp ovulation into the window with Math.min, so a
+  // short (in-progress) cycle omits the phases that haven't started instead of
+  // overlapping the menstrual phase.
+  const ovulationStartDay = Math.max(periodLengthDays + 1, cycleLengthDays - 16);
+  const ovulationEndDay = Math.max(ovulationStartDay, cycleLengthDays - 12);
   const windows: Array<{ endDay: number; phase: CyclePhase; startDay: number }> = [
     { endDay: periodLengthDays, phase: "menstrual", startDay: 1 },
     {
@@ -459,12 +457,16 @@ function buildPhaseRanges(
   ];
 
   return windows
-    .filter((window) => window.startDay <= window.endDay)
-    .map((window) => ({
-      endDate: addDaysToIsoDate(cycleStart, window.endDay - 1),
-      phase: window.phase,
-      startDate: addDaysToIsoDate(cycleStart, window.startDay - 1)
-    }));
+    .filter((window) => window.startDay <= window.endDay && window.startDay <= cycleLengthDays)
+    .map((window) => {
+      const endDate = addDaysToIsoDate(cycleStart, window.endDay - 1);
+
+      return {
+        endDate: endDate > cycleEnd ? cycleEnd : endDate,
+        phase: window.phase,
+        startDate: addDaysToIsoDate(cycleStart, window.startDay - 1)
+      };
+    });
 }
 
 function createHistoryDay(date: string, phase: CyclePhase): HistoryDay {
@@ -501,7 +503,10 @@ function getHistory(input?: { before?: string }): HistoryResponse {
         ? differenceInDays(cycle.startedOn, nextCycleStart)
         : differenceInDays(cycle.startedOn, today) + 1;
       const periodEnd = inferCyclePeriodEnd(cycle, nextCycleStart);
-      const periodLengthDays = differenceInDays(cycle.startedOn, periodEnd) + 1;
+      // History never shows future days: an in-progress cycle's period can't run
+      // past today even when the settings-based fallback projects further out.
+      const visiblePeriodEnd = periodEnd > today ? today : periodEnd;
+      const periodLengthDays = differenceInDays(cycle.startedOn, visiblePeriodEnd) + 1;
       const phases = buildPhaseRanges(cycle.startedOn, cycleLengthDays, periodLengthDays).map(
         (phaseRange) => {
           const days = getDateRange(phaseRange.startDate, phaseRange.endDate).map((date) =>
