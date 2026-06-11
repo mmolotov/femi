@@ -282,7 +282,7 @@ function inferPeriodEndDate(input: {
     while (true) {
       const nextDate = addDaysToIsoDate(cursor, 1);
 
-      if (input.nextCycleStart && differenceInDays(nextDate, input.nextCycleStart) >= 0) {
+      if (input.nextCycleStart && nextDate >= input.nextCycleStart) {
         break;
       }
 
@@ -296,7 +296,12 @@ function inferPeriodEndDate(input: {
     resolvedEnd = maxIsoDate(resolvedEnd, cursor);
   }
 
-  if (input.nextCycleStart && differenceInDays(resolvedEnd, input.nextCycleStart) >= 0) {
+  // Only pull the period end back when it would actually run into the next
+  // cycle. The comparison reads `resolvedEnd >= nextCycleStart` directly:
+  // differenceInDays(a, b) returns b - a, so the previous
+  // `differenceInDays(resolvedEnd, nextCycleStart) >= 0` form was inverted and
+  // clamped every completed cycle to the full cycle length.
+  if (input.nextCycleStart && resolvedEnd >= input.nextCycleStart) {
     return addDaysToIsoDate(input.nextCycleStart, -1);
   }
 
@@ -385,14 +390,14 @@ function buildPhaseRanges(
   const periodLengthDays = differenceInDays(cycleStart, periodEnd) + 1;
   const ranges: Array<{ endDate: string; phase: CyclePhase; startDate: string }> = [];
 
-  const ovulationStartDay = Math.min(
-    cycleLengthDays,
-    Math.max(periodLengthDays + 1, cycleLengthDays - 16)
-  );
-  const ovulationEndDay = Math.min(
-    cycleLengthDays,
-    Math.max(ovulationStartDay, cycleLengthDays - 12)
-  );
+  // Lay ovulation out from the start of the cycle without clamping it back into
+  // the window with Math.min: for a short (still in-progress) cycle that clamp
+  // would drag ovulation on top of the menstrual phase. Letting these run past
+  // cycleLengthDays lets the `startDay > cycleLengthDays` guard below drop the
+  // phases that haven't started yet, so short cycles simply omit later phases
+  // instead of overlapping the menstrual one.
+  const ovulationStartDay = Math.max(periodLengthDays + 1, cycleLengthDays - 16);
+  const ovulationEndDay = Math.max(ovulationStartDay, cycleLengthDays - 12);
   const phaseDayWindows: Array<{ endDay: number; phase: CyclePhase; startDay: number }> = [
     {
       endDay: periodLengthDays,
@@ -999,50 +1004,57 @@ export async function registerCycleRoutes(
             nextCycleStart,
             periodDates
           });
-          const phases = buildPhaseRanges(startedOn, cycleLengthDays, periodEnd).map((range) => {
-            const days = getDateRange(range.startDate, range.endDate).map((date) =>
-              createHistoryDay(
-                date,
-                range.phase,
-                cycleRows,
-                checkinRowsByDate.get(date) ?? null,
-                periodRowsByDate.get(date) ?? null,
-                symptomKeysByDate.get(date) ?? []
-              )
-            );
-            const flowLevels = days
-              .map((day) => day.period?.flowIntensity)
-              .filter((value): value is FlowIntensity => value !== null && value !== undefined)
-              .map((value) => flowIntensityToLevelMap[value]);
-            const painLevels = days
-              .map((day) => day.checkin?.painLevel)
-              .filter((value): value is number => value !== null && value !== undefined);
-            const moodValues = days
-              .map((day) => day.checkin?.mood)
-              .filter((value): value is number => value !== null && value !== undefined);
-            const energyValues = days
-              .map((day) => day.checkin?.energy)
-              .filter((value): value is number => value !== null && value !== undefined);
+          // History never shows future days, so an in-progress cycle's period
+          // can't run past today even when the settings-based fallback projects
+          // further out. Completed cycles already end on/before today, so this
+          // leaves them untouched.
+          const visiblePeriodEnd = periodEnd > today ? today : periodEnd;
+          const phases = buildPhaseRanges(startedOn, cycleLengthDays, visiblePeriodEnd).map(
+            (range) => {
+              const days = getDateRange(range.startDate, range.endDate).map((date) =>
+                createHistoryDay(
+                  date,
+                  range.phase,
+                  cycleRows,
+                  checkinRowsByDate.get(date) ?? null,
+                  periodRowsByDate.get(date) ?? null,
+                  symptomKeysByDate.get(date) ?? []
+                )
+              );
+              const flowLevels = days
+                .map((day) => day.period?.flowIntensity)
+                .filter((value): value is FlowIntensity => value !== null && value !== undefined)
+                .map((value) => flowIntensityToLevelMap[value]);
+              const painLevels = days
+                .map((day) => day.checkin?.painLevel)
+                .filter((value): value is number => value !== null && value !== undefined);
+              const moodValues = days
+                .map((day) => day.checkin?.mood)
+                .filter((value): value is number => value !== null && value !== undefined);
+              const energyValues = days
+                .map((day) => day.checkin?.energy)
+                .filter((value): value is number => value !== null && value !== undefined);
 
-            return {
-              averageEnergy: averageNullable(energyValues),
-              averageFlowIntensityLevel: averageNullable(flowLevels),
-              averageMood: averageNullable(moodValues),
-              averagePainLevel: averageNullable(painLevels),
-              commonSymptoms: getCommonSymptoms(days),
-              days,
-              endDate: range.endDate,
-              phase: range.phase,
-              startDate: range.startDate,
-              totalDays: days.length
-            };
-          });
+              return {
+                averageEnergy: averageNullable(energyValues),
+                averageFlowIntensityLevel: averageNullable(flowLevels),
+                averageMood: averageNullable(moodValues),
+                averagePainLevel: averageNullable(painLevels),
+                commonSymptoms: getCommonSymptoms(days),
+                days,
+                endDate: range.endDate,
+                phase: range.phase,
+                startDate: range.startDate,
+                totalDays: days.length
+              };
+            }
+          );
 
           return {
             cycleId: cycleRow.id,
             cycleLengthDays: nextCycleStart ? differenceInDays(startedOn, nextCycleStart) : null,
             endedOn: nextCycleStart ? addDaysToIsoDate(nextCycleStart, -1) : null,
-            periodLengthDays: differenceInDays(startedOn, periodEnd) + 1,
+            periodLengthDays: differenceInDays(startedOn, visiblePeriodEnd) + 1,
             phases,
             startedOn
           };

@@ -642,6 +642,103 @@ describe("cycle routes", () => {
     });
   });
 
+  it("truncates an in-progress cycle's phases to today without overlap or projection", async () => {
+    app = await createTestApp();
+    // Cycle started two days ago; "today" is 2026-04-03, so only three days have
+    // actually elapsed even though the configured period length is five days.
+    setMockSystemTime("2026-04-03T12:00:00.000Z");
+    resolveAuthenticatedUserMock.mockResolvedValue({
+      settings: {
+        cycleLengthDays: 28,
+        onboardingCompleted: true,
+        periodLengthDays: 5,
+        remindersEnabled: true,
+        timezone: "UTC"
+      },
+      user: {
+        firstName: "Ada",
+        id: "7d8ff976-fb53-4bfb-b732-12f6e18dc4d0",
+        languageCode: "en",
+        lastName: null,
+        telegramUserId: "10001",
+        username: "ada"
+      }
+    });
+
+    const cycleRows = [
+      {
+        endedOn: new Date("2026-03-05T00:00:00.000Z"),
+        id: "cycle-complete",
+        startedOn: new Date("2026-03-01T00:00:00.000Z")
+      },
+      {
+        endedOn: null,
+        id: "cycle-in-progress",
+        startedOn: new Date("2026-04-01T00:00:00.000Z")
+      }
+    ];
+
+    const selectMock = vi
+      .fn()
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder([]))
+      .mockImplementationOnce(() => createSelectBuilder(cycleRows));
+
+    await registerCycleRoutes(app, {
+      db: {
+        select: selectMock
+      } as never,
+      env: {} as never
+    });
+
+    const response = await app.inject({
+      headers: {
+        "x-telegram-init-data": "stub"
+      },
+      method: "GET",
+      url: "/api/history"
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const payload = response.json();
+    const [inProgress, completed] = payload.cycles;
+
+    // In-progress cycle: length is still unknown and the period must not be
+    // projected to the configured five days — only the three elapsed days count.
+    expect(inProgress).toMatchObject({
+      cycleId: "cycle-in-progress",
+      cycleLengthDays: null,
+      periodLengthDays: 3,
+      startedOn: "2026-04-01"
+    });
+    // Only the menstrual phase has started; later phases are omitted rather than
+    // overlapping it, and nothing runs past today.
+    expect(inProgress.phases).toHaveLength(1);
+    expect(inProgress.phases[0]).toMatchObject({
+      endDate: "2026-04-03",
+      phase: "menstrual",
+      startDate: "2026-04-01"
+    });
+    for (const phase of inProgress.phases) {
+      expect(phase.endDate <= "2026-04-03").toBe(true);
+    }
+
+    // The completed cycle is unaffected: it still lays out all four phases.
+    expect(completed).toMatchObject({
+      cycleId: "cycle-complete",
+      cycleLengthDays: 31,
+      periodLengthDays: 5
+    });
+    expect(completed.phases.map((phase: { phase: string }) => phase.phase)).toEqual([
+      "menstrual",
+      "follicular",
+      "ovulatory",
+      "luteal"
+    ]);
+  });
+
   it("returns older history when queried before the oldest loaded cycle", async () => {
     app = await createTestApp();
     setMockSystemTime("2026-04-21T12:00:00.000Z");
