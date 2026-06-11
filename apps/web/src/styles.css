@@ -624,6 +624,24 @@ select {
   width: 100%;
 }
 
+/* iOS Safari / WKWebView (Telegram's iOS client) sizes <input type="date"> to
+   its own intrinsic content width and centers the value, so the formatted date
+   ("2 июня 2026 г.") spills past the field's right edge and off the screen.
+   Reset the native appearance so the control honors width:100% / box-sizing,
+   let it shrink inside the grid, and left-align the value to match the sibling
+   number fields. */
+.field input[type="date"] {
+  /* stylelint-disable-next-line property-no-vendor-prefix -- iOS Safari < 15.4 / WKWebView needs the -webkit- form to reset the date control; autoprefixer is not configured. */
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+}
+
+.field input[type="date"]::-webkit-date-and-time-value {
+  margin: 0;
+  text-align: left;
+}
+
 .field input::placeholder,
 .field textarea::placeholder {
   color: var(--ink-quaternary);
