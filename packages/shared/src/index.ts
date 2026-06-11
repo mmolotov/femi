@@ -14,6 +14,13 @@ export const periodLengthRange = {
   min: 2
 } as const;
 
+/**
+ * How many days past the average cycle length a cycle may run — with no period
+ * logged — before the app treats it as a possible delay and surfaces a notice.
+ * Single tunable constant so the threshold is easy to adjust.
+ */
+export const LATE_PERIOD_THRESHOLD_DAYS = 2;
+
 function hasUniqueValues(values: readonly string[]): boolean {
   return new Set(values).size === values.length;
 }
@@ -548,6 +555,14 @@ export function buildPeriodForecast({
   const horizon = addDaysToIsoDate(fromDate, months * 31);
   const forecast: Array<{ periodEnd: string; periodStart: string }> = [];
   let cursor = addDaysToIsoDate(latestCycleStart, averageCycleLengthDays);
+
+  // If the next expected period is already overdue (its predicted start falls
+  // before the forecast origin), roll it forward to `fromDate`. An overdue
+  // period is "expected now", not in the past — so the forecast, and the
+  // calendar/Today markers built from it, never highlight past predicted days.
+  if (differenceInDays(cursor, fromDate) > 0) {
+    cursor = fromDate;
+  }
 
   while (differenceInDays(cursor, horizon) >= 0) {
     forecast.push({

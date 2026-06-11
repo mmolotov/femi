@@ -72,6 +72,9 @@ export const baseMessages = {
     phaseLabel: "Phase",
     phaseFallback: "phase unavailable",
     phaseFallbackDescription: "Add period days to make the phase model more reliable.",
+    cycleLateTitle: "Your cycle is running long",
+    cycleLateBody:
+      "It's been {days} day(s) past your average cycle length ({average} days) with no period logged. If your period started, mark it — otherwise this may be a delay.",
     phaseNames: {
       menstrual: "Menstrual",
       follicular: "Follicular",
@@ -361,6 +364,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Фаза",
       phaseFallback: "фаза недоступна",
       phaseFallbackDescription: "Добавьте дни менструации, чтобы модель фаз работала точнее.",
+      cycleLateTitle: "Цикл длится дольше обычного",
+      cycleLateBody:
+        "Уже на {days} дн. больше средней длины цикла ({average} дн.), а менструация не отмечена. Если она началась — отметьте день; если нет, возможно, у вас задержка.",
       phaseNames: {
         menstrual: "Менструальная",
         follicular: "Фолликулярная",
@@ -638,6 +644,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Fase",
       phaseFallback: "fase no disponible",
       phaseFallbackDescription: "Añade días de período para que el modelo de fases sea más fiable.",
+      cycleLateTitle: "Tu ciclo se está alargando",
+      cycleLateBody:
+        "Han pasado {days} día(s) más que la duración media de tu ciclo ({average} días) sin registrar el período. Si ya empezó, márcalo; si no, podría ser un retraso.",
       phaseNames: {
         menstrual: "Menstrual",
         follicular: "Folicular",
@@ -931,6 +940,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseFallback: "fase indisponível",
       phaseFallbackDescription:
         "Adicione dias menstruais para tornar o modelo de fases mais confiável.",
+      cycleLateTitle: "Seu ciclo está mais longo que o normal",
+      cycleLateBody:
+        "Já se passaram {days} dia(s) além da duração média do seu ciclo ({average} dias) sem registrar a menstruação. Se ela começou, marque o dia; caso contrário, pode ser um atraso.",
       phaseNames: {
         menstrual: "Menstrual",
         follicular: "Folicular",
@@ -1219,6 +1231,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Faz",
       phaseFallback: "faz kullanılamıyor",
       phaseFallbackDescription: "Faz modelinin daha doğru çalışması için adet günleri ekleyin.",
+      cycleLateTitle: "Döngün normalden uzun sürüyor",
+      cycleLateBody:
+        "Adet kaydı olmadan ortalama döngü uzunluğunu ({average} gün) {days} gün geçtin. Adetin başladıysa işaretle; başlamadıysa gecikme olabilir.",
       phaseNames: {
         menstrual: "Menstrüel",
         follicular: "Foliküler",
@@ -1505,6 +1520,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "Фаза",
       phaseFallback: "фаза недоступна",
       phaseFallbackDescription: "Додайте дні менструації, щоб модель фаз працювала точніше.",
+      cycleLateTitle: "Цикл триває довше, ніж зазвичай",
+      cycleLateBody:
+        "Уже на {days} дн. більше за середню довжину циклу ({average} дн.), а менструацію не позначено. Якщо вона почалася — позначте день; якщо ні, можливо, у вас затримка.",
       phaseNames: {
         menstrual: "Менструальна",
         follicular: "Фолікулярна",
@@ -1792,6 +1810,9 @@ export const translations: Record<SupportedLanguage, Record<string, unknown>> = 
       phaseLabel: "المرحلة",
       phaseFallback: "المرحلة غير متاحة",
       phaseFallbackDescription: "أضيفي أيام الحيض لكي يعمل نموذج المراحل بدقة أكبر.",
+      cycleLateTitle: "دورتكِ أطول من المعتاد",
+      cycleLateBody:
+        "مرّ {days} يوم بعد متوسط طول دورتكِ ({average} يوم) دون تسجيل الحيض. إذا بدأ الحيض فسجّليه؛ وإلا فقد يكون هناك تأخير.",
       phaseNames: {
         menstrual: "الحيض",
         follicular: "الجريبية",
