@@ -22,11 +22,11 @@
     "@femi/db": "workspace:*",
     "@femi/shared": "workspace:*",
     "@telegram-apps/init-data-node": "^2.0.0",
-    "dotenv": "^17.2.2",
+    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.8.5",
-    "grammy": "^1.38.3",
-    "zod": "^4.1.5"
+    "grammy": "^1.43.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
