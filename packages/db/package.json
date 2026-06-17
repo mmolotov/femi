@@ -19,9 +19,9 @@
     "migrate": "node --import tsx src/migrate.ts"
   },
   "dependencies": {
-    "dotenv": "^17.2.2",
+    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.16.3"
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
