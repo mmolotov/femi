@@ -5,8 +5,12 @@ import type { Bot } from "grammy";
 
 import { createBot } from "./bot/create-bot.js";
 import { getEnv, type AppEnv } from "./lib/env.js";
+import { registerRateLimit } from "./lib/rate-limit.js";
 import { registerAuthRoutes } from "./routes/auth.js";
+import { registerCycleRoutes } from "./routes/cycle.js";
+import { registerFeedbackRoutes } from "./routes/feedback.js";
 import { registerHealthRoutes } from "./routes/health.js";
+import { registerMeRoutes } from "./routes/me.js";
 import { registerTelegramRoutes } from "./routes/telegram.js";
 
 type AppContext = {
@@ -24,20 +28,35 @@ export async function createAppContext(): Promise<AppContext> {
   const app = Fastify({
     logger: {
       level: env.LOG_LEVEL
-    }
+    },
+    trustProxy: env.TRUST_PROXY
   });
 
   await app.register(cors, {
-    origin: true
+    origin: env.WEB_APP_URL
   });
+  await registerRateLimit(app, env);
 
   await registerHealthRoutes(app);
   await registerAuthRoutes(app, {
     db: db.db,
     env
   });
+  await registerMeRoutes(app, {
+    db: db.db,
+    env
+  });
+  await registerCycleRoutes(app, {
+    db: db.db,
+    env
+  });
   await registerTelegramRoutes(app, {
     bot,
+    env
+  });
+  await registerFeedbackRoutes(app, {
+    bot,
+    db: db.db,
     env
   });
 

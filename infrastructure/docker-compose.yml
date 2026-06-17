@@ -1,20 +1,6 @@
-services:
-  caddy:
-    image: caddy:2
-    depends_on:
-      - web
-      - server
-    environment:
-      APP_DOMAIN: ${APP_DOMAIN:-localhost}
-      CADDY_EMAIL: ${CADDY_EMAIL:-ops@example.com}
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+name: femi
 
+services:
   web:
     build:
       context: ..
@@ -22,6 +8,10 @@ services:
     depends_on:
       server:
         condition: service_started
+    env_file:
+      - ../.env
+    environment:
+      WEB_APP_URL: ${WEB_APP_URL}
 
   server:
     build:
@@ -38,6 +28,7 @@ services:
       TELEGRAM_BOT_SECRET_TOKEN: ${TELEGRAM_BOT_SECRET_TOKEN}
       TELEGRAM_WEBHOOK_URL: ${TELEGRAM_WEBHOOK_URL}
       TELEGRAM_INIT_DATA_EXPIRES_IN: ${TELEGRAM_INIT_DATA_EXPIRES_IN:-3600}
+      FEEDBACK_CHAT_ID: ${FEEDBACK_CHAT_ID}
       HOST: 0.0.0.0
       PORT: 3001
       WEB_APP_URL: ${WEB_APP_URL}
@@ -62,6 +53,32 @@ services:
       PORT: 3001
       WEB_APP_URL: ${WEB_APP_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # The worker is the monitoring collector: it runs metric SQL on the
+      # read-only pool. Set MONITORING_DATABASE_URL to the read-only role DSN.
+      MONITORING_DATABASE_URL: ${MONITORING_DATABASE_URL:-}
+      MONITORING_ENABLED: ${MONITORING_ENABLED:-true}
+
+  monitoring:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+    command: ["pnpm", "--filter", "@femi/server", "start:monitoring"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-femi}:${POSTGRES_PASSWORD:-femi}@postgres:5432/${POSTGRES_DB:-femi}
+      # Optional read-only role DSN; falls back to DATABASE_URL when unset.
+      MONITORING_DATABASE_URL: ${MONITORING_DATABASE_URL:-}
+      MONITORING_HOST: 0.0.0.0
+      MONITORING_PORT: ${MONITORING_PORT:-3002}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    # Internal-only: bound to host loopback (reach it via SSH tunnel), and it never
+    # joins the public `edge` network in docker-compose.prod.yml.
+    ports:
+      - 127.0.0.1:${MONITORING_PORT:-3002}:${MONITORING_PORT:-3002}
 
   migrate:
     build:
@@ -110,9 +127,7 @@ services:
       S3_BACKUP_REGION: ${S3_BACKUP_REGION}
       S3_BACKUP_ACCESS_KEY: ${S3_BACKUP_ACCESS_KEY}
       S3_BACKUP_SECRET_KEY: ${S3_BACKUP_SECRET_KEY}
-      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_CRON_SCHEDULE: "${BACKUP_CRON_SCHEDULE:-0 3 * * *}"
 
 volumes:
-  caddy_data:
-  caddy_config:
   postgres_data:

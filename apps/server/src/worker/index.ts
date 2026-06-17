@@ -1,44 +1,98 @@
-import { createDatabaseConnection } from "@femi/db";
+import { createDatabaseConnection, createReadOnlyPool } from "@femi/db";
 
 import { getEnv } from "../lib/env.js";
+import { createStructuredLogger } from "../lib/structured-log.js";
+import { runMonitoringTick } from "../monitoring/index.js";
+import { pruneSnapshots } from "../monitoring/retention.js";
 
 const env = getEnv();
-const { pool } = createDatabaseConnection(env.DATABASE_URL);
+const { db, pool } = createDatabaseConnection(env.DATABASE_URL);
+// Metric queries run on a read-only connection so monitoring can never mutate
+// product data; snapshot writes use the writable `db` above. Only opened when
+// monitoring is enabled.
+const readPool = env.MONITORING_ENABLED
+  ? createReadOnlyPool(env.MONITORING_DATABASE_URL ?? env.DATABASE_URL)
+  : null;
+const logger = createStructuredLogger("worker", env.LOG_LEVEL);
 
 const tick = async () => {
   const client = await pool.connect();
 
   try {
     await client.query("select 1");
-    console.log(
-      JSON.stringify({
-        level: "info",
-        msg: "worker heartbeat",
-        timestamp: new Date().toISOString()
-      })
-    );
+    logger.info("worker heartbeat", {
+      workerTickMs: env.WORKER_TICK_MS
+    });
   } finally {
     client.release();
   }
+
+  if (readPool) {
+    const result = await runMonitoringTick(db, readPool);
+    if (result.ran.length > 0 || result.failed.length > 0) {
+      logger.info("monitoring tick", {
+        ran: result.ran,
+        failed: result.failed,
+        skipped: result.skipped.length
+      });
+    }
+    if (result.errors.length > 0) {
+      logger.error("monitoring metrics failed", {
+        errors: result.errors
+      });
+    }
+
+    // Prune after a collection so the cadence follows real metric runs rather
+    // than every heartbeat; keeps metric_snapshots bounded.
+    if (result.ran.length > 0) {
+      const pruned = await pruneSnapshots(db, env.MONITORING_RETENTION_DAYS);
+      if (pruned > 0) {
+        logger.info("monitoring snapshots pruned", {
+          pruned,
+          retentionDays: env.MONITORING_RETENTION_DAYS
+        });
+      }
+    }
+  }
 };
 
-await tick();
+await tick().catch((error: unknown) => {
+  logger.error("initial worker tick failed", {
+    error
+  });
+});
 
+// Guard against overlapping ticks: if one is still running when the interval
+// fires (slow query / DB stall), skip rather than double-run metrics.
+let ticking = false;
 const timer = setInterval(() => {
-  void tick();
+  if (ticking) {
+    logger.warn("worker tick still running; skipping this interval");
+    return;
+  }
+
+  ticking = true;
+  void tick()
+    .catch((error: unknown) => {
+      logger.error("worker tick failed", {
+        error
+      });
+    })
+    .finally(() => {
+      ticking = false;
+    });
 }, env.WORKER_TICK_MS);
 
 const shutdown = async (signal: string) => {
   clearInterval(timer);
-  console.log(
-    JSON.stringify({
-      level: "info",
-      msg: "worker shutdown",
-      signal,
-      timestamp: new Date().toISOString()
-    })
-  );
-  await pool.end();
+  logger.info("worker shutdown", {
+    signal
+  });
+  const closing = [pool.end()];
+  if (readPool) {
+    closing.push(readPool.end());
+  }
+  await Promise.allSettled(closing);
   process.exit(0);
 };
 

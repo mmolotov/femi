@@ -10,20 +10,23 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "dev:worker": "tsx watch src/worker/index.ts",
+    "dev:monitoring": "tsx watch src/monitoring-server/index.ts",
     "start": "node dist/index.js",
     "start:worker": "node dist/worker/index.js",
+    "start:monitoring": "node dist/monitoring-server/index.js",
     "typecheck": "tsc -p tsconfig.typecheck.json"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",
+    "@fastify/rate-limit": "^10.3.0",
     "@femi/db": "workspace:*",
     "@femi/shared": "workspace:*",
     "@telegram-apps/init-data-node": "^2.0.0",
-    "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
-    "fastify": "^5.6.0",
-    "grammy": "^1.38.3",
-    "zod": "^4.1.5"
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.8.5",
+    "grammy": "^1.43.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

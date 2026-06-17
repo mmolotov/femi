@@ -3,7 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>femi</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F5F0E6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#15171A" media="(prefers-color-scheme: dark)" />
+    <title>femi — personal cycle journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("femi.theme");
+          var mode =
+            stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+          var prefersDark =
+            window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var resolved = mode === "system" ? (prefersDark ? "dark" : "light") : mode;
+          document.documentElement.setAttribute("data-theme", resolved);
+          document.documentElement.setAttribute("data-theme-choice", mode);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

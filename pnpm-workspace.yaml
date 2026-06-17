@@ -1,3 +1,24 @@
 packages:
   - apps/*
   - packages/*
+
+# Supply-chain cooldown: refuse to resolve versions published less than this many
+# minutes ago, so freshly-compromised releases can't enter the lockfile via
+# `pnpm add`/`pnpm update` (or any non-frozen install). 4320 = 3 days.
+# Requires pnpm >= 10.16. Pair with the Dependabot `cooldown` in dependabot.yml.
+minimumReleaseAge: 4320
+minimumReleaseAgeExclude:
+  # Escape hatch for urgent security patches you need before the cooldown elapses.
+  - "@femi/*"
+
+# Security overrides: force patched versions of vulnerable transitive deps in our
+# own app tree (web/server/db). Each selector is scoped to the vulnerable range so
+# only affected versions are bumped; unrelated majors are left untouched.
+# Audited via `pnpm audit`; advisory IDs noted per entry.
+overrides:
+  "esbuild@<0.25.0": ">=0.25.0" # GHSA-67mh-4wv8-2f99 (dev-server request smuggling)
+  "valibot@>=0.31.0 <1.2.0": ">=1.2.0" # GHSA-vqpr-j7v3-hqw9 (via @telegram-apps)
+  "fast-uri@<3.1.2": ">=3.1.2" # GHSA-q3j6-qgpj-74h6, GHSA-v39h-62p7-jpjc (via fastify)
+  "ws@>=8.0.0 <8.20.1": ">=8.20.1" # GHSA-58qx-3vcg-4xpx
+  "brace-expansion@>=5.0.0 <5.0.6": ">=5.0.6" # GHSA-jxxr-4gwj-5jf2 (ReDoS)
+  "postcss@<8.5.10": ">=8.5.10" # GHSA-qx2v-qp2m-jg93 (via stylelint)

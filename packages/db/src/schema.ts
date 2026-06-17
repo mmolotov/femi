@@ -1,11 +1,14 @@
 import {
   bigint,
   boolean,
+  date,
+  index,
   integer,
   jsonb,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar
 } from "drizzle-orm/pg-core";
@@ -33,58 +36,97 @@ export const userSettings = pgTable("user_settings", {
     .unique(),
   cycleLengthDays: integer("cycle_length_days").default(28).notNull(),
   periodLengthDays: integer("period_length_days").default(5).notNull(),
+  latePeriodThresholdDays: integer("late_period_threshold_days").default(2).notNull(),
   timezone: varchar("timezone", { length: 64 }).default("UTC").notNull(),
   remindersEnabled: boolean("reminders_enabled").default(true).notNull(),
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
   ...timestamps
 });
 
-export const cycles = pgTable("cycles", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  startedOn: timestamp("started_on", { mode: "date" }).notNull(),
-  endedOn: timestamp("ended_on", { mode: "date" }),
-  predicted: boolean("predicted").default(false).notNull(),
-  ...timestamps
-});
+export const cycles = pgTable(
+  "cycles",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    startedOn: date("started_on", { mode: "date" }).notNull(),
+    endedOn: date("ended_on", { mode: "date" }),
+    predicted: boolean("predicted").default(false).notNull(),
+    ...timestamps
+  },
+  (table) => ({
+    userStartedOnUniqueIdx: uniqueIndex("cycles_user_started_on_idx").on(
+      table.userId,
+      table.startedOn
+    )
+  })
+);
 
-export const periodLogs = pgTable("period_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
-  flowLevel: integer("flow_level"),
-  notes: text("notes"),
-  ...timestamps
-});
+export const periodLogs = pgTable(
+  "period_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    happenedOn: date("happened_on", { mode: "date" }).notNull(),
+    flowLevel: integer("flow_level"),
+    notes: text("notes"),
+    ...timestamps
+  },
+  (table) => ({
+    userHappenedOnUniqueIdx: uniqueIndex("period_logs_user_happened_on_idx").on(
+      table.userId,
+      table.happenedOn
+    )
+  })
+);
 
-export const dailyCheckins = pgTable("daily_checkins", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
-  mood: integer("mood"),
-  energy: integer("energy"),
-  painLevel: integer("pain_level"),
-  discharge: varchar("discharge", { length: 64 }),
-  sleepQuality: integer("sleep_quality"),
-  note: text("note"),
-  ...timestamps
-});
+export const dailyCheckins = pgTable(
+  "daily_checkins",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    happenedOn: date("happened_on", { mode: "date" }).notNull(),
+    mood: integer("mood"),
+    energy: integer("energy"),
+    painLevel: integer("pain_level"),
+    discharge: varchar("discharge", { length: 64 }),
+    sleepQuality: integer("sleep_quality"),
+    note: text("note"),
+    ...timestamps
+  },
+  (table) => ({
+    userHappenedOnUniqueIdx: uniqueIndex("daily_checkins_user_happened_on_idx").on(
+      table.userId,
+      table.happenedOn
+    )
+  })
+);
 
-export const symptomLogs = pgTable("symptom_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
-  symptomKey: varchar("symptom_key", { length: 64 }).notNull(),
-  severity: integer("severity"),
-  ...timestamps
-});
+export const symptomLogs = pgTable(
+  "symptom_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    happenedOn: date("happened_on", { mode: "date" }).notNull(),
+    symptomKey: varchar("symptom_key", { length: 64 }).notNull(),
+    severity: integer("severity"),
+    ...timestamps
+  },
+  (table) => ({
+    userHappenedOnSymptomUniqueIdx: uniqueIndex("symptom_logs_user_happened_on_symptom_idx").on(
+      table.userId,
+      table.happenedOn,
+      table.symptomKey
+    )
+  })
+);
 
 export const notes = pgTable("notes", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -93,7 +135,7 @@ export const notes = pgTable("notes", {
     .references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 255 }),
   body: text("body").notNull(),
-  happenedOn: timestamp("happened_on", { mode: "date" }),
+  happenedOn: date("happened_on", { mode: "date" }),
   ...timestamps
 });
 
@@ -129,11 +171,33 @@ export const contraceptionLogs = pgTable("contraception_logs", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  happenedOn: timestamp("happened_on", { mode: "date" }).notNull(),
+  happenedOn: date("happened_on", { mode: "date" }).notNull(),
   method: varchar("method", { length: 64 }).notNull(),
   notes: text("notes"),
   ...timestamps
 });
+
+// Internal monitoring: one row per metric execution. Not linked to users; holds
+// the aggregated query result so the dashboard can read the latest snapshot
+// without re-running SQL on every request.
+export const metricSnapshots = pgTable(
+  "metric_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    metricId: varchar("metric_id", { length: 128 }).notNull(),
+    generatedAt: timestamp("generated_at", { withTimezone: true }).defaultNow().notNull(),
+    rows: jsonb("rows").notNull(),
+    rowCount: integer("row_count").notNull(),
+    durationMs: integer("duration_ms"),
+    error: text("error")
+  },
+  (table) => ({
+    metricGeneratedIdx: index("metric_snapshots_metric_generated_idx").on(
+      table.metricId,
+      table.generatedAt
+    )
+  })
+);
 
 export const schema = {
   users,
@@ -145,5 +209,6 @@ export const schema = {
   notes,
   reminders,
   notificationJobs,
-  contraceptionLogs
+  contraceptionLogs,
+  metricSnapshots
 };

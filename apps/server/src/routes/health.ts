@@ -10,6 +10,6 @@ export async function registerHealthRoutes(app: FastifyInstance): Promise<void> 
       timestamp: new Date().toISOString()
     });
 
-  app.get("/health", async () => buildPayload("server"));
-  app.get("/api/health", async () => buildPayload("api"));
+  app.get("/health", { config: { rateLimit: false } }, async () => buildPayload("server"));
+  app.get("/api/health", { config: { rateLimit: false } }, async () => buildPayload("api"));
 }

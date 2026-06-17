@@ -1,6 +1,8 @@
 node_modules
 dist
 coverage
+# Generated lockfile — its format is owned by pnpm, not Prettier
+pnpm-lock.yaml
+.claude
 playwright-report
 test-results
-

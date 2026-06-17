@@ -1,0 +1,249 @@
+name: Deploy Femi
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy from this repository (leave empty to deploy the commit that started this workflow)
+        required: false
+        type: string
+
+concurrency:
+  group: deploy-femi-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      resolved_ref: ${{ steps.resolve-ref.outputs.resolved_ref }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref != '' && inputs.ref || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate package manager
+        run: corepack install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve validated ref
+        id: resolve-ref
+        run: echo "resolved_ref=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Validate repository
+        run: pnpm validate
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+    timeout-minutes: 20
+    environment:
+      name: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_PATH: /opt/femi
+      DEPLOY_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+      DEPLOY_REF: ${{ needs.validate.outputs.resolved_ref }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+
+    steps:
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Configure known_hosts
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy /opt/femi
+        run: |
+          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" -- "${DEPLOY_REF}" "${DEPLOY_PATH}" <<'EOF'
+          set -euo pipefail
+
+          deploy_ref="$1"
+          deploy_path="$2"
+
+          deploy_script="$(mktemp "${TMPDIR:-/tmp}/femi-deploy.XXXXXX.sh")"
+          cleanup() {
+            rm -f "${deploy_script}"
+          }
+          trap cleanup EXIT
+
+          cat > "${deploy_script}" <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          deploy_ref="$1"
+          deploy_path="$2"
+
+          cd "${deploy_path}"
+
+          if [ -n "$(git status --short)" ]; then
+            echo "Refusing to deploy from a dirty checkout in ${deploy_path}." >&2
+            git status --short >&2
+            exit 1
+          fi
+
+          set -a
+          . ./.env
+          set +a
+
+          compose() {
+            docker compose \
+              --env-file .env \
+              -f infrastructure/docker-compose.yml \
+              -f infrastructure/docker-compose.prod.yml \
+              "$@"
+          }
+
+          dump_postgres() {
+            compose exec -T postgres /bin/sh -lc \
+              'pg_dump "postgresql://${POSTGRES_USER:-femi}:${POSTGRES_PASSWORD:-femi}@127.0.0.1:5432/${POSTGRES_DB:-femi}"'
+          }
+
+          upload_backup_from_stdin() {
+            local scope="$1"
+
+            compose run --rm --no-deps -T backup /bin/bash -lc '
+              set -euo pipefail
+
+              if [ -z "${S3_BACKUP_BUCKET:-}" ]; then
+                echo "S3_BACKUP_BUCKET is required for backups" >&2
+                exit 1
+              fi
+
+              if [ -z "${S3_BACKUP_ENDPOINT:-}" ]; then
+                echo "S3_BACKUP_ENDPOINT is required for backups" >&2
+                exit 1
+              fi
+
+              export AWS_ACCESS_KEY_ID="${S3_BACKUP_ACCESS_KEY:-}"
+              export AWS_SECRET_ACCESS_KEY="${S3_BACKUP_SECRET_KEY:-}"
+              export AWS_DEFAULT_REGION="${S3_BACKUP_REGION:-us-east-1}"
+
+              scope="$1"
+              sanitized_scope="$(printf "%s" "${scope}" | tr -cs "A-Za-z0-9._/-" "-")"
+              sanitized_scope="${sanitized_scope#/}"
+              sanitized_scope="${sanitized_scope%/}"
+
+              if [ -z "${sanitized_scope}" ]; then
+                sanitized_scope="manual"
+              fi
+
+              timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+              filename="femi-${timestamp}.sql.gz"
+              filepath="/tmp/${filename}"
+              object_key="${sanitized_scope}/${filename}"
+
+              trap "rm -f \"${filepath}\"" EXIT
+
+              cat > "${filepath}"
+
+              if [ ! -s "${filepath}" ]; then
+                echo "Backup archive was not created or is empty: ${filepath}" >&2
+                exit 1
+              fi
+
+              echo "Uploading backup ${object_key}"
+
+              aws s3 cp \
+                "${filepath}" \
+                "s3://${S3_BACKUP_BUCKET}/${object_key}" \
+                --endpoint-url "${S3_BACKUP_ENDPOINT}"
+
+              echo "Uploaded backup ${object_key}"
+            ' bash "${scope}"
+          }
+
+          predeploy_backup_skipped=0
+
+          git fetch --tags --prune origin
+
+          if compose ps --status running --services postgres | grep -qx "postgres"; then
+            echo "Running pre-deploy backup from the current postgres container..."
+
+            dump_postgres | gzip | upload_backup_from_stdin "predeploy/${deploy_ref}"
+          else
+            echo "Skipping pre-deploy backup because postgres is not running in the current stack."
+            predeploy_backup_skipped=1
+          fi
+
+          git checkout --detach "${deploy_ref}"
+
+          compose up -d --build
+
+          compose up -d
+
+          compose ps
+
+          if [ "${predeploy_backup_skipped}" = "1" ]; then
+            echo "Attempting immediate compensating backup because the pre-deploy backup was skipped..."
+
+            postgres_ready=0
+            readiness_attempt=1
+            readiness_max_attempts=20
+
+            while [ "${readiness_attempt}" -le "${readiness_max_attempts}" ]; do
+              if compose exec -T postgres pg_isready -U "${POSTGRES_USER:-femi}" -d "${POSTGRES_DB:-femi}" > /dev/null 2>&1; then
+                postgres_ready=1
+                break
+              fi
+
+              echo "Waiting for postgres readiness before compensating backup (${readiness_attempt}/${readiness_max_attempts})..."
+              readiness_attempt=$((readiness_attempt + 1))
+              sleep 3
+            done
+
+            if [ "${postgres_ready}" = "1" ]; then
+              if dump_postgres | gzip | upload_backup_from_stdin "postdeploy/${deploy_ref}"; then
+                echo "Compensating post-deploy backup completed."
+              else
+                echo "Compensating post-deploy backup failed; continuing because no pre-deploy database instance was available." >&2
+              fi
+            else
+              echo "Skipping compensating post-deploy backup because postgres did not become ready in time." >&2
+            fi
+          fi
+
+          attempt=1
+          max_attempts=20
+
+          until curl --fail --silent --show-error "https://${APP_DOMAIN}/api/health" > /dev/null; do
+            if [ "${attempt}" -ge "${max_attempts}" ]; then
+              echo "Public health check failed after ${max_attempts} attempts." >&2
+              exit 1
+            fi
+
+            echo "Public health check attempt ${attempt}/${max_attempts} failed; waiting for ingress/TLS to converge..."
+            attempt=$((attempt + 1))
+            sleep 3
+          done
+          REMOTE_SCRIPT
+
+          chmod 700 "${deploy_script}"
+          bash "${deploy_script}" "${deploy_ref}" "${deploy_path}"
+          EOF

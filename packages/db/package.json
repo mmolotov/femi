@@ -14,13 +14,14 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "migrate": "node --import tsx src/migrate.ts"
   },
   "dependencies": {
-    "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
-    "pg": "^8.16.3"
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

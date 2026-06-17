@@ -8,7 +8,7 @@
       "project": ["src/**/*.ts"]
     },
     "apps/web": {
-      "ignoreDependencies": ["@telegram-apps/sdk-react", "autoprefixer", "postcss", "tailwindcss"],
+      "ignoreDependencies": ["autoprefixer", "postcss", "tailwindcss"],
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/db": {

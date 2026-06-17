@@ -1,9 +1,36 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 
-import { CalendarRoute } from "./routes/CalendarRoute";
-import { HistoryRoute } from "./routes/HistoryRoute";
-import { SettingsRoute } from "./routes/SettingsRoute";
-import { TodayRoute } from "./routes/TodayRoute";
+import { AppDataProvider, useAppData } from "./data/AppDataProvider";
+import { I18nProvider, useI18n } from "./i18n/I18nProvider";
+import { SessionProvider, useSession } from "./session/SessionProvider";
+import { ThemeProvider } from "./theme/ThemeProvider";
+
+const CalendarRoute = lazy(async () => {
+  const module = await import("./routes/CalendarRoute");
+
+  return { default: module.CalendarRoute };
+});
+const HistoryRoute = lazy(async () => {
+  const module = await import("./routes/HistoryRoute");
+
+  return { default: module.HistoryRoute };
+});
+const OnboardingGate = lazy(async () => {
+  const module = await import("./components/OnboardingGate");
+
+  return { default: module.OnboardingGate };
+});
+const SettingsRoute = lazy(async () => {
+  const module = await import("./routes/SettingsRoute");
+
+  return { default: module.SettingsRoute };
+});
+const TodayRoute = lazy(async () => {
+  const module = await import("./routes/TodayRoute");
+
+  return { default: module.TodayRoute };
+});
 
 type Tab = {
   to: string;
@@ -11,46 +38,107 @@ type Tab = {
   end?: boolean;
 };
 
-const tabs: Tab[] = [
-  { to: "/", label: "Today", end: true },
-  { to: "/calendar", label: "Calendar" },
-  { to: "/history", label: "History" },
-  { to: "/settings", label: "Settings" }
-];
+function AppShell() {
+  const location = useLocation();
+  const { messages } = useI18n();
+  const { error, me, status } = useAppData();
+  const session = useSession();
+
+  const showOnboarding = status === "ready" && me != null && !me.settings.onboardingCompleted;
+
+  // Onboarding is a long, scrollable form; reset scroll when it gives way to the app.
+  useEffect(() => {
+    if (!showOnboarding) {
+      window.scrollTo(0, 0);
+    }
+  }, [showOnboarding]);
+
+  const tabs: Tab[] = [
+    { to: "/", label: messages.app.tabs.today, end: true },
+    { to: "/history", label: messages.app.tabs.history },
+    { to: "/settings", label: messages.app.tabs.settings }
+  ];
+
+  if (session.status === "signed_out" && location.pathname !== "/") {
+    return <Navigate replace to="/" />;
+  }
+
+  if (session.status === "signed_out") {
+    return (
+      <div className="app-shell">
+        <section className="status-banner muted-banner signed-out-banner">
+          <strong>{messages.app.signedOutTitle}</strong>
+          <span>{messages.app.signedOutBody}</span>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      {status === "loading" ? (
+        <section className="status-banner">{messages.app.loading}</section>
+      ) : null}
+
+      {session.status === "preview" ? (
+        <section className="status-banner muted-banner">
+          <strong>{messages.app.previewTitle}</strong>
+          <span>{messages.app.previewBody}</span>
+        </section>
+      ) : null}
+
+      {status === "error" ? (
+        <section className="status-banner error-banner">
+          <strong>{messages.app.syncErrorTitle}</strong>
+          <span>{error ?? messages.app.syncErrorBody}</span>
+        </section>
+      ) : null}
+      {showOnboarding ? null : (
+        <nav className="tab-bar" aria-label={messages.app.primaryNavLabel}>
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.to}
+              className={({ isActive }) => (isActive ? "tab-link active" : "tab-link")}
+              end={tab.end}
+              to={{
+                pathname: tab.to,
+                search: location.search
+              }}
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
+
+      <main className="content">
+        <Suspense fallback={<section className="status-banner">{messages.app.loading}</section>}>
+          {showOnboarding ? (
+            <OnboardingGate />
+          ) : (
+            <Routes>
+              <Route element={<TodayRoute />} path="/" />
+              <Route element={<CalendarRoute />} path="/calendar" />
+              <Route element={<HistoryRoute />} path="/history" />
+              <Route element={<SettingsRoute />} path="/settings" />
+            </Routes>
+          )}
+        </Suspense>
+      </main>
+    </div>
+  );
+}
 
 export function App() {
   return (
-    <div className="app-shell">
-      <header className="hero-card">
-        <p className="eyebrow">femi foundation</p>
-        <h1>Simple cycle tracking, built for calm daily use.</h1>
-        <p className="hero-copy">
-          Milestone 0 ships the Mini App shell, authentication path, navigation, settings baseline,
-          and backend connectivity.
-        </p>
-      </header>
-
-      <nav className="tab-bar" aria-label="Primary">
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.to}
-            className={({ isActive }) => (isActive ? "tab-link active" : "tab-link")}
-            end={tab.end}
-            to={tab.to}
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
-
-      <main className="content">
-        <Routes>
-          <Route element={<TodayRoute />} path="/" />
-          <Route element={<CalendarRoute />} path="/calendar" />
-          <Route element={<HistoryRoute />} path="/history" />
-          <Route element={<SettingsRoute />} path="/settings" />
-        </Routes>
-      </main>
-    </div>
+    <ThemeProvider>
+      <I18nProvider>
+        <SessionProvider>
+          <AppDataProvider>
+            <AppShell />
+          </AppDataProvider>
+        </SessionProvider>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

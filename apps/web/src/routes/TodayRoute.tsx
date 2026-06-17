@@ -1,68 +1,958 @@
-import { useEffect, useState } from "react";
+import {
+  addDaysToIsoDate,
+  differenceInDays,
+  flowIntensityValues,
+  getIsoDateInTimeZone,
+  LATE_PERIOD_THRESHOLD_DAYS,
+  resolveConceptionProbability,
+  resolveCyclePhase,
+  resolveOvulationDay,
+  symptomKeys,
+  type CalendarResponse,
+  type ConceptionProbability,
+  type CyclePhase,
+  type CycleSummary,
+  type DailyCheckinEntry,
+  type DailyCheckinRequest,
+  type FlowIntensity,
+  type SymptomKey
+} from "@femi/shared";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { DaySummary, type DaySummaryCopy } from "../components/DaySummary";
 import { Panel } from "../components/Panel";
+import { WeekStrip, type WeekStripCopy } from "../components/WeekStrip";
+import { useAppData } from "../data/AppDataProvider";
+import { useI18n } from "../i18n/I18nProvider";
+import { formatIsoDateForDisplay, getCalendarWeekdayLabels } from "../lib/date";
 
-type HealthResponse = {
-  service: string;
-  status: string;
-  timestamp: string;
+type CheckinFormState = {
+  discharge: NonNullable<DailyCheckinEntry["discharge"]> | "";
+  energy: NonNullable<DailyCheckinEntry["energy"]> | "";
+  flowIntensity: FlowIntensity | "";
+  mood: NonNullable<DailyCheckinEntry["mood"]> | "";
+  note: string;
+  painLevel: NonNullable<DailyCheckinEntry["painLevel"]> | "";
+  sleepQuality: NonNullable<DailyCheckinEntry["sleepQuality"]> | "";
+  symptomKeys: DailyCheckinRequest["symptomKeys"];
 };
 
+const emptyCheckinState: CheckinFormState = {
+  discharge: "",
+  energy: "",
+  flowIntensity: "",
+  mood: "",
+  note: "",
+  painLevel: "",
+  sleepQuality: "",
+  symptomKeys: []
+};
+
+function toFormState(
+  entry: DailyCheckinEntry | null,
+  flowIntensity: FlowIntensity | null
+): CheckinFormState {
+  if (!entry) {
+    return { ...emptyCheckinState, flowIntensity: flowIntensity ?? "" };
+  }
+
+  return {
+    discharge: entry.discharge ?? "",
+    energy: entry.energy ?? "",
+    flowIntensity: flowIntensity ?? "",
+    mood: entry.mood ?? "",
+    note: entry.note ?? "",
+    painLevel: entry.painLevel ?? "",
+    sleepQuality: entry.sleepQuality ?? "",
+    symptomKeys: entry.symptomKeys
+  };
+}
+
+function buildCheckinPayload(input: {
+  formState: CheckinFormState;
+  isMenstrualPhase: boolean;
+  persistedEntry: DailyCheckinEntry | null;
+}): DailyCheckinRequest {
+  const { formState, isMenstrualPhase, persistedEntry } = input;
+
+  const payload: DailyCheckinRequest = {
+    symptomKeys: formState.symptomKeys
+  };
+
+  if (formState.mood !== "") {
+    payload.mood = formState.mood;
+  } else if (persistedEntry?.mood !== null && persistedEntry?.mood !== undefined) {
+    payload.mood = null;
+  }
+
+  if (formState.energy !== "") {
+    payload.energy = formState.energy;
+  } else if (persistedEntry?.energy !== null && persistedEntry?.energy !== undefined) {
+    payload.energy = null;
+  }
+
+  if (formState.painLevel !== "") {
+    payload.painLevel = formState.painLevel;
+  } else if (persistedEntry?.painLevel !== null && persistedEntry?.painLevel !== undefined) {
+    payload.painLevel = null;
+  }
+
+  if (!isMenstrualPhase && formState.discharge !== "") {
+    payload.discharge = formState.discharge;
+  } else if (
+    persistedEntry?.discharge !== null &&
+    persistedEntry?.discharge !== undefined &&
+    (isMenstrualPhase || formState.discharge === "")
+  ) {
+    payload.discharge = null;
+  }
+
+  if (formState.sleepQuality !== "") {
+    payload.sleepQuality = formState.sleepQuality;
+  } else if (persistedEntry?.sleepQuality !== null && persistedEntry?.sleepQuality !== undefined) {
+    payload.sleepQuality = null;
+  }
+
+  if (formState.note.trim().length > 0) {
+    payload.note = formState.note;
+  } else if (persistedEntry?.note !== null && persistedEntry?.note !== undefined) {
+    payload.note = null;
+  }
+
+  return payload;
+}
+
+function getSelectedCycleDay(
+  latestPeriodStart: string | null,
+  selectedDate: string,
+  averageCycleLengthDays: number
+): number | null {
+  if (!latestPeriodStart) {
+    return null;
+  }
+
+  const offset = differenceInDays(latestPeriodStart, selectedDate);
+  const normalizedOffset =
+    ((offset % averageCycleLengthDays) + averageCycleLengthDays) % averageCycleLengthDays;
+
+  return normalizedOffset + 1;
+}
+
+function collectOvulationDays(summary: CycleSummary): string[] {
+  const ovulationDay = resolveOvulationDay(summary.averageCycleLengthDays);
+
+  if (ovulationDay === null) {
+    return [];
+  }
+
+  const offsetFromCycleStart = ovulationDay - 1;
+  const starts: string[] = [];
+
+  if (summary.latestPeriodStart) {
+    starts.push(summary.latestPeriodStart);
+  }
+
+  for (const forecastEntry of summary.forecast) {
+    starts.push(forecastEntry.periodStart);
+  }
+
+  return starts.map((start) => addDaysToIsoDate(start, offsetFromCycleStart));
+}
+
+function collectPredictedPeriodDays(summary: CycleSummary): string[] {
+  const dates: string[] = [];
+
+  for (const entry of summary.forecast) {
+    const span = Math.abs(differenceInDays(entry.periodStart, entry.periodEnd)) + 1;
+
+    for (let index = 0; index < span; index += 1) {
+      dates.push(addDaysToIsoDate(entry.periodStart, index));
+    }
+  }
+
+  return dates;
+}
+
+function resolveNextOvulationDate(today: string, ovulationDays: readonly string[]): string | null {
+  for (const date of ovulationDays) {
+    if (differenceInDays(today, date) >= 0) {
+      return date;
+    }
+  }
+
+  return null;
+}
+
+function resolveNextPeriodStart(today: string, summary: CycleSummary): string | null {
+  if (
+    summary.predictedNextPeriodStart &&
+    differenceInDays(today, summary.predictedNextPeriodStart) >= 0
+  ) {
+    return summary.predictedNextPeriodStart;
+  }
+
+  for (const entry of summary.forecast) {
+    if (differenceInDays(today, entry.periodStart) >= 0) {
+      return entry.periodStart;
+    }
+  }
+
+  return null;
+}
+
+function interpolate(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
+}
+
+function pickTodaySummaryValue(
+  nextPeriodText: (days: number) => string,
+  nextOvulationText: (days: number) => string,
+  todayPeriodText: string,
+  todayOvulationText: string,
+  fallbackText: string,
+  daysToPeriod: number | null,
+  daysToOvulation: number | null
+): string {
+  const candidates: Array<{
+    days: number;
+    render: (n: number) => string;
+    renderToday: string;
+  }> = [];
+
+  if (daysToPeriod !== null && daysToPeriod >= 0) {
+    candidates.push({
+      days: daysToPeriod,
+      render: nextPeriodText,
+      renderToday: todayPeriodText
+    });
+  }
+
+  if (daysToOvulation !== null && daysToOvulation >= 0) {
+    candidates.push({
+      days: daysToOvulation,
+      render: nextOvulationText,
+      renderToday: todayOvulationText
+    });
+  }
+
+  if (candidates.length === 0) {
+    return fallbackText;
+  }
+
+  const nearest = candidates.reduce((best, candidate) =>
+    candidate.days < best.days ? candidate : best
+  );
+
+  if (nearest.days === 0) {
+    return nearest.renderToday;
+  }
+
+  return nearest.render(nearest.days);
+}
+
 export function TodayRoute() {
-  const [apiStatus, setApiStatus] = useState<HealthResponse | null>(null);
+  const { api, me, refresh, status, summary } = useAppData();
+  const { language, messages } = useI18n();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const browserToday = getIsoDateInTimeZone(
+    new Date(),
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+  const today = summary?.today ?? browserToday;
+  const requestedDate = searchParams.get("date");
+  const initialSelectedDate = requestedDate ?? today;
+
+  const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
+  const [formState, setFormState] = useState<CheckinFormState>(emptyCheckinState);
+  const [persistedEntry, setPersistedEntry] = useState<DailyCheckinEntry | null>(null);
+  const [calendar, setCalendar] = useState<CalendarResponse | null>(null);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [checkinError, setCheckinError] = useState<string | null>(null);
+  const [checkinLoadError, setCheckinLoadError] = useState<string | null>(null);
+  const [periodError, setPeriodError] = useState<string | null>(null);
+  const [isLoadingCheckin, setIsLoadingCheckin] = useState(false);
+  const [isSavingCheckin, setIsSavingCheckin] = useState(false);
+  const [isTogglingPeriod, setIsTogglingPeriod] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [selectedDateSource, setSelectedDateSource] = useState<"bootstrap" | "user">("bootstrap");
+  const copyRef = useRef({
+    calendarLoadError: messages.calendar.loadError,
+    checkinLoadError: messages.app.dataLoadError
+  });
+
+  copyRef.current = {
+    calendarLoadError: messages.calendar.loadError,
+    checkinLoadError: messages.app.dataLoadError
+  };
+
+  const selectedMonth = selectedDate.slice(0, 7);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!summary || selectedDateSource === "user" || requestedDate) {
+      return;
+    }
 
-    void fetch("/api/health")
-      .then((response) => response.json())
-      .then((payload: HealthResponse) => {
-        if (!cancelled) {
-          setApiStatus(payload);
+    if (selectedDate !== summary.today) {
+      setSelectedDate(summary.today);
+    }
+  }, [requestedDate, selectedDate, selectedDateSource, summary]);
+
+  useEffect(() => {
+    if (requestedDate) {
+      setSelectedDateSource("user");
+      setSelectedDate(requestedDate);
+      return;
+    }
+
+    setSelectedDateSource("bootstrap");
+
+    if (summary && selectedDate !== summary.today) {
+      setSelectedDate(summary.today);
+    }
+  }, [requestedDate, selectedDate, summary]);
+
+  const loadCalendar = useCallback(
+    async (nextMonth: string) => {
+      if (!api || status !== "ready") {
+        setCalendar(null);
+        setCalendarError(null);
+        return;
+      }
+
+      try {
+        const response = await api.getCalendar(nextMonth);
+        setCalendar(response);
+        setCalendarError(null);
+      } catch (error) {
+        setCalendar(null);
+        setCalendarError(
+          error instanceof Error ? error.message : copyRef.current.calendarLoadError
+        );
+      }
+    },
+    [api, status]
+  );
+
+  useEffect(() => {
+    void loadCalendar(selectedMonth);
+  }, [loadCalendar, selectedMonth]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!api || !selectedDate || status !== "ready") {
+      setFormState(emptyCheckinState);
+      setPersistedEntry(null);
+      setCheckinLoadError(null);
+      setIsLoadingCheckin(false);
+      return;
+    }
+
+    setCheckinLoadError(null);
+    setIsLoadingCheckin(true);
+
+    void api
+      .getCheckin(selectedDate)
+      .then((response) => {
+        if (!active) {
+          return;
         }
+
+        setPersistedEntry(response.entry ?? null);
+        setIsLoadingCheckin(false);
       })
-      .catch(() => {
-        if (!cancelled) {
-          setApiStatus(null);
+      .catch((error) => {
+        if (!active) {
+          return;
         }
+
+        setPersistedEntry(null);
+        setCheckinLoadError(
+          error instanceof Error ? error.message : copyRef.current.checkinLoadError
+        );
+        setIsLoadingCheckin(false);
       });
 
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, []);
+  }, [api, selectedDate, status]);
+
+  const selectedDay = useMemo(
+    () => calendar?.days.find((day) => day.date === selectedDate) ?? null,
+    [calendar, selectedDate]
+  );
+
+  useEffect(() => {
+    setFormState(toFormState(persistedEntry, selectedDay?.flowIntensity ?? null));
+    setSaveSuccess(false);
+    setCheckinError(null);
+  }, [persistedEntry, selectedDay]);
+
+  useEffect(() => {
+    setCheckinError(null);
+    setPeriodError(null);
+    setSaveSuccess(false);
+  }, [selectedDate]);
+
+  const markerData = useMemo(() => {
+    if (!summary) {
+      return {
+        ovulationDays: [] as string[],
+        periodDays: [] as string[],
+        predictedPeriodDays: [] as string[]
+      };
+    }
+
+    const loggedPeriodDaysFromCalendar =
+      calendar?.days.filter((day) => day.isLoggedPeriodDay).map((day) => day.date) ?? [];
+    const predictedFromForecast = collectPredictedPeriodDays(summary);
+    const ovulationDays = collectOvulationDays(summary);
+
+    return {
+      ovulationDays,
+      periodDays: loggedPeriodDaysFromCalendar,
+      predictedPeriodDays: predictedFromForecast
+    };
+  }, [calendar, summary]);
+
+  const selectedCycleDay = useMemo(
+    () =>
+      summary
+        ? getSelectedCycleDay(
+            summary.latestPeriodStart,
+            selectedDate,
+            summary.averageCycleLengthDays
+          )
+        : null,
+    [selectedDate, summary]
+  );
+
+  const selectedPhase: CyclePhase | null = useMemo(() => {
+    if (!summary) {
+      return selectedDay?.isLoggedPeriodDay ? "menstrual" : null;
+    }
+
+    // A logged period day is confirmed menstrual. A *predicted* day is only
+    // tentative, so it must not flip the phase: an overdue, still-unlogged cycle
+    // stays luteal instead of jumping to menstrual on the predicted day.
+    if (selectedDay?.isLoggedPeriodDay) {
+      return "menstrual";
+    }
+
+    // For today, trust the server's current phase — it uses the real, un-wrapped
+    // cycle day, so a late cycle reads as luteal rather than wrapping back into
+    // an early-cycle menstrual day.
+    if (selectedDate === today) {
+      return summary.currentPhase;
+    }
+
+    if (selectedCycleDay === null) {
+      return null;
+    }
+
+    return resolveCyclePhase(
+      selectedCycleDay,
+      summary.averageCycleLengthDays,
+      summary.averagePeriodLengthDays
+    );
+  }, [selectedCycleDay, selectedDate, selectedDay, summary, today]);
+
+  const conceptionProbability: ConceptionProbability | null = useMemo(() => {
+    if (!summary || selectedCycleDay === null) {
+      return null;
+    }
+
+    return resolveConceptionProbability(
+      selectedCycleDay,
+      summary.averageCycleLengthDays,
+      summary.averagePeriodLengthDays
+    );
+  }, [selectedCycleDay, summary]);
+
+  const nextPeriodDate = summary ? resolveNextPeriodStart(today, summary) : null;
+  const nextOvulationDate = resolveNextOvulationDate(today, markerData.ovulationDays);
+  const daysToNextPeriod = nextPeriodDate ? differenceInDays(today, nextPeriodDate) : null;
+  const daysToOvulation = nextOvulationDate ? differenceInDays(today, nextOvulationDate) : null;
+  // A cycle is "late" once it has run past its average length with no period
+  // logged yet; daysLate counts the days beyond that average.
+  const daysLate =
+    summary && summary.latestPeriodStart !== null
+      ? differenceInDays(summary.latestPeriodStart, today) - summary.averageCycleLengthDays
+      : null;
+  const lateThresholdDays = me?.settings.latePeriodThresholdDays ?? LATE_PERIOD_THRESHOLD_DAYS;
+  const isCycleLate =
+    !!summary && !summary.activePeriod && daysLate !== null && daysLate >= lateThresholdDays;
+  const isTodaySelected = selectedDate === today;
+
+  const isFutureSelected = differenceInDays(today, selectedDate) > 0;
+  const isSelectedDayEditable = !isFutureSelected;
+  const isCheckinEditable = isSelectedDayEditable && !isLoadingCheckin && checkinLoadError === null;
+  const visibleCheckinError = checkinLoadError ?? checkinError;
+  const isMenstrualPhase = selectedPhase === "menstrual";
+  const isLoggedPeriodDay = selectedDay?.isLoggedPeriodDay ?? false;
+  const selectedDateLabel = formatIsoDateForDisplay(selectedDate, language);
+  const weekdayLabels = useMemo(() => getCalendarWeekdayLabels(language), [language]);
+  const primarySummary = useMemo(() => {
+    if (isTodaySelected) {
+      return {
+        label: messages.today.nextLabel,
+        value: pickTodaySummaryValue(
+          (days) => interpolate(messages.today.nextCountdownPeriod, { n: days }),
+          (days) => interpolate(messages.today.nextCountdownOvulation, { n: days }),
+          messages.today.nextCountdownTodayPeriod,
+          messages.today.nextCountdownTodayOvulation,
+          messages.today.nextCountdownFallback,
+          daysToNextPeriod,
+          daysToOvulation
+        )
+      };
+    }
+
+    if (selectedDay?.isLoggedPeriodDay) {
+      return {
+        label: messages.today.selectedDateSummaryLabel,
+        value: messages.week.periodMarker
+      };
+    }
+
+    if (selectedDay?.isPredictedPeriodDay) {
+      return {
+        label: messages.today.selectedDateSummaryLabel,
+        value: messages.week.predictedMarker
+      };
+    }
+
+    if (markerData.ovulationDays.includes(selectedDate)) {
+      return {
+        label: messages.today.selectedDateSummaryLabel,
+        value: messages.week.ovulationMarker
+      };
+    }
+
+    return {
+      label: messages.today.selectedDateSummaryLabel,
+      value: selectedPhase ? messages.today.phaseNames[selectedPhase] : messages.today.phaseFallback
+    };
+  }, [
+    daysToNextPeriod,
+    daysToOvulation,
+    isTodaySelected,
+    markerData.ovulationDays,
+    messages.today.nextCountdownFallback,
+    messages.today.nextCountdownOvulation,
+    messages.today.nextCountdownPeriod,
+    messages.today.nextCountdownTodayOvulation,
+    messages.today.nextCountdownTodayPeriod,
+    messages.today.nextLabel,
+    messages.today.phaseFallback,
+    messages.today.phaseNames,
+    messages.today.selectedDateSummaryLabel,
+    messages.week.ovulationMarker,
+    messages.week.periodMarker,
+    messages.week.predictedMarker,
+    selectedDate,
+    selectedDay,
+    selectedPhase
+  ]);
+
+  const weekStripCopy: WeekStripCopy = messages.week;
+  const daySummaryCopy: DaySummaryCopy = {
+    errorFallback: messages.today.markPeriodDayError,
+    markPeriodDay: messages.today.markPeriodDay,
+    phaseFallback: messages.today.phaseFallback,
+    phaseLabel: messages.today.phaseLabel,
+    phaseNames: messages.today.phaseNames,
+    probabilityFallback: messages.today.conceptionProbabilityFallback,
+    probabilityLabel: messages.today.conceptionProbabilityLabel,
+    probabilityValues: messages.today.conceptionProbabilityValues,
+    removePeriodDay: messages.today.removePeriodDay,
+    savingLabel: messages.today.markPeriodDayPending,
+    title: messages.today.summaryTitle
+  };
+
+  const formatDayLabel = useCallback(
+    (iso: string) => formatIsoDateForDisplay(iso, language),
+    [language]
+  );
+  const formatRangeLabel = useCallback(
+    (startIso: string, endIso: string) =>
+      `${formatIsoDateForDisplay(startIso, language)} – ${formatIsoDateForDisplay(endIso, language)}`,
+    [language]
+  );
+
+  async function togglePeriodDay() {
+    if (!api || !selectedDate) {
+      return;
+    }
+
+    setPeriodError(null);
+    setIsTogglingPeriod(true);
+
+    try {
+      if (isLoggedPeriodDay) {
+        await api.deletePeriodDay(selectedDate);
+      } else {
+        await api.logPeriod({ date: selectedDate });
+      }
+
+      await loadCalendar(selectedMonth);
+
+      try {
+        await refresh();
+      } catch {
+        // Keep the confirmed local mutation result even if the summary refresh fails.
+      }
+    } catch (error) {
+      setPeriodError(
+        error instanceof Error
+          ? error.message
+          : isLoggedPeriodDay
+            ? messages.today.removePeriodDayError
+            : messages.today.markPeriodDayError
+      );
+    } finally {
+      setIsTogglingPeriod(false);
+    }
+  }
+
+  async function submitCheckin() {
+    if (!api || !selectedDate || !isCheckinEditable) {
+      return;
+    }
+
+    setIsSavingCheckin(true);
+    setCheckinError(null);
+    setSaveSuccess(false);
+
+    try {
+      const response = await api.saveCheckin(
+        selectedDate,
+        buildCheckinPayload({ formState, isMenstrualPhase, persistedEntry })
+      );
+
+      if (isMenstrualPhase && formState.flowIntensity) {
+        try {
+          await api.logPeriod({
+            date: selectedDate,
+            flowIntensity: formState.flowIntensity
+          });
+        } catch {
+          // Flow intensity can stay on the previous value without failing the check-in save.
+        }
+      }
+
+      setPersistedEntry(response.entry ?? null);
+      await loadCalendar(selectedMonth);
+
+      try {
+        await refresh();
+      } catch {
+        // Keep the confirmed local mutation result even if the summary refresh fails.
+      }
+
+      setSaveSuccess(true);
+    } catch (error) {
+      setCheckinError(error instanceof Error ? error.message : messages.today.saveError);
+    } finally {
+      setIsSavingCheckin(false);
+    }
+  }
+
+  if (!summary) {
+    return (
+      <Panel title={messages.today.title}>
+        <p className="muted">{messages.app.loading}</p>
+      </Panel>
+    );
+  }
 
   return (
     <>
-      <Panel description="The first screen is reserved for the shortest daily flow." title="Today">
-        <div className="metric-grid">
-          <div className="metric-card">
-            <span className="metric-label">Current goal</span>
-            <strong>Fast check-ins under 10 seconds</strong>
-          </div>
-          <div className="metric-card">
-            <span className="metric-label">API status</span>
-            <strong>{apiStatus?.status ?? "unavailable"}</strong>
-          </div>
-          <div className="metric-card">
-            <span className="metric-label">Last heartbeat</span>
-            <strong>{apiStatus?.timestamp ?? "not connected yet"}</strong>
-          </div>
-        </div>
+      {isCycleLate ? (
+        <section className="status-banner cycle-late-banner" role="status">
+          <strong>{messages.today.cycleLateTitle}</strong>
+          <span>
+            {interpolate(messages.today.cycleLateBody, {
+              days: daysLate ?? 0,
+              average: summary.averageCycleLengthDays
+            })}
+          </span>
+        </section>
+      ) : null}
+
+      <WeekStrip
+        copy={weekStripCopy}
+        formatDayLabel={formatDayLabel}
+        formatRangeLabel={formatRangeLabel}
+        onOpenCalendar={() => navigate("/calendar")}
+        onSelect={(date) => {
+          const next = new URLSearchParams(searchParams);
+
+          if (date === today) {
+            next.delete("date");
+          } else {
+            next.set("date", date);
+          }
+
+          setSearchParams(next);
+          setSelectedDateSource("user");
+          setSelectedDate(date);
+        }}
+        ovulationDays={markerData.ovulationDays}
+        periodDays={markerData.periodDays}
+        predictedPeriodDays={markerData.predictedPeriodDays}
+        selectedDate={selectedDate}
+        today={today}
+        weekdayLabels={weekdayLabels}
+      />
+
+      <Panel
+        aside={<strong className="panel-date">{selectedDateLabel}</strong>}
+        title={messages.today.summaryTitle}
+      >
+        <DaySummary
+          canEdit={isSelectedDayEditable}
+          conceptionProbability={conceptionProbability}
+          copy={daySummaryCopy}
+          error={periodError}
+          isPeriodDay={isLoggedPeriodDay}
+          isSaving={isTogglingPeriod}
+          onTogglePeriodDay={() => {
+            void togglePeriodDay();
+          }}
+          phase={selectedPhase}
+          primaryLabel={isTodaySelected ? primarySummary.label : undefined}
+          primaryValue={isTodaySelected ? primarySummary.value : undefined}
+        />
       </Panel>
 
       <Panel
-        description="These are placeholders for Milestone 1, kept visible so the shell matches the roadmap."
-        title="Planned quick inputs"
+        description={
+          isMenstrualPhase
+            ? messages.today.menstrualCheckinDescription
+            : messages.today.checkinDescription
+        }
+        title={
+          isMenstrualPhase ? messages.today.menstrualCheckinTitle : messages.today.checkinTitle
+        }
       >
-        <ul className="token-list">
-          <li>Mood</li>
-          <li>Energy</li>
-          <li>Pain</li>
-          <li>Discharge</li>
-          <li>Sleep</li>
-          <li>Symptoms</li>
-        </ul>
+        {isFutureSelected ? (
+          <p className="muted">{messages.today.futureCheckinLocked}</p>
+        ) : (
+          <form
+            className="stack-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitCheckin();
+            }}
+          >
+            {isMenstrualPhase ? (
+              <label className="field">
+                <span>{messages.calendar.flowIntensityLabel}</span>
+                <select
+                  disabled={!isCheckinEditable}
+                  onChange={(event) => {
+                    setFormState((current) => ({
+                      ...current,
+                      flowIntensity: event.target.value as FlowIntensity | ""
+                    }));
+                  }}
+                  value={formState.flowIntensity}
+                >
+                  <option value="">{messages.calendar.flowIntensityPlaceholder}</option>
+                  {flowIntensityValues.map((value) => (
+                    <option key={value} value={value}>
+                      {messages.labels.flowIntensity[value]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            {calendarError ? <p className="inline-error">{calendarError}</p> : null}
+
+            <div className="field-grid">
+              <label className="field">
+                <span>{messages.today.mood}</span>
+                <select
+                  disabled={!isCheckinEditable}
+                  onChange={(event) => {
+                    setFormState((current) => ({
+                      ...current,
+                      mood: event.target.value ? Number(event.target.value) : ""
+                    }));
+                  }}
+                  value={formState.mood}
+                >
+                  <option value="">{messages.today.scorePlaceholder}</option>
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span>{messages.today.energy}</span>
+                <select
+                  disabled={!isCheckinEditable}
+                  onChange={(event) => {
+                    setFormState((current) => ({
+                      ...current,
+                      energy: event.target.value ? Number(event.target.value) : ""
+                    }));
+                  }}
+                  value={formState.energy}
+                >
+                  <option value="">{messages.today.scorePlaceholder}</option>
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span>{messages.today.pain}</span>
+                <select
+                  disabled={!isCheckinEditable}
+                  onChange={(event) => {
+                    setFormState((current) => ({
+                      ...current,
+                      painLevel: event.target.value ? Number(event.target.value) : ""
+                    }));
+                  }}
+                  value={formState.painLevel}
+                >
+                  <option value="">{messages.today.scorePlaceholder}</option>
+                  {[0, 1, 2, 3, 4, 5].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="field">
+                <span>{messages.today.sleep}</span>
+                <select
+                  disabled={!isCheckinEditable}
+                  onChange={(event) => {
+                    setFormState((current) => ({
+                      ...current,
+                      sleepQuality: event.target.value ? Number(event.target.value) : ""
+                    }));
+                  }}
+                  value={formState.sleepQuality}
+                >
+                  <option value="">{messages.today.scorePlaceholder}</option>
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {!isMenstrualPhase ? (
+                <label className="field">
+                  <span>{messages.today.discharge}</span>
+                  <select
+                    disabled={!isCheckinEditable}
+                    onChange={(event) => {
+                      setFormState((current) => ({
+                        ...current,
+                        discharge: event.target.value as CheckinFormState["discharge"]
+                      }));
+                    }}
+                    value={formState.discharge}
+                  >
+                    <option value="">{messages.today.dischargePlaceholder}</option>
+                    {Object.entries(messages.today.dischargeOptions).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+            </div>
+
+            <label className="field">
+              <span>{messages.today.note}</span>
+              <textarea
+                disabled={!isCheckinEditable}
+                onChange={(event) => {
+                  setFormState((current) => ({
+                    ...current,
+                    note: event.target.value
+                  }));
+                }}
+                placeholder={messages.today.notePlaceholder}
+                rows={3}
+                value={formState.note}
+              />
+            </label>
+
+            <div className="field">
+              <span>{messages.today.symptomsTitle}</span>
+              <small>
+                {isMenstrualPhase
+                  ? messages.today.menstrualSymptomsDescription
+                  : messages.today.symptomsDescription}
+              </small>
+              <div className="token-list">
+                {symptomKeys.map((symptomKey) => {
+                  const isActive = formState.symptomKeys.includes(symptomKey);
+
+                  return (
+                    <button
+                      key={symptomKey}
+                      className={isActive ? "pill-button active" : "pill-button"}
+                      disabled={!isCheckinEditable}
+                      onClick={() => {
+                        if (!isCheckinEditable) {
+                          return;
+                        }
+
+                        setFormState((current) => ({
+                          ...current,
+                          symptomKeys: isActive
+                            ? current.symptomKeys.filter((value) => value !== symptomKey)
+                            : [...current.symptomKeys, symptomKey]
+                        }));
+                      }}
+                      type="button"
+                    >
+                      {messages.labels.symptoms[symptomKey as SymptomKey]}
+                    </button>
+                  );
+                })}
+              </div>
+              {formState.symptomKeys.length === 0 ? (
+                <small>{messages.today.symptomNone}</small>
+              ) : null}
+            </div>
+
+            {isLoadingCheckin ? <p className="muted">{messages.app.loading}</p> : null}
+            {visibleCheckinError ? <p className="inline-error">{visibleCheckinError}</p> : null}
+            {saveSuccess ? <p className="inline-success">{messages.today.saveSuccess}</p> : null}
+
+            <button
+              className="primary-button"
+              disabled={!api || !isCheckinEditable || isSavingCheckin}
+              type="submit"
+            >
+              {isSavingCheckin ? messages.today.saveStatePending : messages.today.saveStateIdle}
+            </button>
+          </form>
+        )}
       </Panel>
     </>
   );

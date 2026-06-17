@@ -1,22 +1,187 @@
+/* =========================================================================
+   femi — Editorial Diary
+   A calm, private cycle journal. Warm paper (light) / Cool graphite (dark).
+   Figtree as the single, minimal sans for display, UI, and eyebrows.
+   ========================================================================= */
+
 :root {
+  /* Canvas & surface */
+  --bg-canvas: #f5f0e6;
+  --bg-elevated: #fbf7ee;
+  --bg-sunken: #ece4d2;
+  --bg-contrast: #15110d;
+
+  /* Ink / text */
+  --ink-primary: #15110d;
+  --ink-secondary: #524940;
+  --ink-tertiary: #8a7e6f;
+  --ink-quaternary: #b8ab98;
+  --ink-inverse: #fbf7ee;
+
+  /* Rules / borders */
+  --rule: rgb(21 17 13 / 14%);
+  --rule-soft: rgb(21 17 13 / 7%);
+  --rule-strong: rgb(21 17 13 / 28%);
+
+  /* Accent system */
+  --accent: #872839; /* garnet */
+  --accent-ink: #fbf7ee;
+  --accent-soft: rgb(135 40 57 / 12%);
+  --accent-ring: rgb(135 40 57 / 35%);
+
+  /* Phase palette */
+  --flow: #b95436; /* menstrual / terracotta */
+  --flow-soft: rgb(185 84 54 / 15%);
+  --flow-ink: #5c2113;
+  --sand: #c48f3e; /* follicular */
+  --sand-soft: rgb(196 143 62 / 22%);
+  --sand-ink: #5c3e10;
+  --sage: #7f9f7a; /* ovulatory */
+  --sage-soft: rgb(127 159 122 / 18%);
+  --sage-ink: #2f4a2a;
+  --luteal: #9c7a8f; /* luteal */
+  --luteal-soft: rgb(156 122 143 / 18%);
+  --luteal-ink: #3e2533;
+
+  /* Feedback */
+  --danger: #8e281b;
+  --danger-soft: rgb(142 40 27 / 12%);
+  --success: #35633c;
+  --success-soft: rgb(53 99 60 / 14%);
+
+  /* Atmosphere */
+  --atmosphere:
+    radial-gradient(circle at 88% 0%, rgb(135 40 57 / 10%) 0%, transparent 28rem),
+    radial-gradient(circle at 6% 4%, rgb(196 143 62 / 10%) 0%, transparent 30rem),
+    linear-gradient(180deg, #fbf7ee 0%, #f2ecdf 55%, #eee3ce 100%);
+  --grain-opacity: 0.05;
+
+  /* Elevation */
+  --shadow-hairline: inset 0 0 0 1px var(--rule-soft);
+  --shadow-raised: 0 1px 0 rgb(21 17 13 / 4%), 0 18px 40px rgb(21 17 13 / 6%);
+  --shadow-float: 0 24px 60px rgb(21 17 13 / 12%);
+
+  /* Typography — one minimal sans for everything */
+  --font-display: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-sm: 150ms;
+  --dur-md: 260ms;
+  --dur-lg: 480ms;
+
   color-scheme: light;
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-  background:
-    radial-gradient(circle at top right, rgba(230, 154, 127, 0.32), transparent 22rem),
-    linear-gradient(180deg, #fffaf6 0%, #f6efe9 100%);
-  color: #231815;
-  line-height: 1.5;
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
   font-weight: 400;
+  line-height: 1.55;
 }
 
-* {
+[data-theme="dark"] {
+  /* Canvas & surface — cool graphite, neutral with a faint blue undertone for a calm night */
+  --bg-canvas: #17191c;
+  --bg-elevated: #1f2228;
+  --bg-sunken: #101214;
+  --bg-contrast: #e8eaee;
+
+  /* Ink / text — cool near-neutral greys */
+  --ink-primary: #e8eaee;
+  --ink-secondary: #b2b7c0;
+  --ink-tertiary: #868d99;
+  --ink-quaternary: #4d525b;
+  --ink-inverse: #15171a;
+
+  /* Rules */
+  --rule: rgb(232 234 238 / 14%);
+  --rule-soft: rgb(232 234 238 / 7%);
+  --rule-strong: rgb(232 234 238 / 26%);
+
+  /* Accent — soft rose, kept on-brand but cooled to sit on graphite */
+  --accent: #ecaab8;
+  --accent-ink: #15171a;
+  --accent-soft: rgb(236 170 184 / 15%);
+  --accent-ring: rgb(236 170 184 / 42%);
+
+  /* Phase palette — recalibrated to read cleanly on cool graphite */
+  --flow: #ef9d8c;
+  --flow-soft: rgb(239 157 140 / 18%);
+  --flow-ink: #f9d8cd;
+  --sand: #e6c688;
+  --sand-soft: rgb(230 198 136 / 16%);
+  --sand-ink: #f4e4bd;
+  --sage: #a4cbab;
+  --sage-soft: rgb(164 203 171 / 16%);
+  --sage-ink: #d8ecdc;
+  --luteal: #c3acd4;
+  --luteal-soft: rgb(195 172 212 / 18%);
+  --luteal-ink: #e7daf2;
+
+  /* Feedback */
+  --danger: #ef988a;
+  --danger-soft: rgb(239 152 138 / 18%);
+  --success: #8fc8a3;
+  --success-soft: rgb(143 200 163 / 18%);
+
+  /* Atmosphere — cool glows over a graphite gradient */
+  --atmosphere:
+    radial-gradient(circle at 90% -5%, rgb(236 170 184 / 12%) 0%, transparent 34rem),
+    radial-gradient(circle at 2% 8%, rgb(140 170 214 / 10%) 0%, transparent 32rem),
+    radial-gradient(circle at 50% 120%, rgb(164 203 171 / 7%) 0%, transparent 40rem),
+    linear-gradient(180deg, #1b1e22 0%, #17191c 60%, #101214 100%);
+  --grain-opacity: 0.06;
+
+  /* Elevation */
+  --shadow-hairline: inset 0 0 0 1px rgb(232 234 238 / 7%);
+  --shadow-raised: 0 1px 0 rgb(0 0 0 / 32%), 0 24px 60px rgb(0 0 0 / 38%);
+  --shadow-float: 0 36px 80px rgb(0 0 0 / 50%);
+
+  color-scheme: dark;
+}
+
+/* =========================================================================
+   Reset & base
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
+html {
+  /* stylelint-disable-next-line property-no-vendor-prefix -- iOS Safari/WKWebView (used by Telegram iOS) needs the -webkit- form; autoprefixer is not configured. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
+  background: var(--atmosphere);
+  color: var(--ink-primary);
   margin: 0;
-  min-width: 320px;
   min-height: 100vh;
+  min-width: 320px;
+  transition:
+    background-color var(--dur-md) var(--ease-soft),
+    color var(--dur-md) var(--ease-soft);
+}
+
+/* Grain overlay — subtle editorial texture on paper & ink */
+body::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  content: "";
+  inset: 0;
+  mix-blend-mode: multiply;
+  opacity: var(--grain-opacity);
+  pointer-events: none;
+  position: fixed;
+  z-index: 1;
+}
+
+[data-theme="dark"] body::before {
+  mix-blend-mode: screen;
 }
 
 a {
@@ -28,180 +193,2105 @@ button,
 input,
 textarea,
 select {
+  color: inherit;
   font: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 2;
 }
+
+/* =========================================================================
+   App shell & masthead
+   ========================================================================= */
 
 .app-shell {
-  width: min(100%, 52rem);
   margin: 0 auto;
-  padding: 1rem 1rem 4rem;
+  padding: 1.5rem 1.25rem 5rem;
+  width: min(100%, 56rem);
 }
 
-.hero-card,
-.panel {
-  background: rgba(255, 252, 248, 0.92);
-  border: 1px solid rgba(96, 63, 46, 0.12);
-  border-radius: 1.5rem;
-  box-shadow: 0 18px 40px rgba(94, 59, 40, 0.08);
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.hero-card {
-  padding: 1.5rem;
-  margin-bottom: 1rem;
+.app-shell > * {
+  animation: fade-rise var(--dur-lg) var(--ease) backwards;
 }
 
-.hero-card h1 {
-  margin: 0 0 0.75rem;
-  font-size: clamp(2rem, 7vw, 3.25rem);
-  line-height: 0.95;
+.app-shell > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.app-shell > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.app-shell > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.app-shell > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.app-shell > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+.app-shell > *:nth-child(6) {
+  animation-delay: 300ms;
 }
 
 .hero-copy,
-.panel-header p,
 .muted,
 .notice {
-  color: #65544d;
+  color: var(--ink-secondary);
 }
 
 .eyebrow {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
   margin: 0 0 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.76rem;
-  color: #9c5c42;
 }
 
+/* =========================================================================
+   Tab bar — segmented editorial control
+   ========================================================================= */
+
 .tab-bar {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  box-shadow: var(--shadow-hairline);
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 0.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  margin-bottom: 1.75rem;
+  padding: 0.3rem;
 }
 
 .tab-link {
-  text-align: center;
-  padding: 0.75rem;
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(96, 63, 46, 0.08);
-  color: #6c5b53;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  justify-content: center;
+  letter-spacing: 0.16em;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.9rem;
+  text-align: center;
+  text-transform: uppercase;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    color var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease);
+}
+
+.tab-link:hover {
+  color: var(--ink-primary);
 }
 
 .tab-link.active {
-  background: #231815;
-  color: #fffaf6;
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
 }
+
+/* =========================================================================
+   Status banners
+   ========================================================================= */
 
 .content {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
+/* Grid items default to min-width: auto, which lets a wide child push a panel
+   past the viewport on narrow screens. Allow panels to shrink to their track. */
+/* stylelint-disable-next-line no-descending-specificity */
+.content > * {
+  min-width: 0;
+}
+
+.status-banner {
+  align-items: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--ink-primary);
+  border-radius: 0.25rem 1rem 1rem 0.25rem;
+  color: var(--ink-primary);
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.status-banner strong {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-variation-settings:
+    "opsz" 30,
+    "wght" 500;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.status-banner span {
+  color: var(--ink-secondary);
+  font-size: 0.88rem;
+}
+
+.muted-banner {
+  border-left-color: var(--ink-tertiary);
+}
+
+.error-banner {
+  background: var(--danger-soft);
+  border-left-color: var(--danger);
+  color: var(--danger);
+}
+
+.error-banner span {
+  color: var(--danger);
+  opacity: 0.85;
+}
+
+.cycle-late-banner {
+  background: var(--sand-soft);
+  border-left-color: var(--sand);
+}
+
+/* =========================================================================
+   Panel — the core editorial container
+   ========================================================================= */
+
 .panel {
-  padding: 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-raised);
+  padding: 1.75rem;
+  position: relative;
 }
 
 .panel-header {
-  display: flex;
   align-items: start;
-  justify-content: space-between;
+  display: flex;
   gap: 1rem;
-  margin-bottom: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.panel-header > div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 
 .panel-header h2 {
-  margin: 0 0 0.35rem;
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.4vw, 1.85rem);
+  font-variation-settings:
+    "opsz" 48,
+    "wght" 400;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin: 0 0 0.45rem;
 }
 
 .panel-header p {
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
   margin: 0;
+  max-width: 38rem;
 }
+
+.panel-date {
+  align-items: center;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  min-height: 2.5rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   Metric grid — the hero moment with huge serif numerals
+   ========================================================================= */
 
 .metric-grid {
   display: grid;
+  gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: 0.75rem;
 }
 
 .metric-card {
-  padding: 1rem;
-  background: #fff;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
   border-radius: 1rem;
-  border: 1px solid rgba(96, 63, 46, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 8rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1.25rem;
+  position: relative;
+  transition:
+    transform var(--dur-md) var(--ease),
+    border-color var(--dur-md) var(--ease);
+}
+
+.metric-card:hover {
+  border-color: var(--rule-strong);
+  transform: translateY(-2px);
 }
 
 .metric-label {
+  color: var(--ink-tertiary);
   display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  margin-bottom: 0.4rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #9c5c42;
 }
+
+.metric-card strong {
+  color: var(--ink-primary);
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4.2vw, 2.6rem);
+  font-variation-settings:
+    "opsz" 144,
+    "wght" 350;
+  font-weight: 350;
+  hyphens: auto;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-top: auto;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* Non-numeric metric values get a smaller treatment */
+.metric-card strong:has(+ *),
+.metric-card strong {
+  font-feature-settings: "lnum", "tnum";
+}
+
+/* =========================================================================
+   Token list / pill buttons
+   ========================================================================= */
 
 .token-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0;
-  margin: 0;
+  gap: 0.55rem;
   list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
 }
 
 .token-list li {
-  padding: 0.55rem 0.8rem;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
   border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(96, 63, 46, 0.08);
+  color: var(--ink-secondary);
+  font-size: 0.88rem;
+  padding: 0.5rem 0.85rem;
 }
 
 .empty-state {
-  padding: 1rem;
+  background: var(--bg-canvas);
+  border: 1px dashed var(--rule);
   border-radius: 1rem;
-  background: #fff;
-  border: 1px dashed rgba(96, 63, 46, 0.2);
+  color: var(--ink-secondary);
+  padding: 1rem;
 }
+
+/* =========================================================================
+   Details list — dl treatment for Settings-style surfaces
+   ========================================================================= */
 
 .details-list {
-  margin: 0;
   display: grid;
-  gap: 1rem;
+  gap: 0.85rem;
+  margin: 0;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 .details-list div {
-  background: #fff;
-  padding: 1rem;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
   border-radius: 1rem;
-  border: 1px solid rgba(96, 63, 46, 0.08);
+  padding: 1rem 1.15rem;
 }
 
 .details-list dt {
-  margin-bottom: 0.35rem;
-  font-size: 0.85rem;
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  margin-bottom: 0.4rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #9c5c42;
 }
 
 .details-list dd {
+  color: var(--ink-primary);
   margin: 0;
+}
+
+.panel .details-list {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
 }
 
 .notice {
+  font-size: 0.92rem;
+  line-height: 1.65;
   margin: 0;
 }
 
-@media (max-width: 640px) {
+/* =========================================================================
+   Forms — stacked editorial inputs
+   ========================================================================= */
+
+.stack-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.field span {
+  color: var(--ink-primary);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.field small {
+  color: var(--ink-tertiary);
+  font-size: 0.78rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  color: var(--ink-primary);
+  font-size: 1rem;
+  padding: 0.8rem 0.95rem;
+  transition:
+    border-color var(--dur-sm) var(--ease),
+    box-shadow var(--dur-sm) var(--ease),
+    background-color var(--dur-sm) var(--ease);
+  width: 100%;
+}
+
+/* iOS Safari / WKWebView (Telegram's iOS client) sizes <input type="date"> to
+   its own intrinsic content width and centers the value, so the formatted date
+   ("2 июня 2026 г.") spills past the field's right edge and off the screen.
+   Reset the native appearance so the control honors width:100% / box-sizing,
+   let it shrink inside the grid, and left-align the value to match the sibling
+   number fields. */
+.field input[type="date"] {
+  /* stylelint-disable-next-line property-no-vendor-prefix -- iOS Safari < 15.4 / WKWebView needs the -webkit- form to reset the date control; autoprefixer is not configured. */
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+}
+
+.field input[type="date"]::-webkit-date-and-time-value {
+  margin: 0;
+  text-align: left;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--ink-quaternary);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  outline: none;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.field textarea {
+  min-height: 3rem;
+  resize: vertical;
+}
+
+.toggle-field {
+  align-items: center;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 0.85rem;
+  padding: 0.7rem 1rem;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.toggle-field input {
+  accent-color: var(--accent);
+  cursor: pointer;
+  height: 1.05rem;
+  width: 1.05rem;
+}
+
+.toggle-field span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.action-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.action-row-end {
+  margin-left: auto;
+}
+
+@media (width <= 540px) {
+  .action-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .action-row > .primary-button,
+  .action-row > .secondary-button,
+  .action-row > .destructive-button {
+    width: 100%;
+  }
+
+  .action-row-end {
+    margin-left: 0;
+  }
+}
+
+/* =========================================================================
+   Buttons — primary (solid ink), secondary (hairline), destructive, pill
+   ========================================================================= */
+
+.primary-button,
+.secondary-button,
+.destructive-button,
+.pill-button {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  gap: 0.5rem;
+  justify-content: center;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    transform var(--dur-sm) var(--ease),
+    box-shadow var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease),
+    background-color var(--dur-sm) var(--ease),
+    color var(--dur-sm) var(--ease);
+}
+
+.primary-button,
+.secondary-button,
+.destructive-button {
+  padding: 0.85rem 1.25rem;
+}
+
+.primary-button {
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+}
+
+.primary-button:hover {
+  background: var(--accent);
+  box-shadow: 0 10px 24px var(--accent-ring);
+  color: var(--accent-ink);
+  transform: translateY(-1px);
+}
+
+.secondary-button {
+  background: var(--bg-elevated);
+  border-color: var(--rule);
+  color: var(--ink-primary);
+}
+
+.secondary-button:hover {
+  border-color: var(--ink-primary);
+  transform: translateY(-1px);
+}
+
+.destructive-button {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.destructive-button:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.pill-button {
+  background: var(--bg-canvas);
+  border-color: var(--rule);
+  color: var(--ink-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  padding: 0.55rem 0.9rem;
+  text-transform: none;
+}
+
+.pill-button:hover {
+  border-color: var(--rule-strong);
+  color: var(--ink-primary);
+}
+
+.pill-button.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+[data-theme="dark"] .pill-button.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.destructive-button:disabled,
+.pill-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.inline-error,
+.inline-success {
+  align-items: center;
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  gap: 0.5rem;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.inline-error {
+  color: var(--danger);
+}
+
+.inline-error::before {
+  background: var(--danger);
+  border-radius: 999px;
+  content: "";
+  display: inline-block;
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.inline-success {
+  color: var(--success);
+}
+
+.inline-success::before {
+  background: var(--success);
+  border-radius: 999px;
+  content: "";
+  display: inline-block;
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.account-settings {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.account-danger-card {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+  border-radius: 1rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.dialog-backdrop {
+  align-items: center;
+  background: rgb(12 14 17 / 52%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 30;
+}
+
+.dialog-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-float);
+  display: grid;
+  gap: 1rem;
+  max-width: 30rem;
+  padding: 1.5rem;
+  width: min(100%, 30rem);
+}
+
+.dialog-card h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+  font-variation-settings:
+    "opsz" 40,
+    "wght" 430;
+
+  /* Round font-weight to a standard step (400) so non-variable fallback fonts
+     used for scripts without Figtree coverage (e.g. Cyrillic, Arabic) don't
+     round 430 up to medium/bold on iOS/Android. Figtree itself still renders
+     at 430 via the wght variation axis above. */
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.dialog-card p {
+  color: var(--ink-secondary);
+  margin: 0;
+}
+
+/* =========================================================================
+   Onboarding
+   ========================================================================= */
+
+.onboarding-preview {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.onboarding-preview .panel-header {
+  margin-bottom: 0;
+}
+
+.onboarding-preview h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-variation-settings:
+    "opsz" 48,
+    "wght" 500;
+  font-weight: 500;
+  margin: 0 0 0.3rem;
+}
+
+/* =========================================================================
+   Appearance panel — theme segment + language select
+   ========================================================================= */
+
+.appearance-controls {
+  display: grid;
+  gap: 1.1rem;
+}
+
+/* =========================================================================
+   About the app — quiet text trigger at the foot of Settings
+   ========================================================================= */
+
+.about-app-row {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0 1.5rem;
+}
+
+.text-button {
+  background: none;
+  border: none;
+  color: var(--ink-tertiary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  padding: 0.5rem 0.75rem;
+  text-transform: uppercase;
+  transition: color var(--dur-sm) var(--ease);
+}
+
+.text-button:hover {
+  color: var(--ink-primary);
+}
+
+.text-button:focus-visible {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 3px var(--accent-ring);
+  color: var(--ink-primary);
+  outline: none;
+}
+
+/* =========================================================================
+   Calendar
+   ========================================================================= */
+
+.calendar-legend {
+  color: var(--ink-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  gap: 0.75rem 1.25rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.legend-item {
+  align-items: center;
+  color: var(--ink-tertiary);
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.legend-dot {
+  background: var(--ink-quaternary);
+  border-radius: 999px;
+  display: inline-block;
+  height: 0.7rem;
+  width: 0.7rem;
+}
+
+.legend-dot.logged {
+  background: var(--flow);
+}
+
+.legend-dot.predicted {
+  background: var(--sand);
+  border: 1px dashed var(--sand);
+  background-color: transparent;
+}
+
+.legend-dot.today {
+  background: var(--ink-primary);
+}
+
+.calendar-weekdays {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-bottom: 0.5rem;
+  padding: 0 0.15rem;
+}
+
+.calendar-weekday {
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-grid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-day-placeholder {
+  min-height: 5.75rem;
+}
+
+.calendar-day {
+  align-items: flex-start;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 5.75rem;
+  overflow: hidden;
+  padding: 0.7rem 0.7rem 0.55rem;
+  position: relative;
+  text-align: left;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease),
+    transform var(--dur-sm) var(--ease);
+  width: 100%;
+}
+
+.calendar-day:hover {
+  border-color: var(--rule-strong);
+  transform: translateY(-1px);
+}
+
+.onboarding-calendar-grid .calendar-day {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.7rem;
+  cursor: default;
+  gap: 0;
+  min-height: 0;
+  padding: 0.35rem 0.45rem;
+}
+
+.calendar-day.today {
+  border-color: var(--ink-primary);
+  box-shadow: inset 0 0 0 1px var(--ink-primary);
+}
+
+.calendar-day.today .calendar-day-number {
+  color: var(--ink-primary);
+  font-weight: 600;
+}
+
+.calendar-day.selected {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: 0 10px 24px var(--accent-ring);
+}
+
+.calendar-day.logged {
+  background: var(--flow-soft);
+  border-color: var(--flow);
+}
+
+.calendar-day.logged::after {
+  background: var(--flow);
+  bottom: 0;
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.calendar-day.predicted {
+  background: transparent;
+  border-color: var(--sand);
+  border-style: dashed;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.calendar-day-number {
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-variation-settings:
+    "opsz" 48,
+    "wght" 450;
+  font-weight: 450;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.calendar-day-flow,
+.calendar-day-symptoms {
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.calendar-day.logged .calendar-day-flow {
+  color: var(--flow-ink);
+}
+
+[data-theme="dark"] .calendar-day.logged .calendar-day-flow {
+  color: var(--flow);
+}
+
+/* Onboarding preview: square, number-only cells matching the Calendar route */
+.onboarding-calendar-grid .calendar-day-placeholder {
+  aspect-ratio: 1 / 1;
+  min-height: 0;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.onboarding-calendar-grid .calendar-day-number {
+  font-size: 0.95rem;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+.onboarding-calendar-grid .calendar-day-flow {
+  display: none;
+}
+
+.onboarding-calendar-grid .calendar-day.logged::after {
+  content: none;
+}
+
+.calendar-day-symptoms {
+  align-items: center;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-flex;
+  font-size: 0.65rem;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding: 0.22rem 0.5rem;
+}
+
+.calendar-day-symptom-glyphs {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.24rem;
+}
+
+.calendar-day-symptom-dot {
+  background: var(--accent);
+  border-radius: 999px;
+  display: inline-block;
+  height: 0.38rem;
+  width: 0.38rem;
+}
+
+.calendar-day-symptom-more {
+  color: var(--accent);
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.calendar-actions {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.15rem;
+}
+
+/* =========================================================================
+   Phase banner / pill
+   ========================================================================= */
+
+.phase-banner {
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.15rem;
+  position: relative;
+}
+
+.phase-banner::before {
+  background: var(--ink-quaternary);
+  border-radius: 0 999px 999px 0;
+  content: "";
+  height: 28px;
+  left: 0;
+  position: absolute;
+  top: 1.15rem;
+  width: 3px;
+}
+
+.phase-banner.neutral {
+  background: var(--bg-canvas);
+}
+
+.phase-banner.menstrual {
+  background: var(--flow-soft);
+}
+
+.phase-banner.menstrual::before {
+  background: var(--flow);
+}
+
+.phase-banner.follicular {
+  background: var(--sand-soft);
+}
+
+.phase-banner.follicular::before {
+  background: var(--sand);
+}
+
+.phase-banner.ovulatory {
+  background: var(--sage-soft);
+}
+
+.phase-banner.ovulatory::before {
+  background: var(--sage);
+}
+
+.phase-banner.luteal {
+  background: var(--luteal-soft);
+}
+
+.phase-banner.luteal::before {
+  background: var(--luteal);
+}
+
+.phase-pill {
+  align-items: center;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  gap: 0.5rem;
+  justify-content: center;
+  letter-spacing: 0.14em;
+  min-width: 8rem;
+  padding: 0.55rem 1rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.phase-pill::before {
+  background: var(--ink-quaternary);
+  border-radius: 999px;
+  content: "";
+  display: inline-block;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.phase-pill.menstrual {
+  background: var(--flow-soft);
+  border-color: var(--flow);
+  color: var(--flow-ink);
+}
+
+[data-theme="dark"] .phase-pill.menstrual {
+  color: var(--flow);
+}
+
+.phase-pill.menstrual::before {
+  background: var(--flow);
+}
+
+.phase-pill.follicular {
+  background: var(--sand-soft);
+  border-color: var(--sand);
+  color: var(--sand-ink);
+}
+
+[data-theme="dark"] .phase-pill.follicular {
+  color: var(--sand);
+}
+
+.phase-pill.follicular::before {
+  background: var(--sand);
+}
+
+.phase-pill.ovulatory {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+  color: var(--sage-ink);
+}
+
+[data-theme="dark"] .phase-pill.ovulatory {
+  color: var(--sage);
+}
+
+.phase-pill.ovulatory::before {
+  background: var(--sage);
+}
+
+.phase-pill.luteal {
+  background: var(--luteal-soft);
+  border-color: var(--luteal);
+  color: var(--luteal-ink);
+}
+
+[data-theme="dark"] .phase-pill.luteal {
+  color: var(--luteal);
+}
+
+.phase-pill.luteal::before {
+  background: var(--luteal);
+}
+
+.phase-pill.neutral::before {
+  background: var(--ink-quaternary);
+}
+
+/* =========================================================================
+   Forecast list
+   ========================================================================= */
+
+.forecast-list {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  margin-top: 1rem;
+}
+
+.forecast-card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+  padding: 1.15rem;
+}
+
+.forecast-card strong {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-variation-settings:
+    "opsz" 72,
+    "wght" 400;
+  font-weight: 400;
+}
+
+.forecast-card small {
+  color: var(--ink-tertiary);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  margin-top: 0.4rem;
+  text-transform: uppercase;
+}
+
+/* =========================================================================
+   History
+   ========================================================================= */
+
+.history-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.history-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.history-card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 1rem;
+}
+
+.history-card-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 1.15rem;
+}
+
+.history-card-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-card-body {
+  padding: 0 1.15rem 1.15rem;
+}
+
+.history-card-header {
+  margin: 0;
+}
+
+.history-card-header strong {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-variation-settings:
+    "opsz" 48,
+    "wght" 500;
+  font-weight: 500;
+}
+
+.history-section + .history-section {
+  margin-top: 0.75rem;
+}
+
+.history-line {
+  color: var(--ink-secondary);
+  font-size: 0.92rem;
+  margin: 0.25rem 0 0;
+}
+
+.history-phase-list,
+.history-day-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.history-phase-card,
+.history-day-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule-soft);
+  border-radius: 0.9rem;
+  padding: 0.95rem 1.15rem;
+}
+
+.history-phase-summary {
+  color: var(--ink-primary);
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none;
+}
+
+.history-phase-summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-tag {
+  background: var(--accent-soft);
+  border-radius: 999px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.7rem;
+}
+
+/* =========================================================================
+   Day details
+   ========================================================================= */
+
+.day-details-header {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+.day-details-meta {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.day-details-meta strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 3.4vw, 1.8rem);
+  font-variation-settings:
+    "opsz" 72,
+    "wght" 400;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+}
+
+.day-details-meta .muted {
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.day-details-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.detail-card {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 1.15rem;
+  padding: 1.35rem;
+}
+
+.detail-card.accent-card {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-canvas) 100%);
+  border-color: var(--accent-ring);
+}
+
+.detail-card-header {
+  margin-bottom: 1rem;
+}
+
+.detail-card-header h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-variation-settings:
+    "opsz" 48,
+    "wght" 500;
+  font-weight: 500;
+  margin: 0 0 0.3rem;
+}
+
+.detail-card-header p {
+  color: var(--ink-secondary);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* =========================================================================
+   Theme segment control (Settings)
+   ========================================================================= */
+
+.theme-segment {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  display: inline-grid;
+  gap: 0.25rem;
+  grid-auto-flow: column;
+  padding: 0.3rem;
+}
+
+.theme-segment button {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  padding: 0.6rem 1.1rem;
+  text-transform: uppercase;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    color var(--dur-sm) var(--ease);
+}
+
+.theme-segment button:hover {
+  color: var(--ink-primary);
+}
+
+.theme-segment button.active {
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+}
+
+/* =========================================================================
+   RTL corrections
+   ========================================================================= */
+
+[dir="rtl"] .status-banner {
+  border-left: 1px solid var(--rule);
+  border-radius: 1rem 0.25rem 0.25rem 1rem;
+  border-right: 3px solid var(--ink-primary);
+}
+
+[dir="rtl"] .phase-banner::before {
+  border-radius: 999px 0 0 999px;
+  left: auto;
+  right: 0;
+}
+
+[dir="rtl"] .action-row-end {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* =========================================================================
+   Reduced motion
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* =========================================================================
+   Responsive
+   ========================================================================= */
+
+@media (width <= 720px) {
   .app-shell {
-    padding: 0.75rem 0.75rem 3rem;
+    padding: 1rem 0.9rem 4rem;
+  }
+
+  .panel {
+    padding: 1.35rem 1.15rem;
+  }
+
+  .day-details-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-grid {
+    gap: 0.3rem;
+  }
+
+  .calendar-weekdays {
+    gap: 0.3rem;
+  }
+
+  .calendar-day {
+    min-height: 4.75rem;
+    padding: 0.55rem 0.5rem 0.45rem;
+  }
+
+  .calendar-day-placeholder {
+    min-height: 4.75rem;
+  }
+
+  .calendar-day-number {
+    font-size: 1rem;
+  }
+
+  /* stylelint-disable-next-line no-descending-specificity */
+  .calendar-day-flow {
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (width <= 480px) {
+  .calendar-day-flow {
+    font-size: 0.5rem;
+    letter-spacing: 0.02em;
   }
 
   .tab-bar {
+    padding: 0.25rem;
+  }
+
+  .tab-link {
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    padding: 0.5rem;
+  }
+}
+
+/* =========================================================================
+   Week strip — editorial single-row calendar
+   ========================================================================= */
+.week-strip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 0.9rem 0.75rem;
+}
+
+.week-strip-header {
+  align-items: center;
+  color: var(--ink-secondary);
+  display: grid;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  gap: 0.5rem;
+  grid-template-columns: auto 1fr auto auto;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.week-strip-nav,
+.week-strip-open-calendar {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.week-strip-nav:hover,
+.week-strip-open-calendar:hover {
+  border-color: var(--rule-strong);
+}
+
+.week-strip-range {
+  color: var(--ink-tertiary);
+  text-align: center;
+}
+
+.week-strip-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.week-strip-back-today {
+  background: color-mix(in srgb, var(--bg-canvas) 78%, var(--accent-soft) 22%);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  padding: 0.45rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.week-strip-back-today:hover {
+  border-color: var(--rule-strong);
+}
+
+.week-strip-days {
+  display: grid;
+  gap: 0.35rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  outline: none;
+}
+
+.week-strip-day {
+  align-items: center;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 3.5rem;
+  padding: 0.45rem 0.2rem 0.4rem;
+  position: relative;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease),
+    transform var(--dur-sm) var(--ease);
+}
+
+.week-strip-day:hover {
+  border-color: var(--rule-strong);
+  transform: translateY(-1px);
+}
+
+.week-strip-weekday {
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.week-strip-number {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.week-strip-markers {
+  display: inline-flex;
+  gap: 0.18rem;
+  min-height: 0.35rem;
+}
+
+.week-strip-marker {
+  border-radius: 999px;
+  display: inline-block;
+  height: 0.35rem;
+  width: 0.35rem;
+}
+
+.week-strip-marker.period {
+  background: var(--flow);
+}
+
+.week-strip-marker.predicted {
+  background: transparent;
+  border: 1px dashed var(--flow);
+}
+
+.week-strip-marker.ovulation {
+  background: var(--sage);
+}
+
+.week-strip-day.today {
+  border-color: var(--ink-primary);
+  box-shadow: inset 0 0 0 1px var(--ink-primary);
+}
+
+.week-strip-day.selected {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: 0 8px 18px var(--accent-ring);
+}
+
+.week-strip-day.period {
+  background: var(--flow-soft);
+  border-color: var(--flow);
+}
+
+.week-strip-day.predicted {
+  border-color: var(--flow);
+  border-style: dashed;
+}
+
+.week-strip-day.ovulation {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+}
+
+/* =========================================================================
+   Day summary
+   ========================================================================= */
+.day-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.day-summary-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.day-summary-tile {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.7rem 0.65rem;
+}
+
+.day-summary-label {
+  color: var(--ink-tertiary);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.day-summary-value {
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.day-summary-value.phase-pill {
+  align-self: flex-start;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  font-weight: 500;
+  justify-content: flex-start;
+  letter-spacing: 0.02em;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 0.25rem 0.6rem;
+  white-space: normal;
+}
+
+.probability-pill {
+  align-self: flex-start;
+  background: var(--bg-elevated);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 0.25rem 0.6rem;
+  white-space: normal;
+}
+
+.probability-pill.low {
+  color: var(--ink-secondary);
+}
+
+.probability-pill.moderate {
+  background: var(--sand-soft);
+  border-color: var(--sand);
+  color: var(--sand-ink);
+}
+
+.probability-pill.peak {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+  color: var(--sage-ink);
+}
+
+.day-summary-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* =========================================================================
+   Calendar route — projections + bulk edit
+   ========================================================================= */
+.calendar-controls {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.calendar-controls-top {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.calendar-back-today {
+  align-items: center;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 1 auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  justify-content: center;
+  letter-spacing: 0.12em;
+  min-width: 0;
+  padding: 0.55rem 1.15rem;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+.calendar-back-today:hover {
+  border-color: var(--rule-strong);
+}
+
+.segmented {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  display: inline-flex;
+  padding: 0.2rem;
+}
+
+.segmented-item {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.9rem;
+  text-transform: uppercase;
+}
+
+.segmented-item.active {
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+}
+
+.calendar-nav {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.calendar-range {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  min-width: 8ch;
+  text-align: center;
+}
+
+.calendar-bulk {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.calendar-grid-head {
+  color: var(--ink-tertiary);
+  display: grid;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  gap: 0.35rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  letter-spacing: 0.12em;
+  margin: 0.4rem 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-cell {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.7rem;
+  color: var(--ink-primary);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.35rem 0.45rem;
+  position: relative;
+  transition:
+    background-color var(--dur-sm) var(--ease),
+    border-color var(--dur-sm) var(--ease);
+}
+
+.calendar-cell:hover {
+  border-color: var(--rule-strong);
+}
+
+.calendar-cell.out-of-month {
+  color: var(--ink-quaternary);
+  opacity: 0.55;
+}
+
+.calendar-cell.today {
+  border-color: var(--ink-primary);
+  box-shadow: inset 0 0 0 1px var(--ink-primary);
+}
+
+.calendar-cell.period {
+  background: var(--flow-soft);
+  border-color: var(--flow);
+}
+
+.calendar-cell.predicted {
+  border-color: var(--flow);
+  border-style: dashed;
+}
+
+.calendar-cell.ovulation {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+}
+
+.calendar-cell.future {
+  color: var(--ink-quaternary);
+}
+
+.calendar-cell.bulk-toggled {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 6px 14px var(--accent-ring);
+}
+
+.calendar-cell:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.legend-dot.period {
+  background: var(--flow);
+}
+
+.legend-dot.ovulation {
+  background: var(--sage);
+}
+
+.year-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mini-month {
+  background: var(--bg-canvas);
+  border: 1px solid var(--rule);
+  border-radius: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 0.55rem 0.55rem;
+}
+
+.mini-month:hover {
+  border-color: var(--rule-strong);
+}
+
+.mini-month-title {
+  color: var(--ink-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.mini-month-grid {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.mini-day {
+  aspect-ratio: 1 / 1;
+  background: var(--bg-sunken);
+  border-radius: 2px;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: 0.44rem;
+  justify-content: center;
+  align-items: center;
+  line-height: 1;
+}
+
+.mini-day.out-of-month {
+  opacity: 0.3;
+}
+
+.mini-day.today {
+  outline: 1.5px solid var(--ink-primary);
+}
+
+.mini-day.period {
+  background: var(--flow);
+  color: var(--flow-ink);
+}
+
+.mini-day.predicted {
+  background: var(--flow-soft);
+}
+
+.mini-day.ovulation {
+  background: var(--sage);
+  color: var(--sage-ink);
+}
+
+@media (width <= 480px) {
+  .year-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .day-summary-tile {
+    padding: 0.55rem 0.5rem;
+  }
+
+  .day-summary-value {
+    font-size: 0.92rem;
+  }
+}
+
+.feedback-block > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.feedback-block > summary::-webkit-details-marker {
+  display: none;
+}
+
+.feedback-block .panel-header {
+  margin-bottom: 0;
+}
+
+.feedback-description {
+  color: var(--ink-secondary);
+  margin: 1.5rem 0 1rem;
+}
+
+.feedback-textarea {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  color: inherit;
+  font: inherit;
+  padding: 0.75rem 1rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.feedback-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.feedback-counter {
+  color: var(--ink-secondary);
+  font-size: 0.85rem;
 }

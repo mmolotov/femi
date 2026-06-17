@@ -8,6 +8,34 @@
       "when": 1774702800000,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774726200000,
+      "tag": "0001_user_settings_onboarding",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774729800000,
+      "tag": "0002_m1_uniques",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779708660519,
+      "tag": "0003_monitoring_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781173076407,
+      "tag": "0004_late_period_threshold",
+      "breakpoints": true
     }
   ]
 }

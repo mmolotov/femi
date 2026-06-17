@@ -6,6 +6,7 @@ on:
       - main
       - master
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +18,8 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - name: Checkout
@@ -26,11 +29,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
-          cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
+          package-manager-cache: false
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Activate package manager
+        run: corepack install
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -40,6 +45,9 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Lint styles
+        run: pnpm lint:styles
 
       - name: Typecheck
         run: pnpm typecheck
@@ -54,7 +62,7 @@ jobs:
         run: pnpm build
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: coverage-report

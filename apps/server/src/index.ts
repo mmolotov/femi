@@ -1,23 +1,14 @@
 import { createAppContext } from "./app.js";
+import { syncTelegramWebhookRegistration } from "./lib/telegram-webhook.js";
 
 const { app, bot, db, env } = await createAppContext();
 
 async function syncTelegramWebhook(): Promise<void> {
-  if (!env.TELEGRAM_WEBHOOK_URL) {
-    app.log.info("TELEGRAM_WEBHOOK_URL is not set, skipping webhook registration.");
-    return;
-  }
-
-  await bot.api.setWebhook(env.TELEGRAM_WEBHOOK_URL, {
-    secret_token: env.TELEGRAM_BOT_SECRET_TOKEN
+  await syncTelegramWebhookRegistration({
+    api: bot.api,
+    env,
+    logger: app.log
   });
-
-  app.log.info(
-    {
-      webhookUrl: env.TELEGRAM_WEBHOOK_URL
-    },
-    "Telegram webhook registered."
-  );
 }
 
 const closeGracefully = async (signal: string) => {
