@@ -28,7 +28,7 @@ jobs:
 
       - name: Checkout
         if: steps.dependency-graph.outputs.status == 'enabled'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Dependency review
         if: steps.dependency-graph.outputs.status == 'enabled'
