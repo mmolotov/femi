@@ -28,7 +28,8 @@ certs/
 
 .idea/
 .vscode/
-.mcp.json
 backlog/
+
+.claude/settings.local.json
 
 *.log

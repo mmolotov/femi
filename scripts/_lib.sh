@@ -3,7 +3,7 @@
 
 # Always operate from the repo root so relative paths (.env, compose file) resolve.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT"
+cd "$ROOT" || exit 1
 
 COMPOSE_FILE="infrastructure/docker-compose.yml"
 
