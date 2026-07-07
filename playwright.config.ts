@@ -8,6 +8,8 @@ export default defineConfig({
     command:
       "pnpm --filter @femi/web build && pnpm --filter @femi/web exec vite preview --host 127.0.0.1 --port 4173",
     reuseExistingServer: true,
+    // The command builds the app before serving; the 60s default is too tight for CI.
+    timeout: 180_000,
     url: "http://127.0.0.1:4173"
   },
   use: {
