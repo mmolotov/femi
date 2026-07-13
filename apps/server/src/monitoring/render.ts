@@ -219,9 +219,13 @@ const STYLES = `
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--ink);
     font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
-  header.top { padding:1.5rem 2rem; border-bottom:1px solid var(--rule); }
+  header.top { padding:1.5rem 2rem; border-bottom:1px solid var(--rule); display:flex;
+    align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
   header.top h1 { margin:0; font-size:1.15rem; font-weight:600; letter-spacing:-0.01em; }
   header.top p { margin:.25rem 0 0; color:var(--muted); font-size:.85rem; }
+  .refresh button { background:none; border:1px solid var(--rule); color:var(--ink);
+    border-radius:.5rem; padding:.45rem .9rem; font:inherit; font-size:.8rem; cursor:pointer; }
+  .refresh button:hover { border-color:var(--accent); color:var(--accent); }
   main { display:grid; gap:1rem; grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));
     padding:1.5rem 2rem; align-items:start; }
   .card { background:var(--panel); border:1px solid var(--rule); border-radius:.75rem;
@@ -263,8 +267,10 @@ export function renderDashboard(metrics: DashboardMetric[]): string {
     `<meta name="viewport" content="width=device-width, initial-scale=1" />` +
     `<meta name="robots" content="noindex, nofollow" />` +
     `<title>femi monitoring</title><style>${STYLES}</style></head>` +
-    `<body><header class="top"><h1>femi monitoring</h1>` +
-    `<p>Internal product metrics. Snapshots are refreshed by the worker.</p></header>` +
+    `<body><header class="top"><div><h1>femi monitoring</h1>` +
+    `<p>Internal product metrics. Snapshots refresh on worker intervals or on demand.</p></div>` +
+    `<form class="refresh" method="post" action="/refresh">` +
+    `<button type="submit">Recalculate</button></form></header>` +
     `<main>${body}</main></body></html>`
   );
 }

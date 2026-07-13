@@ -98,6 +98,12 @@ describe("renderDashboard", () => {
     expect(html).toContain("boom");
   });
 
+  it("renders the manual recalculate control", () => {
+    const html = renderDashboard([]);
+    expect(html).toContain('action="/refresh"');
+    expect(html).toContain("Recalculate");
+  });
+
   it("escapes html in titles", () => {
     const html = renderDashboard([metric({ title: "<script>alert(1)</script>" })]);
     expect(html).not.toContain("<script>alert(1)</script>");
