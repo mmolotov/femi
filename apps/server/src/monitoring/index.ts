@@ -32,13 +32,16 @@ async function lastGeneratedByMetric(db: Database): Promise<Map<string, Date>> {
 // One scheduling pass: run every metric whose interval has elapsed and persist a
 // snapshot for each. Reads run on the read-only pool; snapshots are written via
 // the writable `db`. Safe to call on every worker tick — non-due metrics are skipped.
+// `force` (manual refresh) re-runs every metric regardless of its interval.
 export async function runMonitoringTick(
   db: Database,
   readPool: Pool,
   now: Date = new Date(),
-  metrics: MetricDefinition[] = loadMetrics()
+  metrics: MetricDefinition[] = loadMetrics(),
+  force = false
 ): Promise<MonitoringTickResult> {
-  const lastByMetric = await lastGeneratedByMetric(db);
+  // A forced tick treats every metric as never run, so all of them are due.
+  const lastByMetric = force ? new Map<string, Date>() : await lastGeneratedByMetric(db);
   const ran: string[] = [];
   const skipped: string[] = [];
   const failed: string[] = [];
