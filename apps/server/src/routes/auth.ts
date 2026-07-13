@@ -44,7 +44,9 @@ export async function registerAuthRoutes(app: FastifyInstance, deps: AuthRouteDe
       });
     }
 
-    const initData = parse(parsedBody.data.initDataRaw) as {
+    // `parse` defaults to Telegram's snake_case keys (first_name, …); `true`
+    // converts them to the camelCase fields ParsedTelegramUser expects.
+    const initData = parse(parsedBody.data.initDataRaw, true) as {
       user?: ParsedTelegramUser;
     };
     const telegramUser = initData.user;
