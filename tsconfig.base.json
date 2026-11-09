@@ -10,10 +10,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "paths": {
-      "@femi/shared": ["packages/shared/src/index.ts"],
-      "@femi/db": ["packages/db/src/index.ts"]
+      "@femi/shared": ["./packages/shared/src/index.ts"],
+      "@femi/db": ["./packages/db/src/index.ts"]
     }
   }
 }
