@@ -46,7 +46,10 @@ export default defineConfig(
       "react-hooks": reactHooks
     },
     rules: {
-      ...reactHooks.configs.recommended.rules
+      // Preserve the v5 preset's rule scope during the tooling migration.
+      // The v7 preset adds compiler diagnostics that need a separate review.
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn"
     }
   }
 );

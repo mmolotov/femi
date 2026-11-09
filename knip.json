@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
       "project": ["*.ts", "*.mjs"]
@@ -9,7 +9,7 @@
     },
     "apps/web": {
       "ignoreDependencies": ["autoprefixer", "postcss", "tailwindcss"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.{ts,tsx,css}"]
     },
     "packages/db": {
       "project": ["src/**/*.ts"]

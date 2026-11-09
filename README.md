@@ -17,7 +17,7 @@ See [disclaimer.md](./disclaimer.md) for the non-medical product and data-handli
 
 ## Prerequisites
 
-- `Node.js 24`
+- `Node.js 24.15+` (within the Node 24 release line)
 - `corepack` (run `corepack enable` once)
 - `Docker` with `docker compose`
 
@@ -26,6 +26,13 @@ See [disclaimer.md](./disclaimer.md) for the non-medical product and data-handli
 `pnpm validate` runs the full pre-commit suite (the same checks as CI, in order):
 `format:check` → `lint` → `lint:styles` → `typecheck` → `test:coverage` → `analyze` → `build`.
 Auto-fixers: `pnpm format`, `pnpm lint:fix`, `pnpm lint:styles:fix`.
+
+The toolchain uses TypeScript 6.0, ESLint 10, Vite 8 and Vitest 5. TypeScript is
+limited to the 6.0 line while [typescript-eslint supports versions below 6.1](https://typescript-eslint.io/users/dependency-versions/);
+`@types/node` stays on the Node 24 line. jsdom 30 requires Node 24.15 or newer.
+React linting retains the existing Rules of Hooks and exhaustive-dependencies checks;
+adopting the expanded compiler diagnostics is a separate change. Vite resolves
+TypeScript paths natively and uses Rolldown for production builds.
 
 ## Local development
 
