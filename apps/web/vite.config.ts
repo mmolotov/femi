@@ -3,7 +3,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig, loadEnv } from "vite";
 
 function loadHttpsCerts(dir: string) {
@@ -38,31 +37,25 @@ export default defineConfig(({ mode, isPreview }) => {
 
   return {
     build: {
-      rollupOptions: {
+      // Keep the browser support floor used before the Vite 8 migration.
+      target: ["chrome107", "edge107", "firefox104", "safari16"],
+      rolldownOptions: {
         output: {
-          manualChunks(id) {
-            if (!id.includes("node_modules")) {
-              return undefined;
-            }
-
-            if (id.includes("@telegram-apps")) {
-              return "telegram-vendor";
-            }
-
-            if (id.includes("react-router")) {
-              return "router-vendor";
-            }
-
-            if (id.includes("react")) {
-              return "react-vendor";
-            }
-
-            return "vendor";
+          codeSplitting: {
+            groups: [
+              { name: "telegram-vendor", test: /node_modules.*@telegram-apps/, priority: 30 },
+              { name: "router-vendor", test: /node_modules.*react-router/, priority: 20 },
+              { name: "react-vendor", test: /node_modules.*react/, priority: 10 },
+              { name: "vendor", test: /node_modules/, priority: 0 }
+            ]
           }
         }
       }
     },
-    plugins: [react(), tsconfigPaths()],
+    plugins: [react()],
+    resolve: {
+      tsconfigPaths: true
+    },
     preview: {
       allowedHosts: allowedPreviewHosts,
       host: "0.0.0.0",
