@@ -62,6 +62,31 @@ describe("SessionProvider", () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it("sends the device timezone before authenticated data can load", async () => {
+    const options = Intl.DateTimeFormat().resolvedOptions();
+    vi.spyOn(Intl.DateTimeFormat.prototype, "resolvedOptions").mockReturnValue({
+      ...options,
+      timeZone: "Europe/Belgrade"
+    });
+
+    render(
+      <I18nProvider>
+        <SessionProvider>
+          <SessionProbe />
+        </SessionProvider>
+      </I18nProvider>
+    );
+
+    await screen.findByText("authenticated");
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/auth/telegram",
+      expect.objectContaining({
+        body: JSON.stringify({ initDataRaw: "init-data", timezone: "Europe/Belgrade" })
+      })
+    );
   });
 
   it("does not reauthenticate when the language changes", async () => {

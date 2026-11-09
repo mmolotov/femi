@@ -19,6 +19,14 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       reportsDirectory: "coverage",
+      // Floor slightly below the current totals (2026-07: lines 76.9 / funcs 73.6 /
+      // branches 67.1) so coverage can only ratchet up; raise when coverage grows.
+      thresholds: {
+        lines: 74,
+        statements: 74,
+        functions: 71,
+        branches: 65
+      },
       exclude: [
         "**/dist/**",
         "**/*.d.ts",

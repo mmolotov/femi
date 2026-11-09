@@ -33,7 +33,7 @@ test.describe("onboarding", () => {
     await page.getByLabel(/usual cycle length/i).fill("30");
     await expect(save).toBeEnabled();
 
-    await page.getByLabel(/usual period length/i).fill("1");
+    await page.getByLabel(/usual period length/i).fill("0");
     await expect(save).toBeDisabled();
     await page.getByLabel(/usual period length/i).fill("6");
     await expect(save).toBeEnabled();

@@ -1,0 +1,58 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm format)",
+      "Bash(pnpm format:*)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm test)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm analyze)",
+      "Bash(pnpm build)",
+      "Bash(pnpm validate)",
+      "Bash(pnpm --filter * build)",
+      "Bash(pnpm --filter * typecheck)",
+      "Bash(pnpm --filter * test *)",
+      "Bash(pnpm --filter * exec vitest *)",
+      "Bash(pnpm exec vitest *)",
+      "Bash(pnpm exec playwright *)",
+      "Bash(pnpm exec prettier *)",
+      "Bash(pnpm exec eslint *)",
+      "Bash(pnpm exec tsc *)",
+      "Bash(pnpm exec knip *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(grep *)",
+      "mcp__backlog"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Edit(./.env)",
+      "Edit(./.env.local)",
+      "Write(./.env)",
+      "Write(./.env.local)",
+      "Read(./certs/**)",
+      "Read(./apps/web/certs/**)"
+    ]
+  },
+  "enabledMcpjsonServers": ["backlog"],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); if [ -n \"$f\" ] && [ -f \"$f\" ]; then pnpm exec prettier --write --ignore-unknown \"$f\" >/dev/null 2>&1 || true; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

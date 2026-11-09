@@ -37,6 +37,20 @@ describe("cycle utilities", () => {
     expect(calculateCurrentCycleDay("2026-03-01", "2026-03-05")).toBe(5);
   });
 
+  it.each([
+    ["2026-11-08T22:00:00Z", "2026-11-08"],
+    ["2026-11-08T22:59:59Z", "2026-11-08"],
+    ["2026-11-08T23:00:00Z", "2026-11-09"],
+    ["2026-07-08T21:59:59Z", "2026-07-08"],
+    ["2026-07-08T22:00:00Z", "2026-07-09"],
+    ["2026-03-29T00:59:59Z", "2026-03-29"],
+    ["2026-03-29T01:00:00Z", "2026-03-29"],
+    ["2026-10-25T00:59:59Z", "2026-10-25"],
+    ["2026-10-25T01:00:00Z", "2026-10-25"]
+  ])("derives Serbia's date at %s as %s", (instant, expected) => {
+    expect(getIsoDateInTimeZone(new Date(instant), "Europe/Belgrade")).toBe(expected);
+  });
+
   it("returns null current cycle day without a cycle start", () => {
     expect(calculateCurrentCycleDay(null, "2026-03-05")).toBeNull();
   });

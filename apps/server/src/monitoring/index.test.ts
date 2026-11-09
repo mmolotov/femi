@@ -47,6 +47,15 @@ describe("runMonitoringTick", () => {
     expect(result.failed).toEqual([]);
   });
 
+  it("force-runs metrics that are still within their interval", async () => {
+    const db = fakeDb([{ metricId: "recent", lastGeneratedAt: now.toISOString() }]);
+
+    const result = await runMonitoringTick(db, fakeReadPool(), now, [metric("recent")], true);
+
+    expect(result.ran).toEqual(["recent"]);
+    expect(result.skipped).toEqual([]);
+  });
+
   it("coerces the DB's string timestamp to a Date (regression: raw max() returns a string)", async () => {
     // node-postgres returns a raw max(generated_at) aggregate as a Postgres
     // timestamp string, not a Date. The scheduler must treat it as a date rather
