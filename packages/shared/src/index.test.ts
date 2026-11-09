@@ -41,6 +41,31 @@ describe("shared schemas", () => {
     expect(payload.cycleLengthDays).toBe(29);
   });
 
+  it.each(["Europe/Belgrade", "UTC", "America/Los_Angeles"])(
+    "preserves a valid device timezone %s in auth",
+    (timezone) => {
+      expect(telegramAuthRequestSchema.parse({ initDataRaw: "signed", timezone })).toEqual({
+        initDataRaw: "signed",
+        timezone
+      });
+    }
+  );
+
+  it.each(["Not/A_Timezone", "", "UTC+1", null, 60])(
+    "rejects an invalid device timezone %s in auth",
+    (timezone) => {
+      expect(telegramAuthRequestSchema.safeParse({ initDataRaw: "signed", timezone }).success).toBe(
+        false
+      );
+    }
+  );
+
+  it("supports legacy auth clients without a timezone", () => {
+    expect(telegramAuthRequestSchema.parse({ initDataRaw: "signed" })).toEqual({
+      initDataRaw: "signed"
+    });
+  });
+
   it("rejects an invalid cycle length in onboarding", () => {
     const parsed = onboardingSetupRequestSchema.safeParse({
       cycleLengthDays: 9,

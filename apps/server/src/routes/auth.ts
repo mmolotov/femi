@@ -89,14 +89,23 @@ export async function registerAuthRoutes(app: FastifyInstance, deps: AuthRouteDe
       })
       .returning();
 
-    await deps.db
-      .insert(userSettings)
-      .values({
-        userId: persistedUser.id
-      })
-      .onConflictDoNothing({
-        target: userSettings.userId
+    const timezone = parsedBody.data.timezone;
+    const settingsInsert = deps.db.insert(userSettings).values({
+      userId: persistedUser.id,
+      ...(timezone ? { timezone } : {})
+    });
+
+    if (timezone) {
+      // Refresh the device timezone before the client loads date-dependent data.
+      // Preserve cycle preferences and onboarding state for existing accounts.
+      await settingsInsert.onConflictDoUpdate({
+        target: userSettings.userId,
+        set: { timezone, updatedAt: new Date() }
       });
+    } else {
+      // Older clients omit timezone; keep their stored setting intact.
+      await settingsInsert.onConflictDoNothing({ target: userSettings.userId });
+    }
 
     const [freshUser] = await deps.db
       .select({
