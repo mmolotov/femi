@@ -148,7 +148,17 @@ export const healthResponseSchema = z.object({
 });
 
 export const telegramAuthRequestSchema = z.object({
-  initDataRaw: z.string().min(1)
+  initDataRaw: z.string().min(1),
+  timezone: timezoneSchema
+    .refine((timezone) => {
+      try {
+        new Intl.DateTimeFormat("en", { timeZone: timezone });
+        return true;
+      } catch {
+        return false;
+      }
+    }, "Expected a supported timezone.")
+    .optional()
 });
 
 export const feedbackMessageMaxLength = 2000;

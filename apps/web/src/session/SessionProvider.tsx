@@ -112,7 +112,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
       try {
         const response = await fetch("/api/auth/telegram", {
           body: JSON.stringify({
-            initDataRaw: runtime.initDataRaw
+            initDataRaw: runtime.initDataRaw,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
           }),
           headers: {
             "content-type": "application/json"
