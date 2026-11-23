@@ -1,4 +1,4 @@
-FROM postgres:18-alpine
+FROM postgres:19-alpine
 
 RUN apk add --no-cache bash aws-cli
 
