@@ -94,7 +94,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-femi}:${POSTGRES_PASSWORD:-femi}@postgres:5432/${POSTGRES_DB:-femi}
 
   postgres:
-    image: postgres:18-alpine
+    image: postgres:19-alpine
     env_file:
       - ../.env
     environment:
